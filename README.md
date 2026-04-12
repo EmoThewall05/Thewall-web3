@@ -1,54 +1,123 @@
-​⬡ 𝕋ℍ𝔼 𝕎𝔸𝕃𝕃 𝕎𝔼𝔹𝟛
+# ⬡ THE WALL — Web3 Wallet
 
-The Living Fortress 🦋
-​Multi-Chain Gasless Web3 Wallet & Seven-Brain AI Guardian
-​<p align="center">
-<img src="https://github.com/Emobies-app/Thewall-web3/raw/main/assets/thewall_main_banner.png" width="100%" alt="TheWall Main Banner: The Invisible Fortress of Digital Assets">
-</p>
-​TheWall is not simply a tool; it is a meticulously crafted digital asset ecosystem where military-grade security meets unprecedented user experience. We have conceptualized the traditional blockchain landscape as a dynamic, living garden. Your digital assets (Tokens, NFTs) are represented as vulnerable Flowers, protected by our sophisticated, autonomous Emowall AI Butterfly Companion.
-​TheWall aims to bridge the gap between complex Web3 architecture and daily financial utility, removing the barriers of seed phrases and gas fees while providing 24/7 intelligent guardianship.
-​🌐 Visit the Official Site: thewall.e-mobies.com
-​🧠 The Seven Brains AI Architecture (Emo AI Pro)
-​<p align="center">
-<img src="https://www.google.com/search?q=https://github.com/Emobies-app/Thewall-web3/raw/main/assets/seven_brains_ai.png" width="85%" alt="Seven Brains AI: Distributed Intelligence Framework">
-</p>
-​Your assets are guarded by a state-of-the-art, Distributed Intelligence Framework (DIF) consisting of seven distinct, integrated Large Language Models (LLMs) specialized for different aspects of security and optimization:
-​Anthropic Claude: Strategic Logic & Creative Decision Synthesis. Handles complex contextual analysis and generates user-facing security recommendations.
-​Google Gemini: Real-Time Market Intelligence & Semantic Search. Provides instantaneous data analysis on market shifts, news, and project sentiment.
-​OpenAI GPT-4: Smart Contract Verification & Vulnerability Assessment. The primary engine for auditing new smart contracts and detecting potential exploits.
-​DeepSeek: High-Performance Code Optimization & Internal Security Auditing. Ensures the core wallet codebase is lean, efficient, and free of vulnerabilities.
-​Meta Llama 3: Localized Privacy-Preserving Layer. Processes sensitive user data on-device, minimizing data exposure while enhancing personalization.
-​Mistral: High-Throughput Transaction Prediction & Latency Management. Optimizes the routing of transactions across multiple chains for speed.
-​Custom Emo-Core: Emotional Intelligence (EI) & User Assistance Logic. Interprets user intent, simplifies technical terms, and manages the empathetic interface of the Butterfly Guardian.
-​✨ Primary Technology Pillars
-​⚡ Gasless & Seedless Access
-​100% Gasless Ecosystem: Utilizing the advanced Alchemy Gas Manager (ERC-4337 Account Abstraction), TheWall covers the gas fees for all transactions (swaps, transfers, staking) across all supported chains, providing a seamless Web2-like experience.
-​No Seed Phrase Complexity: Security is provided through biometric authentication (FaceID, Fingerprint), Magic Links (Email), and standard passkeys, removing the risk of lost recovery phrases.
-​🛡️ Guard & Shield Modes (Security Layer)
-​TheWall integrates the Emowall AI 2.0 Security Suite:
-​Guardian Mode: Multi-signature family safety features and emergency contact alerts.
-​Shield Mode: Advanced deepfake detection and media verification, blocking advanced social engineering attacks before they reach the wallet.
-​One-Tap Emergency Freeze: Immediately locks all wallet activity across all chains with a single cryptographic command.
-​🦋 Visually Intuitive Interface: The Asset Garden
-​<p align="center">
-<img src="https://www.google.com/search?q=https://github.com/Emobies-app/Thewall-web3/raw/main/assets/asset_garden_alerts.png" width="85%" alt="TheWall Asset Garden: Visualizing Asset Status and AI Alerts">
-</p>
-​The traditional wallet interface (a list of numbers) has been replaced by a dynamic, Visual Guardian System:
-​Dynamic Asset Visualization: Each token or NFT in your wallet is represented by a unique Flower. The vibrancy and health of the flower visually reflect the asset's market performance and security status.
-​The AI Butterfly Companion: The Emowall AI is personified as a graceful, multi-colored Butterfly that flies from flower to flower. Its colors (Orange-Cyan, Pink, Red) and flight patterns (calm, agitated) provide immediate, non-verbal feedback on:
-​Market Sentiment Shifts
-​Impending Volatility
-​Security Threats or Scam Warnings
-​⛓️ Supported Multi-Chain Ecosystem
-​<p align="center">
+> Protect your invisible valuable currencies.
+> Web3 · 6 Chains · Gasless · No Seed Phrase
 
-​⛓️ Supported Multi-Chain Ecosystem
+Built by **Thewin (Dwin 05)** · India 🇮🇳 → Dubai 🇦🇪
+Built entirely on phone using Termux + Acode
 
-Chain Network Symbol Ecosystem Personality Core Focus Status
-🌍 Earth ETH Ethereum L1 Decentralized Consensus & DeFi Live
-🌟 Soul SOL Solana High-Speed Performance & dApps Live
-🌙 Moon MON Monad Ultra-Fast EVM Compatibility Live
-🪐 Orbit ARB Arbitrum L2 Scalable EVM Execution Live
-₿ Birth BTC Bitcoin Store of Value & L2 Layers Live
-🔵 Base BASE Base L2 Seamless Coinbase Integration Live
-</p>        
+---
+
+## 🌍 Live
+**[thewall.e-mobies.com](https://thewall.e-mobies.com)**
+
+---
+
+## ⚡ Features
+
+| Feature | Description |
+|---------|-------------|
+| 🔐 No Seed Phrase | Email + Google Auth (TOTP) login |
+| ⚡ Gasless | Zero gas fees via Alchemy Gas Manager |
+| 🦋 Emowall AI | Grok-powered Web3 guardian |
+| 📊 Charts | CoinGecko candlestick 1D/7D/1M/3M/1Y |
+| 📰 News | CoinDesk live RSS feed |
+| 🔔 Alerts | Browser price notifications |
+| 🌐 DApps | Uniswap, OpenSea, Aave, 1inch, Raydium |
+| 🔄 Swap | UniSwap V3 integration |
+| ❄️ Freeze | Emergency PIN wallet lock |
+| 🔗 Connect | WalletConnect 530+ wallets |
+
+---
+
+## ⛓️ 6 Chains
+
+| Name | Symbol | Chain |
+|------|--------|-------|
+| 🌍 Earth | ETH | Ethereum |
+| 🌟 Soul | SOL | Solana |
+| 🌙 Moon | MON | Monad |
+| 🪐 Orbit | ARB | Arbitrum |
+| ₿ Birth | BTC | Bitcoin |
+| 🔵 Base | BASE | Base |
+
+---
+
+## 🛠️ Tech Stack
+Next.js 15      — Framework
+Alchemy         — RPC + Gas Manager (all 6 chains)
+WalletConnect   — Wallet integration (Reown AppKit)
+CoinGecko       — Price + Charts
+CoinDesk RSS    — News
+Grok AI (xAI)   — Emowall AI Web3
+NileDB          — Database (Postgres)
+Vercel          — Deployment
+---
+
+## 🚀 Deploy
+
+```bash
+git clone https://github.com/Emobies-app/Thewall-web3
+npm install
+npm run dev
+```
+
+### Environment Variables
+TOTP_SECRET=
+ALCHEMY_API_KEY=
+ALCHEMY_GAS_POLICY_ID=
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=
+GROK_API_KEY=
+ETHERSCAN_API_KEY=
+HELIUS_API_KEY=
+NILEDB_POSTGRES_URL=
+---
+
+## 🔐 Security
+
+- CodeQL Advanced scanning
+- Snyk vulnerability detection
+- Semgrep static analysis
+- PIN-based wallet freeze
+- Biometric 2FA support
+- Alchemy Webhook monitoring
+
+---
+
+## 🦋 Emowall AI
+
+AI-powered Web3 guardian built with Grok (xAI).
+Watches your wallet 24/7 — ask about swaps,
+chains, gas, security, prices. Always watching. 🦋
+
+---
+
+## 🏆 Backed By
+
+Alchemy Ecosystem Fund · Personal credits from
+Mike Garland (Head of Product, Solana @ Alchemy)
+
+---
+
+## 📱 Part of Dwin Universe
+
+| App | Description |
+|-----|-------------|
+| 📱 Emobies | Mobile repair platform |
+| 🦋 Emowall AI | Multi-gen AI safety |
+| 🧱 TheWall | Web3 wallet (this) |
+| 🤖 Emo Robos | Robotics & automation |
+| 🧠 Emo AI Pro | Advanced AI platform |
+
+---
+
+## 👤 Developer
+
+**Thewin (Emobies05)**
+India 🇮🇳 → Dubai 🇦🇪
+Self-taught · Built on phone using Termux + Acode
+0 coding knowledge → 3.5 months → production Web3 wallet
+
+[github.com/Emobies-app](https://github.com/Emobies-app)
+
+> *"Follow the flow"* · 🦋
