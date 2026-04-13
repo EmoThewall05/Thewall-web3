@@ -23,7 +23,8 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Install Android SDK
+      # 🚀 ഇതാണ് ആ മാജിക് സ്റ്റെപ്പ്!
+      - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
       - name: Install Bubblewrap
@@ -33,20 +34,20 @@ jobs:
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         run: |
-          # 1. ബബിൾവാപ്പിന് കൃത്യമായ പാത്ത് പറഞ്ഞു കൊടുക്കുന്നു
+          # 1. ബബിൾവാപ്പിന് ആൻഡ്രോയിഡ് SDK-യുടെ പക്കാ ലൊക്കേഷൻ കാണിച്ചു കൊടുക്കുന്നു
           mkdir -p ~/.bubblewrap
-          echo "{\"jdkPath\":\"$JAVA_HOME\",\"androidSdkPath\":\"$ANDROID_HOME\"}" > ~/.bubblewrap/config.json
+          echo "{\"jdkPath\":\"$JAVA_HOME\",\"androidSdkPath\":\"$ANDROID_SDK_ROOT\"}" > ~/.bubblewrap/config.json
           
-          # 2. മാനിഫെസ്റ്റ് ഫയൽ ഉണ്ടാക്കുന്നു
+          # 2. മാനിഫെസ്റ്റ് സെറ്റപ്പ്
           echo '{"packageId":"com.emobies.thewall","host":"thewall.e-mobies.com","name":"TheWall","launcherName":"TheWall","displayMode":"standalone","themeColor":"#07080B","navigationColor":"#07080B","backgroundColor":"#07080B","enableNotifications":true,"startUrl":"/","iconUrl":"https://thewall.e-mobies.com/icon-512.png","maskableIconUrl":"https://thewall.e-mobies.com/icon-512.png","splashScreenFadeOutDuration":300,"orientation":"any","shortcuts":[],"signingKey":{"path":"./android.keystore","alias":"thewall"},"appVersionName":"3.0.0","appVersionCode":300,"generatorApp":"bubblewrap-cli","fallbackType":"customtabs"}' > twa-manifest.json
 
-          # 3. കീസ്റ്റോർ സെറ്റപ്പ്
+          # 3. കീസ്റ്റോർ ഉണ്ടാക്കുന്നു
           keytool -genkey -v -keystore android.keystore -alias thewall -keyalg RSA -keysize 2048 -validity 10000 -storepass "$KEYSTORE_PASSWORD" -keypass "$KEYSTORE_PASSWORD" -dname "CN=Divin, OU=Dwin, O=Dwin, L=Dubai, S=Dubai, C=AE"
 
-          # 4. ബിൽഡ് സ്റ്റാർട്ട് (യെസ് അടിക്കാൻ -y ചേർത്തു)
+          # 4. ബിൽഡ് (യെസ് അടിക്കാൻ 'yes |' ഉപയോഗിക്കുന്നു)
           yes | bubblewrap build --skipCheck --signingKeyPassword "$KEYSTORE_PASSWORD" --signingKeyStorePassword "$KEYSTORE_PASSWORD"
 
-      - name: Upload Artifacts
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: thewall-apk
