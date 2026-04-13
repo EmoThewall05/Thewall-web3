@@ -30,23 +30,20 @@ jobs:
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         run: |
-          # 1. ചോദ്യങ്ങൾ ഒഴിവാക്കാൻ കോൺഫിഗറേഷൻ സെറ്റ് ചെയ്യുന്നു
           mkdir -p ~/.bubblewrap
           echo "{\"jdkPath\":\"$JAVA_HOME\",\"androidSdkPath\":\"/usr/local/lib/android/sdk\"}" > ~/.bubblewrap/config.json
+          
+          # നേരിട്ട് ഒരു twa-manifest.json ഫയൽ ഉണ്ടാക്കുന്നു (ഇതാണ് ചോദ്യങ്ങൾ ഒഴിവാക്കാൻ ഏക വഴി)
+          echo '{"packageId":"com.emobies.thewall","host":"thewall.e-mobies.com","name":"TheWall","launcherName":"TheWall","displayMode":"standalone","themeColor":"#07080B","navigationColor":"#07080B","backgroundColor":"#07080B","enableNotifications":true,"startUrl":"/","iconUrl":"https://thewall.e-mobies.com/icon-512.png","maskableIconUrl":"https://thewall.e-mobies.com/icon-512.png","splashScreenFadeOutDuration":300,"orientation":"any","shortcuts":[],"signingKey":{"path":"./android.keystore","alias":"thewall"},"appVersionName":"3.0.0","appVersionCode":300,"generatorApp":"bubblewrap-cli","fallbackType":"customtabs"}' > twa-manifest.json
 
-          # 2. PWA Manifest-ൽ നിന്ന് പ്രോജക്റ്റ് സെറ്റ് ചെയ്യുന്നു
-          bubblewrap init --manifest="https://thewall.e-mobies.com/manifest.json" --directory="./" --confirm
-
-          # 3. പുതിയ കീസ്റ്റോർ ഉണ്ടാക്കുന്നു
+          # കീസ്റ്റോർ ഉണ്ടാക്കുന്നു
           keytool -genkey -v -keystore android.keystore -alias thewall -keyalg RSA -keysize 2048 -validity 10000 -storepass "$KEYSTORE_PASSWORD" -keypass "$KEYSTORE_PASSWORD" -dname "CN=Divin, OU=Dwin, O=Dwin, L=Dubai, S=Dubai, C=AE"
 
-          # 4. ബിൽഡ് സ്റ്റാർട്ട് ചെയ്യുന്നു
-          bubblewrap build --signingKeyPath="android.keystore" --signingKeyAlias="thewall" --signingKeyPassword="$KEYSTORE_PASSWORD" --signingKeyStorePassword="$KEYSTORE_PASSWORD" --skipCheck
+          # ബിൽഡ് ചെയ്യുന്നു
+          bubblewrap build --skipCheck --signingKeyPassword "$KEYSTORE_PASSWORD" --signingKeyStorePassword "$KEYSTORE_PASSWORD"
 
-      - name: Upload Artifacts (APK & AAB)
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: thewall-build-files
-          path: |
-            app-release-signed.apk
-            app-release-signed.aab
+          name: thewall-apk
+          path: app-release-signed.apk
