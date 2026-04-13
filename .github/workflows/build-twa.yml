@@ -1,75 +1,46 @@
-name: Build TWA APK
+name: TWA Build (TheWall)
 
 on:
-  workflow_dispatch:
   push:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Java 17
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Node.js 18
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
 
-      - name: Init Bubblewrap (Non-interactive)
-        run: |
-          bubblewrap init \
-            --manifest https://thewall.e-mobies.com/manifest.json \
-            --directory twa-project \
-            --name "TheWall" \
-            --launcher-name "TheWall" \
-            --display-mode standalone \
-            --theme-color "#FF5500" \
-            --background-color "#07080B" \
-            --icon-url https://thewall.e-mobies.com/icon-512.png \
-            --overwrite
-
-      - name: Create Keystore
+      - name: Build TWA
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         run: |
-          keytool -genkey -v \
-            -keystore twa-project/android.keystore \
-            -alias thewall \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000 \
-            -storepass "$KEYSTORE_PASSWORD" \
-            -keypass "$KEYSTORE_PASSWORD" \
-            -dname "CN=Divin, OU=DwinUniverse, O=Dwin, L=Dubai, S=Dubai, C=AE"
+          # 1. നേരിട്ട് ഒരു twa-manifest.json ഉണ്ടാക്കുന്നു (ഇതാണ് ബുദ്ധി)
+          bubblewrap init --manifest="https://thewall.e-mobies.com/manifest.json" --directory="./" --confirm
 
-      - name: Build APK and AAB
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-        run: |
-          cd twa-project
-          bubblewrap build \
-            --signingKeyPassword "$KEYSTORE_PASSWORD" \
-            --signingKeyStorePassword "$KEYSTORE_PASSWORD"
+          # 2. Keystore ഉണ്ടാക്കുന്നു (നിന്റെ പേരും വിവരങ്ങളും)
+          keytool -genkey -v -keystore android.keystore -alias thewall -keyalg RSA -keysize 2048 -validity 10000 -storepass "$KEYSTORE_PASSWORD" -keypass "$KEYSTORE_PASSWORD" -dname "CN=Divin, OU=Dwin, O=Dwin, L=Dubai, S=Dubai, C=AE"
 
-      - name: Upload APK and AAB
+          # 3. Build അടിക്കുന്നു
+          bubblewrap build --signingKeyPath="android.keystore" --signingKeyAlias="thewall" --signingKeyPassword="$KEYSTORE_PASSWORD" --signingKeyStorePassword="$KEYSTORE_PASSWORD"
+
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: thewall-twa-build
-          path: |
-            twa-project/app-release-signed.apk
-            twa-project/app-release-signed.aab
+          name: thewall-release
+          path: app-release-signed.apk
