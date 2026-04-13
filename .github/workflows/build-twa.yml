@@ -23,6 +23,9 @@ jobs:
         with:
           node-version: '18'
 
+      - name: Install Android SDK
+        uses: android-actions/setup-android@v3
+
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
 
@@ -30,23 +33,23 @@ jobs:
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         run: |
-          # 1. ആൻഡ്രോയിഡ് SDK പാത്ത് സിസ്റ്റത്തിൽ നിന്ന് തന്നെ കണ്ടുപിടിക്കുന്നു
+          # 1. ബബിൾവാപ്പിന് കൃത്യമായ പാത്ത് പറഞ്ഞു കൊടുക്കുന്നു
           mkdir -p ~/.bubblewrap
           echo "{\"jdkPath\":\"$JAVA_HOME\",\"androidSdkPath\":\"$ANDROID_HOME\"}" > ~/.bubblewrap/config.json
           
-          # 2. ടാർഗെറ്റ് മാനിഫെസ്റ്റ് ഉണ്ടാക്കുന്നു
+          # 2. മാനിഫെസ്റ്റ് ഫയൽ ഉണ്ടാക്കുന്നു
           echo '{"packageId":"com.emobies.thewall","host":"thewall.e-mobies.com","name":"TheWall","launcherName":"TheWall","displayMode":"standalone","themeColor":"#07080B","navigationColor":"#07080B","backgroundColor":"#07080B","enableNotifications":true,"startUrl":"/","iconUrl":"https://thewall.e-mobies.com/icon-512.png","maskableIconUrl":"https://thewall.e-mobies.com/icon-512.png","splashScreenFadeOutDuration":300,"orientation":"any","shortcuts":[],"signingKey":{"path":"./android.keystore","alias":"thewall"},"appVersionName":"3.0.0","appVersionCode":300,"generatorApp":"bubblewrap-cli","fallbackType":"customtabs"}' > twa-manifest.json
 
           # 3. കീസ്റ്റോർ സെറ്റപ്പ്
           keytool -genkey -v -keystore android.keystore -alias thewall -keyalg RSA -keysize 2048 -validity 10000 -storepass "$KEYSTORE_PASSWORD" -keypass "$KEYSTORE_PASSWORD" -dname "CN=Divin, OU=Dwin, O=Dwin, L=Dubai, S=Dubai, C=AE"
 
-          # 4. ബിൽഡ് സ്റ്റാർട്ട് (ഇവിടെ പാത്ത് പ്രശ്നം വരില്ല)
-          bubblewrap build --skipCheck --signingKeyPassword "$KEYSTORE_PASSWORD" --signingKeyStorePassword "$KEYSTORE_PASSWORD"
+          # 4. ബിൽഡ് സ്റ്റാർട്ട് (യെസ് അടിക്കാൻ -y ചേർത്തു)
+          yes | bubblewrap build --skipCheck --signingKeyPassword "$KEYSTORE_PASSWORD" --signingKeyStorePassword "$KEYSTORE_PASSWORD"
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: thewall-app-build
+          name: thewall-apk
           path: |
-            app-release-signed.apk
-            app-release-signed.aab
+            *.apk
+            *.aab
