@@ -31,20 +31,16 @@ export default function TransactionApproval({
   const [otpSent, setOtpSent] = useState(false)
   const [otpCountdown, setOtpCountdown] = useState(60)
 
-  // Check biometric availability
+  // 1. ബയോമെട്രിക് ഉണ്ടോ എന്ന് ചെക്ക് ചെയ്യുന്നു
   useEffect(() => {
     const checkBiometric = async () => {
-      try {
-        const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable?.()
-        setHasBiometric(!!available)
-      } catch {
-        setHasBiometric(false)
-      }
+      const available = await window.PublicKeyCredential?.isUserVerifyingPlatformAuthenticatorAvailable?.()
+      setHasBiometric(!!available)
     }
     checkBiometric()
   }, [])
 
-  // Create approval request
+  // 2. ട്രാൻസാക്ഷൻ റിക്വസ്റ്റ് ഉണ്ടാക്കുന്നു
   useEffect(() => {
     fetch('/api/auth/approve', {
       method: 'POST',
@@ -53,7 +49,7 @@ export default function TransactionApproval({
     })
   }, [txId, email, amount, to])
 
-  // Poll phone approval
+  // 3. ഫോൺ അപ്രൂവലിന് വേണ്ടി പോളിംഗ് നടത്തുന്നു
   useEffect(() => {
     if (layer !== 'phone') return
     const interval = setInterval(async () => {
@@ -67,25 +63,13 @@ export default function TransactionApproval({
             if (email) sendEmailOtp()
             setLayer('email_otp')
           }, 800)
-        }
-        if (data.status === 'rejected') {
-          setPhoneStatus('rejected')
-          clearInterval(interval)
+        } else if (data.status === 'rejected') {
           onRejected()
         }
       } catch {}
     }, 2000)
     return () => clearInterval(interval)
   }, [layer, txId])
-
-  // Email OTP countdown
-  useEffect(() => {
-    if (layer !== 'email_otp' || !otpSent) return
-    const timer = setInterval(() => {
-      setOtpCountdown((prev) => (prev > 0 ? prev - 1 : 0))
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [layer, otpSent])
 
   const sendEmailOtp = async () => {
     try {
@@ -95,14 +79,11 @@ export default function TransactionApproval({
         body: JSON.stringify({ type: 'send_email_otp', email }),
       })
       setOtpSent(true)
-      setOtpCountdown(60)
     } catch {}
   }
 
   const handleTotp = async () => {
-    if (totp.length !== 6) return
     setLoading(true)
-    setError('')
     try {
       const res = await fetch('/api/auth/totp', {
         method: 'POST',
@@ -111,17 +92,15 @@ export default function TransactionApproval({
       })
       const data = await res.json()
       if (data.valid) setLayer('phone')
-      else setError('Invalid code. Try again.')
+      else setError('Invalid Authenticator Code 🦋')
     } catch {
-      setError('Verification failed.')
+      setError('Verification failed')
     }
     setLoading(false)
   }
 
   const handleEmailOtp = async () => {
-    if (emailOtp.length !== 6) return
     setLoading(true)
-    setError('')
     try {
       const res = await fetch('/api/auth/totp', {
         method: 'POST',
@@ -131,239 +110,119 @@ export default function TransactionApproval({
       const data = await res.json()
       if (data.valid) {
         if (hasBiometric) setLayer('biometric')
-        else {
-          setLayer('done')
-          onApproved()
-        }
-      } else setError('Invalid OTP. Try again.')
+        else { setLayer('done'); onApproved() }
+      } else setError('Invalid Email OTP 🦋')
     } catch {
-      setError('Verification failed.')
+      setError('Email verification failed')
     }
     setLoading(false)
   }
 
+  // 🚀 ബയോമെട്രിക് ലോജിക് (WebAuthn)
   const handleBiometric = async () => {
     setLoading(true)
     setError('')
     try {
+      // ചലഞ്ച് ഉണ്ടാക്കുന്നു
       const challenge = new Uint8Array(32)
       window.crypto.getRandomValues(challenge)
+
+      // ആൻഡ്രോയിഡ് ഫിംഗർപ്രിന്റ്/ഫേസ് ഐഡി പോപ്പ്അപ്പ് കാണിക്കുന്നു
       const credential = await navigator.credentials.get({
         publicKey: {
           challenge,
-          rpId: window.location.hostname,
-          allowCredentials: [],
-          userVerification: 'required',
           timeout: 60000,
-        },
-      } as CredentialRequestOptions)
+          userVerification: "required",
+          rpId: window.location.hostname
+        }
+      })
+
       if (credential) {
         setLayer('done')
-        onApproved()
+        setTimeout(() => onApproved(), 1000)
       }
-    } catch {
-      setError('Biometric failed. Try again.')
+    } catch (err: any) {
+      console.error(err)
+      setError('Biometric verification failed. Please try again. 🦋')
     }
     setLoading(false)
   }
 
   const s: Record<string, React.CSSProperties> = {
-    wrap: {
-      background: '#070d14',
-      border: '1px solid rgba(0,179,247,0.3)',
-      borderRadius: 16,
-      padding: 24,
-      maxWidth: 380,
-      width: '100%',
-      fontFamily: 'monospace',
-      color: '#e8f4fd',
-    },
+    wrap: { background: '#070d14', border: '1px solid rgba(0,179,247,0.3)', borderRadius: 16, padding: 24, maxWidth: 380, width: '100%', fontFamily: 'monospace', color: '#e8f4fd' },
     title: { color: '#00b3f7', fontSize: '0.85rem', letterSpacing: '0.1em', marginBottom: 8, fontWeight: 700 },
     step: { fontSize: '0.62rem', color: 'rgba(232,244,253,0.3)', marginBottom: 16 },
     info: { background: '#0c1520', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: '0.72rem' },
     row: { display: 'flex', justifyContent: 'space-between', padding: '4px 0' },
-    label: { color: 'rgba(232,244,253,0.4)' },
-    val: { color: '#e8f4fd' },
-    input: {
-      width: '100%',
-      padding: '12px',
-      background: '#0c1520',
-      border: '1px solid rgba(0,179,247,0.3)',
-      borderRadius: 8,
-      color: '#e8f4fd',
-      fontFamily: 'monospace',
-      fontSize: '1.2rem',
-      letterSpacing: '0.3em',
-      textAlign: 'center' as const,
-      outline: 'none',
-      marginBottom: 12,
-    },
-    btn: {
-      width: '100%',
-      padding: 13,
-      background: '#00b3f7',
-      border: 'none',
-      borderRadius: 8,
-      color: '#000',
-      fontFamily: 'monospace',
-      fontWeight: 700,
-      cursor: 'pointer',
-      fontSize: '0.85rem',
-    },
-    btnRed: {
-      width: '100%',
-      padding: 12,
-      background: 'transparent',
-      border: '1px solid rgba(255,68,102,0.4)',
-      borderRadius: 8,
-      color: '#ff4466',
-      fontFamily: 'monospace',
-      cursor: 'pointer',
-      marginTop: 8,
-      fontSize: '0.82rem',
-    },
-    error: { color: '#ff4466', fontSize: '0.72rem', textAlign: 'center' as const, marginTop: 8 },
+    input: { width: '100%', padding: '12px', background: '#0c1520', border: '1px solid rgba(0,179,247,0.3)', borderRadius: 8, color: '#e8f4fd', fontFamily: 'monospace', fontSize: '1.2rem', letterSpacing: '0.3em', textAlign: 'center', outline: 'none', marginBottom: 12 },
+    btn: { width: '100%', padding: 13, background: '#00b3f7', border: 'none', borderRadius: 8, color: '#000', fontFamily: 'monospace', fontWeight: 700, cursor: 'pointer', fontSize: '0.85rem' },
+    btnRed: { width: '100%', padding: 12, background: 'transparent', border: '1px solid rgba(255,68,102,0.4)', borderRadius: 8, color: '#ff4466', fontFamily: 'monospace', cursor: 'pointer', marginTop: 8, fontSize: '0.82rem' },
+    error: { color: '#ff4466', fontSize: '0.72rem', textAlign: 'center', marginTop: 8 },
     layers: { display: 'flex', gap: 4, marginBottom: 16 },
-    layerDotBase: { flex: 1, height: 3, borderRadius: 2 },
+    layerDotBase: { flex: 1, height: 3, borderRadius: 2 }
   }
 
-  const layerIndex = { totp: 0, phone: 1, email_otp: 2, biometric: 3, done: 4 }
-  const currentIndex = layerIndex[layer]
+  const currentIndex = { totp: 0, phone: 1, email_otp: 2, biometric: 3, done: 4 }[layer]
 
   return (
     <div style={s.wrap}>
-      {/* Progress Bar */}
+      {/* പ്രോഗ്രസ് ബാർ */}
       <div style={s.layers}>
         {[0, 1, 2, 3].map((i) => (
-          <div
-            key={i}
-            style={{
-              ...s.layerDotBase,
-              background: i < currentIndex ? '#00ff88' : i === currentIndex ? '#00b3f7' : 'rgba(255,255,255,0.1)',
-            }}
-          />
+          <div key={i} style={{ ...s.layerDotBase, background: i < currentIndex ? '#00ff88' : i === currentIndex ? '#00b3f7' : 'rgba(255,255,255,0.1)' }} />
         ))}
       </div>
 
-      {/* Transaction Info */}
       <div style={s.info}>
-        {amount && (
-          <div style={s.row}>
-            <span style={s.label}>Amount</span>
-            <span style={s.val}>{amount}</span>
-          </div>
-        )}
-        {to && (
-          <div style={s.row}>
-            <span style={s.label}>To</span>
-            <span style={s.val}>
-              {to.slice(0, 8)}...{to.slice(-6)}
-            </span>
-          </div>
-        )}
-        <div style={s.row}>
-          <span style={s.label}>TX ID</span>
-          <span style={s.val}>{txId.slice(0, 10)}...</span>
-        </div>
+        <div style={s.row}><span>Amount</span><span>{amount || '0.00'}</span></div>
+        <div style={s.row}><span>To</span><span>{to?.slice(0, 6)}...{to?.slice(-4)}</span></div>
       </div>
 
-      {/* Layer 1: TOTP */}
       {layer === 'totp' && (
         <>
-          <div style={s.title}>🔢 LAYER 1 · GOOGLE AUTHENTICATOR</div>
-          <div style={s.step}>Enter your 6-digit authenticator code</div>
-          <input
-            style={s.input}
-            type="text"
-            maxLength={6}
-            value={totp}
-            onChange={(e) => setTotp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-            onKeyDown={(e) => e.key === 'Enter' && handleTotp()}
-            placeholder="000000"
-            autoFocus
-          />
-          <button style={s.btn} onClick={handleTotp} disabled={loading || totp.length !== 6}>
-            {loading ? 'Verifying...' : 'Verify →'}
-          </button>
+          <div style={s.title}>🔢 LAYER 1 · AUTHENTICATOR</div>
+          <input style={s.input} type="text" maxLength={6} value={totp} onChange={(e) => setTotp(e.target.value)} placeholder="000000" />
+          <button style={s.btn} onClick={handleTotp} disabled={loading}>{loading ? 'Checking...' : 'Verify 🦋'}</button>
           <button style={s.btnRed} onClick={onRejected}>Cancel</button>
-          {error && <div style={s.error}>{error}</div>}
         </>
       )}
 
-      {/* Layer 2: Phone */}
       {layer === 'phone' && (
-        <>
+        <div style={{ textAlign: 'center' }}>
           <div style={s.title}>📱 LAYER 2 · PHONE APPROVAL</div>
-          <div style={s.step}>Check your phone for approval</div>
-          <div style={{ textAlign: 'center', padding: '30px 0' }}>
-            {phoneStatus === 'waiting' && (
-              <>
-                <div style={{ fontSize: '3rem', marginBottom: 12 }}>📱</div>
-                <div style={{ color: '#e8f4fd', fontSize: '0.9rem' }}>Waiting for approval...</div>
-              </>
-            )}
-            {phoneStatus === 'approved' && <div style={{ color: '#00ff88', fontSize: '1.1rem', fontWeight: 700 }}>✅ Phone Approved!</div>}
-          </div>
-          <button style={s.btnRed} onClick={onRejected}>Cancel</button>
-        </>
+          <div style={{ fontSize: '3rem', margin: '20px 0' }}>{phoneStatus === 'waiting' ? '⏳' : '✅'}</div>
+          <p>{phoneStatus === 'waiting' ? 'Check your mobile notification...' : 'Approved!'}</p>
+        </div>
       )}
 
-      {/* Layer 3: Email OTP */}
       {layer === 'email_otp' && (
         <>
           <div style={s.title}>📧 LAYER 3 · EMAIL OTP</div>
-          <div style={s.step}>OTP sent to {email}</div>
-          {!otpSent ? (
-            <button style={{ ...s.btn, marginBottom: 12 }} onClick={sendEmailOtp}>
-              Send OTP to Email
-            </button>
-          ) : (
-            <>
-              <div style={{ color: '#00ff88', fontSize: '0.8rem', marginBottom: 12, textAlign: 'center' }}>
-                ✅ OTP sent • Resend in {otpCountdown}s
-              </div>
-              <input
-                style={s.input}
-                type="text"
-                maxLength={6}
-                value={emailOtp}
-                onChange={(e) => setEmailOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                onKeyDown={(e) => e.key === 'Enter' && handleEmailOtp()}
-                placeholder="000000"
-                autoFocus
-              />
-              <button style={s.btn} onClick={handleEmailOtp} disabled={loading || emailOtp.length !== 6}>
-                {loading ? 'Verifying...' : 'Verify OTP →'}
-              </button>
-            </>
-          )}
-          <button style={s.btnRed} onClick={onRejected}>Cancel</button>
-          {error && <div style={s.error}>{error}</div>}
+          <input style={s.input} type="text" maxLength={6} value={emailOtp} onChange={(e) => setEmailOtp(e.target.value)} placeholder="000000" />
+          <button style={s.btn} onClick={handleEmailOtp} disabled={loading}>Verify OTP 🦋</button>
         </>
       )}
 
-      {/* Layer 4: Biometric */}
       {layer === 'biometric' && (
-        <>
+        <div style={{ textAlign: 'center' }}>
           <div style={s.title}>👆 LAYER 4 · BIOMETRIC</div>
-          <div style={s.step}>Use Face ID or Fingerprint</div>
-          <div style={{ textAlign: 'center', fontSize: '3.5rem', margin: '24px 0' }}>👆</div>
+          <div style={{ fontSize: '4rem', margin: '20px 0', cursor: 'pointer' }} onClick={handleBiometric}>👆</div>
           <button style={s.btn} onClick={handleBiometric} disabled={loading}>
-            {loading ? 'Verifying...' : 'Authenticate'}
+            {loading ? 'Authenticating...' : 'Touch Sensor to Approve 🦋'}
           </button>
-          <button style={s.btnRed} onClick={onRejected}>Cancel</button>
           {error && <div style={s.error}>{error}</div>}
-        </>
-      )}
-
-      {/* Done */}
-      {layer === 'done' && (
-        <div style={{ textAlign: 'center', padding: '30px 0' }}>
-          <div style={{ fontSize: '3.5rem', marginBottom: 12 }}>✅</div>
-          <div style={{ color: '#00ff88', fontSize: '1.2rem', fontWeight: 700 }}>Transaction Approved!</div>
-          <div style={{ color: 'rgba(232,244,253,0.5)', marginTop: 8 }}>All 5 security layers passed</div>
         </div>
       )}
+
+      {layer === 'done' && (
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '4rem' }}>✅</div>
+          <h2 style={{ color: '#00ff88' }}>Success!</h2>
+          <p>Transaction Authorized 🦋</p>
+        </div>
+      )}
+      
+      {error && layer !== 'biometric' && <div style={s.error}>{error}</div>}
     </div>
   )
-  }
+}
