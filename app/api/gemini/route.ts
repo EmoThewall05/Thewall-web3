@@ -1,45 +1,50 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-// Gemini സെറ്റപ്പ്
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages } = await req.json();
-    const lastMessage = messages?.[messages.length - 1];
-    const userPrompt = lastMessage?.parts?.[0]?.text || lastMessage?.text || 'hi';
+    const { message, history } = await req.json()
+    if (!message) return NextResponse.json({ reply: 'Please send a message! 🦋' })
 
-    // Gemini 1.5 Flash - വേഗതയ്ക്ക് വേണ്ടി
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // Gemini API calling using Fetch (Works perfectly in Next.js Edge/Serverless)
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [
+          {
+            role: 'user',
+            parts: [{ text: `System Instruction: You are Emowall AI Web3 🦋 — guardian for TheWall crypto wallet. 
+              Supported Chains: 
+              1. Earth 🌍 (Ethereum)
+              2. Birth ₿ (Bitcoin)
+              3. Soul 🌟 (Solana)
+              4. Moon 🌙 (Monad)
+              5. Orbit 🪐 (Arbitrum)
+              6. Base 🏠 (Base Chain)
+              
+              Role: Help with swaps, gasless transactions via Alchemy, and social login. 
+              Tone: Be concise, protective, and professional. 
+              Rule: Always end every single message with 🦋.
+              
+              Context/History: ${JSON.stringify(history || [])}` }]
+          },
+          {
+            role: 'user',
+            parts: [{ text: message }]
+          }
+        ]
+      })
+    })
 
-    // Emowall AI - Guardian System Instructions
-    const prompt = `You are Emowall AI, the Web3 Guardian. 
-    You protect the user's wallet across these specific chains:
-    1. Earth 🌍 (Ethereum)
-    2. Birth ₿ (Bitcoin)
-    3. Soul 🌟 (Solana)
-    4. Moon 🌙 (Monad)
-    5. Orbit 🪐 (Arbitrum)
-    6. Base 🏠 (Base Chain)
+    const data = await response.json()
+    
+    // Extracting the text response from Gemini
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'I am here to protect your assets! 🦋'
+    
+    return NextResponse.json({ reply })
 
-    Your tone: Highly protective, professional, and concise. 
-    Always use the 🦋 emoji in every reply.
-    When talking about chains, use their sacred names: Earth, Birth, Soul, Moon, Orbit, and Base.
-
-    User says: ${userPrompt}`;
-
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
-
-    return NextResponse.json({ reply: text });
-
-  } catch (error) {
-    console.error("Gemini Error:", error);
-    // എറർ വന്നാൽ കാണിക്കേണ്ട ബാക്കപ്പ് മെസ്സേജ്
-    return NextResponse.json({ 
-      reply: '🦋 I am monitoring your wallet across Earth, Birth, Soul, Moon, Orbit, and Base! Ask me anything about your security.' 
-    });
+  } catch (err) {
+    console.error("Gemini Error:", err)
+    return NextResponse.json({ reply: '⚠️ Emowall AI is temporarily unavailable. Stay safe! 🦋' })
   }
 }
