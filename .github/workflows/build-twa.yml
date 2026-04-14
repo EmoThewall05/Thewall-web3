@@ -1,56 +1,71 @@
-name: TWA Build (TheWall)
+// Version: 2.2 (Force Update for PWA Builder)
+const CACHE = 'thewall-v2.2';
 
-on:
-  push:
-    branches: [main]
-  workflow_dispatch:
+const SHELL = [
+  '/',
+  '/manifest.json',
+  '/icon-192.png',
+  '/icon-512.png',
+];
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+const SKIP_HOSTS = [
+  'alchemy.com',
+  'walletconnect.com',
+  'walletconnect.org',
+  'coingecko.com',
+  'anthropic.com',
+  'niledb.com',
+  'helius-rpc.com',
+  'generativelanguage.googleapis.com'
+];
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
+self.addEventListener('install', e => {
+  console.log('TheWall SW Installing... 🦋');
+  e.waitUntil(
+    caches.open(CACHE)
+      .then(c => c.addAll(SHELL))
+      .then(() => self.skipWaiting())
+  );
+});
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
+self.addEventListener('activate', e => {
+  console.log('TheWall SW Activated! 🛡️');
+  e.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+    ).then(() => self.clients.claim())
+  );
+});
 
-      # 🚀 ഇതാണ് ആ മാജിക് സ്റ്റെപ്പ്!
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+self.addEventListener('fetch', e => {
+  const url = new URL(e.request.url);
 
-      - name: Install Bubblewrap
-        run: npm install -g @bubblewrap/cli
+  if (e.request.method !== 'GET') return;
+  if (SKIP_HOSTS.some(h => url.hostname.includes(h))) return;
+  if (url.pathname.startsWith('/api/')) return;
 
-      - name: Build TWA
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-        run: |
-          # 1. ബബിൾവാപ്പിന് ആൻഡ്രോയിഡ് SDK-യുടെ പക്കാ ലൊക്കേഷൻ കാണിച്ചു കൊടുക്കുന്നു
-          mkdir -p ~/.bubblewrap
-          echo "{\"jdkPath\":\"$JAVA_HOME\",\"androidSdkPath\":\"$ANDROID_SDK_ROOT\"}" > ~/.bubblewrap/config.json
-          
-          # 2. മാനിഫെസ്റ്റ് സെറ്റപ്പ്
-          echo '{"packageId":"com.emobies.thewall","host":"thewall.e-mobies.com","name":"TheWall","launcherName":"TheWall","displayMode":"standalone","themeColor":"#07080B","navigationColor":"#07080B","backgroundColor":"#07080B","enableNotifications":true,"startUrl":"/","iconUrl":"https://thewall.e-mobies.com/icon-512.png","maskableIconUrl":"https://thewall.e-mobies.com/icon-512.png","splashScreenFadeOutDuration":300,"orientation":"any","shortcuts":[],"signingKey":{"path":"./android.keystore","alias":"thewall"},"appVersionName":"3.0.0","appVersionCode":300,"generatorApp":"bubblewrap-cli","fallbackType":"customtabs"}' > twa-manifest.json
+  if (SHELL.includes(url.pathname)) {
+    e.respondWith(
+      caches.match(e.request).then(res => res || fetch(e.request))
+    );
+    return;
+  }
 
-          # 3. കീസ്റ്റോർ ഉണ്ടാക്കുന്നു
-          keytool -genkey -v -keystore android.keystore -alias thewall -keyalg RSA -keysize 2048 -validity 10000 -storepass "$KEYSTORE_PASSWORD" -keypass "$KEYSTORE_PASSWORD" -dname "CN=Divin, OU=Dwin, O=Dwin, L=Dubai, S=Dubai, C=AE"
+  e.respondWith(
+    fetch(e.request)
+      .then(res => {
+        if (res.status === 200) {
+          const clone = res.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone));
+        }
+        return res;
+      })
+      .catch(() => caches.match(e.request))
+  );
+});
 
-          # 4. ബിൽഡ് (യെസ് അടിക്കാൻ 'yes |' ഉപയോഗിക്കുന്നു)
-          yes | bubblewrap build --skipCheck --signingKeyPassword "$KEYSTORE_PASSWORD" --signingKeyStorePassword "$KEYSTORE_PASSWORD"
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: thewall-apk
-          path: |
-            *.apk
-            *.aab
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
