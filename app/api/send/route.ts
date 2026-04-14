@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// ── Real ETH transaction broadcast via Alchemy ──
+// ── ETH Transaction via Alchemy ──
 async function broadcastEthTx(signedTx: string): Promise<string> {
   const alchemyKey = process.env.ALCHEMY_API_KEY
   const rpcUrl = `https://eth-mainnet.g.alchemy.com/v2/${alchemyKey}`
@@ -16,12 +16,11 @@ async function broadcastEthTx(signedTx: string): Promise<string> {
   })
   const data = await res.json()
   if (data.error) throw new Error(data.error.message)
-  return data.result // tx hash
+  return data.result
 }
 
-// ── Real SOL transaction broadcast via Helius (Updated for Soul Wallet) ──
+// ── SOL Transaction via Helius ──
 async function broadcastSolTx(signedTx: string): Promise<string> {
-  // നീ Vercel-ൽ ആഡ് ചെയ്ത NEXT_PUBLIC_HELIUS_KEY ഇവിടെ ഉപയോഗിക്കുന്നു
   const heliusKey = process.env.NEXT_PUBLIC_HELIUS_KEY 
   const rpcUrl = `https://mainnet.helius-rpc.com/?api-key=${heliusKey}`
 
@@ -36,7 +35,7 @@ async function broadcastSolTx(signedTx: string): Promise<string> {
   })
   const data = await res.json()
   if (data.error) throw new Error(data.error.message)
-  return data.result // tx signature
+  return data.result
 }
 
 export async function POST(req: NextRequest) {
@@ -46,7 +45,7 @@ export async function POST(req: NextRequest) {
 
     if (!action) return NextResponse.json({ error: 'Action required' }, { status: 400 })
 
-    // --- SOLANA PREPARE (Helius) ---
+    // SOLANA PREPARE
     if (action === 'prepare' && chain === 'SOL') {
       const heliusKey = process.env.NEXT_PUBLIC_HELIUS_KEY
       const rpcUrl = `https://mainnet.helius-rpc.com/?api-key=${heliusKey}`
@@ -72,33 +71,21 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    // --- SOLANA BROADCAST ---
-    if (action === 'broadcast' && chain === 'SOL') {
+    // BROADCAST LOGIC
+    if (action === 'broadcast') {
       if (!signedTx) throw new Error('signedTx required')
-      const txSig = await broadcastSolTx(signedTx)
+      const txHash = (chain === 'SOL') ? await broadcastSolTx(signedTx) : await broadcastEthTx(signedTx)
+      
       return NextResponse.json({
         success: true,
-        chain: 'SOL',
-        txHash: txSig,
-        explorerUrl: `https://solscan.io/tx/${txSig}`,
-      })
-    }
-
-    // --- ETHEREUM BROADCAST ---
-    if (action === 'broadcast' && chain === 'ETH') {
-      if (!signedTx) throw new Error('signedTx required')
-      const txHash = await broadcastEthTx(signedTx)
-      return NextResponse.json({
-        success: true,
-        chain: 'ETH',
+        chain,
         txHash,
-        explorerUrl: `https://etherscan.io/tx/${txHash}`,
+        explorerUrl: chain === 'SOL' ? `https://solscan.io/tx/${txHash}` : `https://etherscan.io/tx/${txHash}`,
       })
     }
 
-    return NextResponse.json({ error: 'Invalid action/chain' }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
   } catch (e: any) {
-    console.error('Send error:', e)
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }
