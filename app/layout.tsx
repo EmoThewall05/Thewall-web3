@@ -12,16 +12,13 @@ export const metadata: Metadata = {
   title: '⬡ THE WALL',
   description: '5-Chain Gasless Web3 Wallet — No Seed Phrase • Emowall AI Guardian',
   manifest: '/manifest.json',
-  themeColor: '#07080B',
+  themeColor: '#FF5500',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
     title: 'TheWall',
   },
-  icons: {
-    icon: '/icon-192.png',
-    apple: '/icon-192.png',
-  },
+  icons: { icon: '/icon-192.png', apple: '/icon-192.png' },
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -29,18 +26,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en">
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#07080B" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
+        <meta name="theme-color" content="#FF5500" />
       </head>
-      <body className="bg-[#07080B] text-white">
+      <body className="bg-[#07080B]">
         <WalletProvider>
           <SWRegister />
-          <main className="min-h-screen">
-            {children}
-          </main>
+          {children}
           <EmowallAIChatWrapper />
           <SpeedInsights />
           <Analytics />
