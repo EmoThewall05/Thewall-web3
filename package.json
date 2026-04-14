@@ -2,7 +2,7 @@
   "name": "thewall",
   "version": "3.0.0",
   "private": true,
-  "description": "TheWall — Web3 Wallet · 5 Chains · Gasless · No Seed Phrase",
+  "description": "TheWall — Web3 Wallet · 6 Chains · Gasless · No Seed Phrase",
   "author": "Thewin K K (Dwin 05) — India→ Dubai",
   "scripts": {
     "dev": "next dev",
@@ -41,15 +41,5 @@
     "@coinbase/cdp-sdk": {
       "axios": "^1.15.0"
     }
-  },
-  "keywords": [
-    "web3",
-    "wallet",
-    "ethereum",
-    "solana",
-    "gasless",
-    "thewall",
-    "emowall",
-    "dwin"
-  ]
+  }
 }
