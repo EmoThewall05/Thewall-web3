@@ -27,10 +27,25 @@ export async function POST(req: NextRequest) {
     })
 
     const data = await response.json()
+    
+    // ✅ ADD DEBUG LOGGING
+    console.log('🦋 Gemini Response:', data)
+    
+    // ✅ CHECK FOR ERRORS
+    if (data.error) {
+      console.error('🦋 Gemini Error:', data.error)
+      return NextResponse.json({ 
+        reply: `🦋 Error: ${data.error.message || 'API Error'}` 
+      })
+    }
+    
     const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "🦋 Listening..."
     return NextResponse.json({ reply })
 
-  } catch (err) {
-    return NextResponse.json({ reply: 'Scanning the perimeter... Try again! 🦋' })
+  } catch (err: any) {
+    console.error('🦋 Catch Error:', err.message)
+    return NextResponse.json({ 
+      reply: `🦋 Error: ${err.message || 'Try again!'}` 
+    })
   }
 }
