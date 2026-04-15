@@ -1,4 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+
+# (Paste code, then Ctrl+O, Enter, Ctrl+X)
+
+# Verify
+ls app/api/ai/route.tsimport { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
   try {
