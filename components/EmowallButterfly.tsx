@@ -212,7 +212,7 @@ export default function EmowallButterfly() {
       const data=await res.json()
       const reply=data?.reply||'🦋 Ask me about your wallet!'
       chatHistory.current.push({role:'user',content:val})
-      chatHistory.current.push({role:'assistant',content:reply})
+      chatHistory.current.push({role:'model',content:reply})
       setMsgs(p=>[...p.slice(0,-1),{role:'ai',text:reply}])
     } catch {
       setMsgs(p=>[...p.slice(0,-1),{role:'ai',text:'🦋 Ask me about ETH, SOL, BTC, security or swaps!'}])
