@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ reply: 'Emowall AI: Scanning... (Missing Key) 🦋' })
     }
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${process.env.GEMINI_API_KEY}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -27,10 +27,8 @@ export async function POST(req: NextRequest) {
     })
 
     const data = await response.json()
-    console.log('🦋 Gemini Response:', data)
 
     if (data.error) {
-      console.error('🦋 Gemini Error:', data.error)
       return NextResponse.json({ reply: `🦋 Error: ${data.error.message || 'API Error'}` })
     }
 
@@ -38,7 +36,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ reply })
 
   } catch (err: any) {
-    console.error('🦋 Catch Error:', err.message)
     return NextResponse.json({ reply: `🦋 Error: ${err.message || 'Try again!'}` })
   }
 }
