@@ -1,13 +1,9 @@
-
-# (Paste code, then Ctrl+O, Enter, Ctrl+X)
-
-# Verify
-ls app/api/ai/route.tsimport { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
   try {
     const { message, history } = await req.json()
-    
+
     if (!process.env.GEMINI_API_KEY) {
       return NextResponse.json({ reply: 'Emowall AI: Scanning... (Missing Key) 🦋' })
     }
@@ -31,25 +27,18 @@ export async function POST(req: NextRequest) {
     })
 
     const data = await response.json()
-    
-    // ✅ ADD DEBUG LOGGING
     console.log('🦋 Gemini Response:', data)
-    
-    // ✅ CHECK FOR ERRORS
+
     if (data.error) {
       console.error('🦋 Gemini Error:', data.error)
-      return NextResponse.json({ 
-        reply: `🦋 Error: ${data.error.message || 'API Error'}` 
-      })
+      return NextResponse.json({ reply: `🦋 Error: ${data.error.message || 'API Error'}` })
     }
-    
+
     const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "🦋 Listening..."
     return NextResponse.json({ reply })
 
   } catch (err: any) {
     console.error('🦋 Catch Error:', err.message)
-    return NextResponse.json({ 
-      reply: `🦋 Error: ${err.message || 'Try again!'}` 
-    })
+    return NextResponse.json({ reply: `🦋 Error: ${err.message || 'Try again!'}` })
   }
 }
