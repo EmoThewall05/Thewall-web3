@@ -23,20 +23,33 @@ export async function POST(req: NextRequest) {
       model: 'gemini-2.5-flash',
     });
 
-    // System prompt as the first user message (most stable approach)
+    // System prompt (sent once at the beginning)
     const systemPrompt = `You are Emowall AI 🦋, the Web3 guardian of TheWall Wallet. 
 Be futuristic, concise, and helpful. You support ETH, SOL, BTC, ARB, MON, BASE. 
 End every response with 🦋.`;
 
-    // Build contents array
-    const contents: any[] = [
-      { role: 'user', parts: [{ text: systemPrompt }] },   // System prompt first
-      ...history.map((h: any) => ({
+    // Build the contents array in the correct SDK format
+    const contents: any[] = [];
+
+    // Add system prompt as the first content
+    contents.push({
+      role: 'user',
+      parts: [{ text: systemPrompt }]
+    });
+
+    // Add conversation history
+    history.forEach((h: any) => {
+      contents.push({
         role: h.role === 'user' ? 'user' : 'model',
         parts: [{ text: h.content || '' }]
-      })),
-      { role: 'user', parts: [{ text: message }] }         // Current user message
-    ];
+      });
+    });
+
+    // Add the current user message
+    contents.push({
+      role: 'user',
+      parts: [{ text: message }]
+    });
 
     const result = await model.generateContent(contents);
     const reply = result.response.text() || '🦋 Listening...';
