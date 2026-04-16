@@ -1,41 +1,60 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export async function POST(req: NextRequest) {
   try {
-    const { message, history } = await req.json()
+    const { message, history } = await req.json();
 
-    if (!process.env.X_AI_API_KEY) {
-      return NextResponse.json({ reply: 'Emowall AI: Scanning... (Missing Key) 🦋' })
+    if (!message) {
+      return NextResponse.json({ 
+        reply: 'Emowall AI: Scanning... (No message provided) 🦋' 
+      });
     }
 
-    const response = await fetch('https://api.x.ai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.X_AI_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: 'grok-3-mini',
-        messages: [
-          { role: 'system', content: 'You are Emowall AI 🦋, the Web3 guardian of TheWall Wallet. Be futuristic, concise, and helpful. You support ETH, SOL, BTC, ARB, MON, BASE. End every response with 🦋.' },
-          ...(history || []).map((h: any) => ({
-            role: h.role === 'user' ? 'user' : 'assistant',
-            content: h.content || ''
-          })),
-          { role: 'user', content: message }
-        ]
-      })
-    })
-
-    const data = await response.json()
-    if (data.error) {
-      return NextResponse.json({ reply: `🦋 Error: ${data.error.message || 'API Error'}` })
+    if (!process.env.GEMINI_API_KEY) {
+      return NextResponse.json({ 
+        reply: 'Emowall AI: Scanning... (Missing Gemini Key) 🦋' 
+      });
     }
 
-    const reply = data.choices?.[0]?.message?.content || '🦋 Listening...'
-    return NextResponse.json({ reply })
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+    // Build conversation history for Gemini
+    const contents: any[] = [];
+
+    // Add previous history
+    (history || []).forEach((h: any) => {
+      contents.push({
+        role: h.role === 'user' ? 'user' : 'model',
+        parts: [{ text: h.content || '' }]
+      });
+    });
+
+    // Add current user message
+    contents.push({
+      role: 'user',
+      parts: [{ text: message }]
+    });
+
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-2.5-flash',   // Recommended free-tier model (fast & capable)
+      systemInstruction: `You are Emowall AI 🦋, the Web3 guardian of TheWall Wallet. 
+Be futuristic, concise, and helpful. You support ETH, SOL, BTC, ARB, MON, BASE. 
+End every response with 🦋.`
+    });
+
+    const result = await model.generateContent(contents);
+    const reply = result.response.text() || '🦋 Listening...';
+
+    return NextResponse.json({ reply });
 
   } catch (err: any) {
-    return NextResponse.json({ reply: `🦋 Error: ${err.message || 'Try again!'}` })
+    console.error('Gemini API Error:', err);
+    
+    // Full error logging (as you requested earlier)
+    const errorMessage = err?.message || JSON.stringify(err) || 'Try again!';
+    return NextResponse.json({ 
+      reply: `🦋 Error: ${errorMessage}` 
+    });
   }
 }
