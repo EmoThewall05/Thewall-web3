@@ -7,25 +7,35 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm'
 
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
 
+      - name: Init TWA
+        run: yes | bubblewrap init --manifest https://thewall.e-mobies.com/manifest.json
+        timeout-minutes: 10
+
       - name: Build TWA APK
-        run: |
-          echo "Starting TWA Build Process..."
-          # ഇവിടെയാണ് നമ്മൾ 'yes' കമാൻഡ് ഉപയോഗിക്കുന്നത്
-          yes | bubblewrap build
+        run: yes | bubblewrap build --skipPwaValidation
+        timeout-minutes: 20
         env:
-          JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
+          JAVA_HOME: ${{ env.JAVA_HOME }}
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
