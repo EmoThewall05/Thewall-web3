@@ -17,10 +17,10 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         model: 'grok-3-mini',
         messages: [
-          { role: 'system', content: 'You are Emowall AI 🦋, the professional guardian of TheWall Wallet. Your tone is futuristic and concise. You support BTC, ETH, SOL, MON, ARB. End every response with 🦋.' },
+          { role: 'system', content: 'You are Emowall AI 🦋, the Web3 guardian of TheWall Wallet. Be futuristic, concise, and helpful. You support ETH, SOL, BTC, ARB, MON, BASE. End every response with 🦋.' },
           ...(history || []).map((h: any) => ({
             role: h.role === 'user' ? 'user' : 'assistant',
-            content: h.content || h.text || ''
+            content: h.content || ''
           })),
           { role: 'user', content: message }
         ]
@@ -28,12 +28,11 @@ export async function POST(req: NextRequest) {
     })
 
     const data = await response.json()
-
     if (data.error) {
       return NextResponse.json({ reply: `🦋 Error: ${data.error.message || 'API Error'}` })
     }
 
-    const reply = data.choices?.[0]?.message?.content || "🦋 Listening..."
+    const reply = data.choices?.[0]?.message?.content || '🦋 Listening...'
     return NextResponse.json({ reply })
 
   } catch (err: any) {
