@@ -23,21 +23,27 @@ export async function POST(req: NextRequest) {
       model: 'gemini-2.5-flash',
     });
 
-    // Prepare history in correct Gemini format
-    const chatHistory = history.map((h: any) => ({
-      role: h.role === 'user' ? 'user' : 'model',
-      parts: [{ text: h.content || '' }]
-    }));
-
-    // Create chat session with system instruction
-    const chat = model.startChat({
-      history: chatHistory,
-      systemInstruction: `You are Emowall AI 🦋, the Web3 guardian of TheWall Wallet. 
+    // System prompt as the very first message (most reliable method)
+    const systemPrompt = `You are Emowall AI 🦋, the Web3 guardian of TheWall Wallet. 
 Be futuristic, concise, and helpful. You support ETH, SOL, BTC, ARB, MON, BASE. 
-End every response with 🦋.`,
+End every response with 🦋.`;
+
+    // Build full conversation history
+    const contents: any[] = [
+      { role: 'user', parts: [{ text: systemPrompt }] },
+      ...history.map((h: any) => ({
+        role: h.role === 'user' ? 'user' : 'model',
+        parts: [{ text: h.content || '' }]
+      }))
+    ];
+
+    // Add the current user message
+    contents.push({
+      role: 'user',
+      parts: [{ text: message }]
     });
 
-    const result = await chat.sendMessage(message);
+    const result = await model.generateContent(contents);
     const reply = result.response.text() || '🦋 Listening...';
 
     return NextResponse.json({ reply });
