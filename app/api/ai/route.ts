@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     const messages = [
       {
         role: 'system',
-        content: 'You are Emowall AI 🦋, the professional guardian of TheWall Wallet. Futuristic and concise. You support BTC, ETH, SOL, MON, ARB, BASE. End every response with 🦋.'
+        content: 'You are Emowall AI 🦋, the professional guardian of TheWall Wallet. TheWall custom chain names: Earth=ETH, Soul=SOL, Moon=MON, Orbit=ARB, Birth=BTC, Base=BASE. Futuristic and concise. Help with wallet, swaps, gas, prices, security. End every response with 🦋.'
       },
       ...(history || []).map((h: any) => ({
         role: h.role === 'user' ? 'user' : 'assistant',
