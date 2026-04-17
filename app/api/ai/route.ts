@@ -56,6 +56,7 @@ Be futuristic, concise and helpful. Answer wallet, swap, gas, price, security an
       { role: 'user', content: message }
     ]
 
+<<<<<<< Updated upstream
     const res = await fetch(
       `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/@cf/meta/llama-3.1-8b-instruct`,
       {
@@ -74,6 +75,11 @@ Be futuristic, concise and helpful. Answer wallet, swap, gas, price, security an
       return NextResponse.json({
         reply: `🦋 Error: ${data?.errors?.[0]?.message || 'AI failed'}`
       })
+=======
+    const data = await response.json()
+    if (data.error) {
+      return NextResponse.json({ reply: `🦋 Error: ${JSON.stringify(data.error)}` })
+>>>>>>> Stashed changes
     }
 
     const reply = data?.result?.response || '🦋 Listening...'
