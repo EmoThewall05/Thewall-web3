@@ -4,38 +4,50 @@ export async function POST(req: NextRequest) {
   try {
     const { message, history } = await req.json()
 
-    if (!process.env.X_AI_API_KEY) {
-      return NextResponse.json({ reply: 'Emowall AI: Scanning... (Missing Key) 🦋' })
+    const accountId = process.env.CLOUDFLARE_ACCOUNT_ID
+    const apiToken = process.env.CLOUDFLARE_API_TOKEN
+
+    if (!accountId || !apiToken) {
+      return NextResponse.json({ reply: '🦋 Missing Cloudflare config' })
     }
 
-    const response = await fetch('https://api.x.ai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.X_AI_API_KEY}`
+    const messages = [
+      {
+        role: 'system',
+        content: 'You are Emowall AI 🦋, the professional guardian of TheWall Wallet. Futuristic and concise. You support BTC, ETH, SOL, MON, ARB, BASE. End every response with 🦋.'
       },
-      body: JSON.stringify({
-        model: 'grok-3-mini',
-        messages: [
-          { role: 'system', content: 'You are Emowall AI 🦋, the Web3 guardian of TheWall Wallet. Be futuristic, concise, and helpful. You support ETH, SOL, BTC, ARB, MON, BASE. End every response with 🦋.' },
-          ...(history || []).map((h: any) => ({
-            role: h.role === 'user' ? 'user' : 'assistant',
-            content: h.content || ''
-          })),
-          { role: 'user', content: message }
-        ]
-      })
-    })
+      ...(history || []).map((h: any) => ({
+        role: h.role === 'user' ? 'user' : 'assistant',
+        content: h.content || h.text || ''
+      })),
+      { role: 'user', content: message }
+    ]
 
-    const data = await response.json()
-    if (data.error) {
-      return NextResponse.json({ reply: `🦋 Error: ${JSON.stringify(data.error)}` })
+    const res = await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/@cf/meta/llama-3.1-8b-instruct`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ messages })
+      }
+    )
+
+    const data = await res.json()
+    console.log('CF response:', JSON.stringify(data))
+
+    if (!res.ok || data?.errors?.length > 0) {
+      return NextResponse.json({
+        reply: `🦋 Error: ${data?.errors?.[0]?.message || 'AI failed'}`
+      })
     }
 
-    const reply = data.choices?.[0]?.message?.content || '🦋 Listening...'
+    const reply = data?.result?.response || '🦋 Listening...'
     return NextResponse.json({ reply })
 
   } catch (err: any) {
-    return NextResponse.json({ reply: `🦋 Error: ${err.message || 'Try again!'}` })
+    return NextResponse.json({ reply: `🦋 Error: ${err.message}` })
   }
 }
