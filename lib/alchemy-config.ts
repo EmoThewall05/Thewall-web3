@@ -10,21 +10,17 @@ export const ALCHEMY_CONFIG = {
 }
 
 export const WALLETS = {
-  main:     '0xba24d47ef3f4e1000000000000000000f3f4e1',
-  treasury: '0xecbdebb62d636808a3e94183070585814127393d',
-  solana:   '5auZoWJxJodSU8dwgKmAfmphv5Z9Su3HAzEdLz1EUZs7',
-
-  // Soul wallet — full address server-side only
-  soul: process.env.SOUL_WALLET_ADDRESS || '',
+  main:     process.env.MAIN_WALLET_ADDRESS || '',
+  treasury: process.env.TREASURY_WALLET_ADDRESS || '',
+  solana:   process.env.SOLANA_WALLET_ADDRESS || '',
+  soul:     process.env.SOUL_WALLET_ADDRESS || '',
 }
-
-// ── Display helpers ──────────────────────────────────────────────────────────
 
 export function maskWallet(address: string, visibleChars = 5): string {
   if (!address || address.length < visibleChars * 2) return '••••••••'
-  return `\( {address.slice(0, visibleChars)}... \){address.slice(-visibleChars)}`
+  return `${address.slice(0, visibleChars)}...${address.slice(-visibleChars)}`
 }
 
 export const SOUL_WALLET_DISPLAY = maskWallet(
-  process.env.SOUL_WALLET_ADDRESS || '5auZoWJxJodSU8dwgKmAfmphv5Z9Su3HAzEdLz1EUZs7'
+  process.env.SOUL_WALLET_ADDRESS || ''
 )
