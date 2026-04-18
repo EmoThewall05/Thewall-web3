@@ -11,43 +11,61 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ reply: '🦋 Missing Cloudflare config' })
     }
 
+    // Fetch live prices from CoinGecko
+    let priceContext = ''
+    try {
+      const priceRes = await fetch(
+        'https://api.coingecko.com/api/v3/simple/price?ids=ethereum,solana,bitcoin,arbitrum,monad-testnet&vs_currencies=usd&include_24hr_change=true',
+        { next: { revalidate: 60 } }
+      )
+      const prices = await priceRes.json()
+      priceContext = `
+LIVE PRICES (real-time):
+- ETH (Earth): $${prices?.ethereum?.usd ?? 'N/A'} (${prices?.ethereum?.usd_24h_change?.toFixed(2) ?? '0'}% 24h)
+- SOL (Soul): $${prices?.solana?.usd ?? 'N/A'} (${prices?.solana?.usd_24h_change?.toFixed(2) ?? '0'}% 24h)
+- BTC (Birth): $${prices?.bitcoin?.usd ?? 'N/A'} (${prices?.bitcoin?.usd_24h_change?.toFixed(2) ?? '0'}% 24h)
+- ARB (Orbit): $${prices?.arbitrum?.usd ?? 'N/A'} (${prices?.arbitrum?.usd_24h_change?.toFixed(2) ?? '0'}% 24h)
+- MON (Moon): Testnet — no live price yet
+- BASE: Ethereum L2 — uses ETH`
+    } catch {
+      priceContext = 'Live prices temporarily unavailable.'
+    }
+
     const messages = [
       {
         role: 'system',
         content: `You are Emowall AI 🦋, the professional guardian of TheWall Wallet.
 
-ABOUT THEWALL: Built by Thewin (Dwin 05 / Emobies05), India 🇮🇳 → Dubai 🇦🇪. Built entirely on phone using Termux + Acode. No coding knowledge → 3.5 months → production Web3 wallet. Backed by Alchemy Ecosystem Fund. IMPORTANT: Never invent or hallucinate facts you do not know. If unsure, say I dont have that information instead of guessing. Keep answers concise and short.
+ABOUT THEWALL: Built by Thewin (Dwin 05 / Emobies05), India 🇮🇳 → Dubai 🇦🇪. Built entirely on phone using Termux + Acode. No coding knowledge → 3.5 months → production Web3 wallet. Backed by Alchemy Ecosystem Fund.
+
+IMPORTANT: Never invent or hallucinate facts. If unsure, say "I don't have that information." Keep answers concise.
 
 CHAINS (6 total):
 - 🌍 Earth = ETH (Ethereum)
-- 🌟 Soul = SOL (Solana)  
+- 🌟 Soul = SOL (Solana)
 - 🌙 Moon = MON (Monad)
 - 🪐 Orbit = ARB (Arbitrum)
 - ₿ Birth = BTC (Bitcoin)
 - 🔵 Base = BASE
 
+${priceContext}
+
 FEATURES:
-- No seed phrase — Email + Google Auth (TOTP) login only
+- No seed phrase — Email + Google Auth login only
 - Gasless transactions via Alchemy Gas Manager
-- WalletConnect (530+ wallets supported)
+- WalletConnect (530+ wallets)
 - Uniswap V3 swap integration
-- CoinGecko price charts (1D/7D/1M/3M/1Y)
-- CoinDesk live news feed
+- CoinGecko price charts
+- CoinDesk live news
 - Browser price alerts
-- Freeze wallet via emergency PIN
+- Emergency PIN wallet freeze
 - DApps: Uniswap, OpenSea, Aave, 1inch, Raydium
 
-SECURITY:
-- CodeQL Advanced scanning
-- Snyk vulnerability detection
-- Semgrep static analysis
-- Biometric 2FA support
-- Alchemy Webhook monitoring
-- PIN-based wallet freeze
+SECURITY: CodeQL, Snyk, Semgrep, Biometric 2FA, Alchemy Webhooks, PIN freeze.
 
-TECH STACK: Next.js 15, Alchemy RPC, WalletConnect (Reown AppKit), CoinGecko, CoinDesk RSS, NileDB (Postgres), Vercel.
+TECH STACK: Next.js 15, Alchemy RPC, WalletConnect, CoinGecko, NileDB, Vercel.
 
-Be futuristic, concise and helpful. Answer wallet, swap, gas, price, security and chain questions. End every response with 🦋.`
+Be futuristic, concise and helpful. End every response with 🦋.`
       },
       ...(history || []).map((h: any) => ({
         role: h.role === 'user' ? 'user' : 'assistant',
@@ -56,7 +74,6 @@ Be futuristic, concise and helpful. Answer wallet, swap, gas, price, security an
       { role: 'user', content: message }
     ]
 
-<<<<<<< Updated upstream
     const res = await fetch(
       `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/@cf/meta/llama-3.1-8b-instruct`,
       {
@@ -75,11 +92,6 @@ Be futuristic, concise and helpful. Answer wallet, swap, gas, price, security an
       return NextResponse.json({
         reply: `🦋 Error: ${data?.errors?.[0]?.message || 'AI failed'}`
       })
-=======
-    const data = await response.json()
-    if (data.error) {
-      return NextResponse.json({ reply: `🦋 Error: ${JSON.stringify(data.error)}` })
->>>>>>> Stashed changes
     }
 
     const reply = data?.result?.response || '🦋 Listening...'
