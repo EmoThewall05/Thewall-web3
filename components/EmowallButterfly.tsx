@@ -3,6 +3,9 @@ import { useEffect, useRef, useState } from 'react'
 
 type BfState = 'idle' | 'chat' | 'alert' | 'held'
 
+const EMO_KEY_STORAGE = 'emowall_key'
+const EMO_KEY_API = 'https://emo-key.vercel.app/api/index'
+
 function playFlutter(fast = false) {
   try {
     const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
@@ -50,6 +53,22 @@ function getWaypoints(W: number, H: number) {
 
 function ease(t: number) { return t<0.5?2*t*t:-1+(4-2*t)*t }
 
+// Auto get or generate emo_key
+async function getOrCreateEmoKey(): Promise<string> {
+  try {
+    const stored = localStorage.getItem(EMO_KEY_STORAGE)
+    if (stored) return stored
+
+    const res = await fetch(`${EMO_KEY_API}?name=thewall_user`)
+    const data = await res.json()
+    if (data?.success && data?.key) {
+      localStorage.setItem(EMO_KEY_STORAGE, data.key)
+      return data.key
+    }
+  } catch {}
+  return 'emo_guest'
+}
+
 export default function EmowallButterfly() {
   const bfRef   = useRef<HTMLDivElement>(null)
   const chatRef = useRef<HTMLDivElement>(null)
@@ -67,6 +86,7 @@ export default function EmowallButterfly() {
   const soundInt = useRef<any>(null)
   const stateRef = useRef<BfState>('idle')
   const flyRef   = useRef(true)
+  const emoKey   = useRef<string>('emo_guest')
 
   const [state,  setState_]  = useState<BfState>('idle')
   const [flying, setFlying]  = useState(true)
@@ -83,14 +103,8 @@ export default function EmowallButterfly() {
   const W = () => window.innerWidth  - 165
   const H = () => window.innerHeight - 155
 
-  function setState(s: BfState) {
-    stateRef.current = s
-    setState_(s)
-  }
-  function setFly(v: boolean) {
-    flyRef.current = v
-    setFlying(v)
-  }
+  function setState(s: BfState) { stateRef.current = s; setState_(s) }
+  function setFly(v: boolean) { flyRef.current = v; setFlying(v) }
 
   function startSound() {
     if (soundInt.current) clearInterval(soundInt.current)
@@ -194,7 +208,6 @@ export default function EmowallButterfly() {
   }
   function onChatUp() { chatDown.current=false }
 
-  // FIXED: correct format for /api/ai
   async function sendMsg() {
     const val=input.trim(); if (!val) return
     setInput('')
@@ -203,7 +216,10 @@ export default function EmowallButterfly() {
     try {
       const res=await fetch('/api/ai',{
         method:'POST',
-        headers:{'Content-Type':'application/json'},
+        headers:{
+          'Content-Type':'application/json',
+          'x-emo-key': emoKey.current
+        },
         body:JSON.stringify({
           message: val,
           history: chatHistory.current
@@ -220,9 +236,15 @@ export default function EmowallButterfly() {
   }
 
   useEffect(()=>{
+    // Auto get or create emo_key on mount
+    getOrCreateEmoKey().then(key => {
+      emoKey.current = key
+    })
+
     pos.current = { x: 100, y: 100 }
     wpRef.current = getWaypoints(window.innerWidth-165, window.innerHeight-155)
     startSound()
+
     function loop() {
       frame.current++
       const s=stateRef.current, fly=flyRef.current
@@ -297,7 +319,7 @@ export default function EmowallButterfly() {
             letterSpacing:1,textTransform:'uppercase'}}>Emowall AI 2.0 · drag to move</div>
         </div>
         <div style={{display:'flex',gap:6,padding:'8px 14px',borderBottom:'1px solid #627eea11',overflowX:'auto'}}>
-          {[{l:'ETH',c:'#627eea'},{l:'SOL',c:'#9945ff'},{l:'BTC',c:'#f7931a'},{l:'ARB',c:'#12aaff'},{l:'MON',c:'#00e5ff'}].map(t=>(
+          {[{l:'ETH',c:'#627eea'},{l:'SOL',c:'#9945ff'},{l:'BTC',c:'#f7931a'},{l:'ARB',c:'#12aaff'},{l:'MON',c:'#00e5ff'},{l:'BASE',c:'#0052ff'}].map(t=>(
             <div key={t.l} style={{padding:'3px 8px',borderRadius:20,fontSize:'0.6rem',border:`1px solid ${t.c}55`,
               color:t.c,background:`${t.c}11`,fontFamily:'monospace',whiteSpace:'nowrap',cursor:'pointer'}}>{t.l}</div>
           ))}
