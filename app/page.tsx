@@ -13,7 +13,7 @@ interface PriceAlert  { id: string; symbol: string; targetPrice: number; conditi
 interface SearchResult { address: string; ethBalance: number; ethUsd: number; txCount: number; loading: boolean; error: string }
 
 const MAIN_WALLET = ''
-const TREASURY    = ''
+const TREASURY    = '0x36F0C4Ce3ed7DbfeF2037b6275BFB3096B5e699F'
 const SOL_WALLET  = '5auZoWJxJodSU8dwgKmAfmphv5Z9Su3HAzEdLz1EUZs7'
 const GOAL_USD    = 6_200_000
 const EMOCOIN     = { balance: 250, priceUsd: 0.01 }
