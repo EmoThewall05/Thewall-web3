@@ -1,53 +1,51 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
-const ALCHEMY_SOL_URL = `https://solana-mainnet.g.alchemy.com/v2/${process.env.THEWALL_SOL_KEY}`;
 const SOLANA_ADDRESS = '5auZoWJxJodSU8dwgKmAfmphv5Z9Su3HAzEdLz1EUZs7';
 
+const RPC_URLS = [
+  process.env.THEWALL_SOL_KEY ? `https://solana-mainnet.g.alchemy.com/v2/${process.env.THEWALL_SOL_KEY}` : null,
+  process.env.NEXT_PUBLIC_HELIUS_URL || null,
+  'https://api.mainnet-beta.solana.com',
+  'https://solana-api.projectserum.com',
+].filter(Boolean) as string[];
+
+async function tryRPC(url: string) {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      jsonrpc: '2.0', id: 1,
+      method: 'getBalance',
+      params: [SOLANA_ADDRESS]
+    }),
+    signal: AbortSignal.timeout(5000)
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  return data;
+}
+
 export async function GET() {
-  if (!process.env.THEWALL_SOL_KEY) {
-    return NextResponse.json({
-      status: 'error',
-      message: 'Alchemy Solana key missing in environment variables'
-    }, { status: 500 });
-  }
-
-  try {
-    const res = await fetch(ALCHEMY_SOL_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        jsonrpc: '2.0',
-        id: 1,
-        method: 'getAccountInfo',
-        params: [
-          SOLANA_ADDRESS,
-          { encoding: 'base58' }
-        ]
-      })
-    });
-
-    if (!res.ok) {
-      throw new Error(`Alchemy error: ${res.status}`);
+  for (const url of RPC_URLS) {
+    try {
+      const data = await tryRPC(url);
+      const lamports = data?.result?.value ?? 0;
+      const solBalance = lamports / 1e9;
+      return NextResponse.json({
+        status: 'success',
+        address: SOLANA_ADDRESS,
+        solBalance,
+        lamports,
+        rpc: url.includes('alchemy') ? 'alchemy' : url.includes('helius') ? 'helius' : 'public'
+      });
+    } catch (e) {
+      continue;
     }
-
-    const data = await res.json();
-
-    return NextResponse.json({
-      status: 'success',
-      address: SOLANA_ADDRESS,
-      solanaData: data?.result,
-      note: 'Fetched from Alchemy Solana RPC'
-    });
-
-  } catch (error: any) {
-    console.error('Alchemy Solana fetch error:', error);
-    return NextResponse.json({
-      status: 'error',
-      message: error.message || 'Failed to fetch Solana data'
-    }, { status: 500 });
   }
+  return NextResponse.json({ status: 'error', solBalance: 0, message: 'All RPCs failed' }, { status: 500 });
 }
 
 export async function POST() {
-  return NextResponse.json({ status: 'ok', message: 'POST route active' });
+  return NextResponse.json({ status: 'ok' });
 }
