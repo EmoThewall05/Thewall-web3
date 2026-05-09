@@ -22,15 +22,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
 
-      - name: Init TWA
-        run: bubblewrap init --manifest https://thewall.e-mobies.com/manifest.json --directory twa-project
-        env:
-          BUBBLEWRAP_DISABLE_TELEMETRY: true
+      - name: Init TWA with expect
+        run: |
+          sudo apt-get install -y expect
+          expect -c '
+            set timeout 60
+            spawn bubblewrap init --manifest https://thewall.e-mobies.com/manifest.json --directory twa-project
+            expect "JDK" { send "No\r" }
+            expect eof
+          '
 
       - name: Build TWA APK
         run: |
