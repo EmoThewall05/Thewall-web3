@@ -26,20 +26,23 @@ jobs:
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
 
-      - name: Init TWA with expect
+      - name: Init TWA non-interactive
         run: |
-          sudo apt-get install -y expect
-          expect -c '
-            set timeout 60
-            spawn bubblewrap init --manifest https://thewall.e-mobies.com/manifest.json --directory twa-project
-            expect "JDK" { send "No\r" }
-            expect eof
-          '
+          echo '{"jdkPath":"","androidSdkPath":""}' > ~/.bubblewrap/config.json || true
+          printf 'No\n' | bubblewrap init \
+            --manifest https://thewall.e-mobies.com/manifest.json \
+            --directory twa-project || true
+          ls -la
 
       - name: Build TWA APK
         run: |
-          cd twa-project
-          bubblewrap build --skipPwaValidation
+          ls -la
+          if [ -d "twa-project" ]; then
+            cd twa-project && bubblewrap build --skipPwaValidation
+          else
+            echo "twa-project not created, init failed"
+            exit 1
+          fi
         timeout-minutes: 20
 
       - name: Upload APK
