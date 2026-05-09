@@ -23,10 +23,11 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install Bubblewrap and expect
+      - name: Install tools
         run: |
           npm install -g @bubblewrap/cli
           sudo apt-get install -y expect
+          sudo apt-get install -y android-sdk || true
 
       - name: Decode keystore
         run: echo "${{ secrets.TWA_KEYSTORE_BASE64 }}" | base64 --decode > android.keystore
@@ -38,6 +39,8 @@ jobs:
           spawn bubblewrap build --manifest twa-manifest.json --skipPwaValidation
           expect "JDK" { send "No\r" }
           expect "Path to your existing JDK" { send "/opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.18-8/x64\r" }
+          expect "Android SDK" { send "No\r" }
+          expect "Path to your existing Android SDK" { send "/usr/lib/android-sdk\r" }
           expect eof
           EXPECT
         env:
