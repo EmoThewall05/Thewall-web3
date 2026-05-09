@@ -26,27 +26,21 @@ jobs:
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
 
-      - name: Init TWA non-interactive
-        run: |
-          echo '{"jdkPath":"","androidSdkPath":""}' > ~/.bubblewrap/config.json || true
-          printf 'No\n' | bubblewrap init \
-            --manifest https://thewall.e-mobies.com/manifest.json \
-            --directory twa-project || true
-          ls -la
+      - name: Decode keystore
+        run: echo "${{ secrets.TWA_KEYSTORE_BASE64 }}" | base64 --decode > android.keystore
 
       - name: Build TWA APK
         run: |
-          ls -la
-          if [ -d "twa-project" ]; then
-            cd twa-project && bubblewrap build --skipPwaValidation
-          else
-            echo "twa-project not created, init failed"
-            exit 1
-          fi
+          bubblewrap build \
+            --manifest twa-manifest.json \
+            --skipPwaValidation
+        env:
+          BUBBLEWRAP_KEYSTORE_PASSWORD: ${{ secrets.TWA_KEYSTORE_PASSWORD }}
+          BUBBLEWRAP_KEY_PASSWORD: ${{ secrets.TWA_KEY_PASSWORD }}
         timeout-minutes: 20
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: TheWall-Release-APK
-          path: twa-project/*.apk
+          path: ./*.apk
