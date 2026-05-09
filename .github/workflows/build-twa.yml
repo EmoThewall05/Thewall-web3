@@ -23,17 +23,22 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install Bubblewrap
-        run: npm install -g @bubblewrap/cli
+      - name: Install Bubblewrap and expect
+        run: |
+          npm install -g @bubblewrap/cli
+          sudo apt-get install -y expect
 
       - name: Decode keystore
         run: echo "${{ secrets.TWA_KEYSTORE_BASE64 }}" | base64 --decode > android.keystore
 
       - name: Build TWA APK
         run: |
-          bubblewrap build \
-            --manifest twa-manifest.json \
-            --skipPwaValidation
+          expect << 'EXPECT'
+          set timeout 120
+          spawn bubblewrap build --manifest twa-manifest.json --skipPwaValidation
+          expect "JDK" { send "No\r" }
+          expect eof
+          EXPECT
         env:
           BUBBLEWRAP_KEYSTORE_PASSWORD: ${{ secrets.TWA_KEYSTORE_PASSWORD }}
           BUBBLEWRAP_KEY_PASSWORD: ${{ secrets.TWA_KEY_PASSWORD }}
