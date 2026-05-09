@@ -44,8 +44,14 @@ jobs:
           BUBBLEWRAP_KEY_PASSWORD: ${{ secrets.TWA_KEY_PASSWORD }}
         timeout-minutes: 20
 
+      - name: Find APK
+        run: find . -name "*.apk" 2>/dev/null
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: TheWall-Release-APK
-          path: ./*.apk
+          path: |
+            ./*.apk
+            ./app/build/outputs/apk/**/*.apk
+          if-no-files-found: warn
