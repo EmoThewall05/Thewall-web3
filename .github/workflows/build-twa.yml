@@ -34,9 +34,10 @@ jobs:
       - name: Build TWA APK
         run: |
           expect << 'EXPECT'
-          set timeout 120
+          set timeout 180
           spawn bubblewrap build --manifest twa-manifest.json --skipPwaValidation
           expect "JDK" { send "No\r" }
+          expect "Path to your existing JDK" { send "/opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.18-8/x64\r" }
           expect eof
           EXPECT
         env:
@@ -45,7 +46,7 @@ jobs:
         timeout-minutes: 20
 
       - name: Find APK
-        run: find . -name "*.apk" 2>/dev/null
+        run: find . -name "*.apk" 2>/dev/null || echo "No APK found"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
