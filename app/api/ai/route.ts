@@ -74,6 +74,22 @@ FEATURES:
 - Emergency PIN wallet freeze
 - DApps: Uniswap, OpenSea, Aave, 1inch, Raydium
 
+EMOCOINS (very important):
+- EmoCoins (EMC) is TheWall's native loyalty token
+- 1 EMC = $0.01 USD
+- Users start with 250 EMC
+- Earn more via: Daily Claim, Daily Check-in (+1/day), Refer a Friend (100 EMC), WhatsApp (+50 EMC one time), Daily Scratch (5-50 EMC)
+- 1,000 EMC can be converted to USDT/SOL/ETH
+- EMC runs on TheWall chain 🦋
+- Designed to reward loyal Emobies ecosystem users
+
+EMOBIES ECOSYSTEM:
+- TheWall = Web3 wallet (this app)
+- Emowall AI 2.0 = Family safety Flutter app (free for Kerala school children)
+- Emo AI Pro = Emotional intelligence chat app
+- Emobies = Mobile repair service platform (Kannur, Kerala + Dubai)
+- All powered by Seven Brains AI architecture
+
 SECURITY: CodeQL, Snyk, Semgrep, Biometric 2FA, Alchemy Webhooks, PIN freeze.
 
 TECH STACK: Next.js 15, Alchemy RPC, WalletConnect, CoinGecko, NileDB, Vercel.
