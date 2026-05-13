@@ -1,15 +1,23 @@
 # ⬡ THE WALL — Web3 Wallet
+**Protect your invisible valuable currencies.**
 
-> Protect your invisible valuable currencies.
-> Web3 · 6 Chains · Gasless · No Seed Phrase
+Web3 · 6 Chains · Gasless · No Seed Phrase
 
-Built by **Thewin (Dwin 05)** · India 🇮🇳 → Dubai 🇦🇪
-Built entirely on phone using Termux + Acode
+Built by **Thewin (Dwin 05)** · India 🇮🇳 → Dubai 🇦🇪  
+Built entirely on phone using **Termux + Acode**
+
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?logo=typescript)](https://www.typescriptlang.org)
+[![Alchemy](https://img.shields.io/badge/Alchemy-RPC%20%2B%20Gas-purple)](https://www.alchemy.com)
+[![WalletConnect](https://img.shields.io/badge/WalletConnect-Reown-2e3338?logo=walletconnect)](https://walletconnect.com)
+[![Vercel](https://img.shields.io/badge/Deployed-Vercel-black?logo=vercel)](https://vercel.com)
+[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
 ---
 
-## 🌍 Live
-**[thewall.e-mobies.com](https://thewall.e-mobies.com)**
+## 🌍 Live Demo
+
+🚀 **[thewall.e-mobies.com](https://thewall.e-mobies.com)**
 
 ---
 
@@ -17,107 +25,215 @@ Built entirely on phone using Termux + Acode
 
 | Feature | Description |
 |---------|-------------|
-| 🔐 No Seed Phrase | Email + Google Auth (TOTP) login |
-| ⚡ Gasless | Zero gas fees via Alchemy Gas Manager |
-| 🦋 Emowall AI | Grok-powered Web3 guardian |
-| 📊 Charts | CoinGecko candlestick 1D/7D/1M/3M/1Y |
-| 📰 News | CoinDesk live RSS feed |
-| 🔔 Alerts | Browser price notifications |
-| 🌐 DApps | Uniswap, OpenSea, Aave, 1inch, Raydium |
-| 🔄 Swap | UniSwap V3 integration |
-| ❄️ Freeze | Emergency PIN wallet lock |
-| 🔗 Connect | WalletConnect 530+ wallets |
+| 🔐 **No Seed Phrase** | Email + Google Auth (TOTP) login |
+| ⚡ **Gasless** | Zero gas fees via Alchemy Gas Manager |
+| 🦋 **Emowall AI** | Grok-powered Web3 guardian |
+| 📊 **Charts** | CoinGecko candlestick 1D/7D/1M/3M/1Y |
+| 📰 **News** | CoinDesk live RSS feed |
+| 🔔 **Alerts** | Browser price notifications |
+| 🌐 **DApps** | Uniswap, OpenSea, Aave, 1inch, Raydium |
+| 🔄 **Swap** | UniSwap V3 integration |
+| ❄️ **Freeze** | Emergency PIN wallet lock |
+| 🔗 **Connect** | WalletConnect 530+ wallets |
 
 ---
 
-## ⛓️ 6 Chains
+## ⛓️ Supported Chains
 
-| Name | Symbol | Chain |
-|------|--------|-------|
-| 🌍 Earth | ETH | Ethereum |
-| 🌟 Soul | SOL | Solana |
-| 🌙 Moon | MON | Monad |
-| 🪐 Orbit | ARB | Arbitrum |
-| ₿ Birth | BTC | Bitcoin |
-| 🔵 Base | BASE | Base |
+| Name | Symbol | Network | RPC |
+|------|--------|---------|-----|
+| 🌍 Earth | ETH | Ethereum | Alchemy |
+| 🌟 Soul | SOL | Solana | Helius |
+| 🌙 Moon | MON | Monad | Alchemy |
+| 🪐 Orbit | ARB | Arbitrum | Alchemy |
+| ₿ Birth | BTC | Bitcoin | Alchemy |
+| 🔵 Base | BASE | Base | Alchemy |
 
 ---
 
 ## 🛠️ Tech Stack
-Next.js 15      — Framework
-Alchemy         — RPC + Gas Manager (all 6 chains)
-WalletConnect   — Wallet integration (Reown AppKit)
-CoinGecko       — Price + Charts
-CoinDesk RSS    — News
-Grok AI (xAI)   — Emowall AI Web3
-NileDB          — Database (Postgres)
-Vercel          — Deployment
+
+| Layer | Technology |
+|-------|-----------|
+| **Framework** | Next.js 15 + React 19 |
+| **Language** | TypeScript 5.0 |
+| **RPC + Gas** | Alchemy (all 6 chains) |
+| **Wallet Connect** | Reown AppKit (530+ wallets) |
+| **Market Data** | CoinGecko + CoinDesk RSS |
+| **AI Guardian** | Grok API (xAI) |
+| **Database** | NileDB (Postgres) |
+| **Deployment** | Vercel |
+| **Styling** | TailwindCSS |
+
 ---
 
-## 🚀 Deploy
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+
+- npm or yarn
+
+### Clone & Install
 
 ```bash
-git clone https://github.com/Emobies-app/Thewall-web3
+git clone https://github.com/EmoThewall05/Thewall-web3.git
+cd Thewall-web3
 npm install
-npm run dev
 ```
 
 ### Environment Variables
-TOTP_SECRET=
-ALCHEMY_API_KEY=
-ALCHEMY_GAS_POLICY_ID=
-NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=
-GROK_API_KEY=
-ETHERSCAN_API_KEY=
-HELIUS_API_KEY=
-NILEDB_POSTGRES_URL=
+
+Create `.env.local`:
+
+```env
+# Alchemy (All chains RPC + Gas Manager)
+ALCHEMY_API_KEY=your_alchemy_api_key
+ALCHEMY_GAS_POLICY_ID=your_gas_policy_id
+
+# WalletConnect (Reown)
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id
+
+# Solana (Helius)
+HELIUS_API_KEY=your_helius_api_key
+
+# AI Guardian (Grok)
+GROK_API_KEY=your_grok_api_key
+
+# Blockchain Explorers
+ETHERSCAN_API_KEY=your_etherscan_key
+
+# Database
+NILEDB_POSTGRES_URL=your_postgres_url
+
+# Security
+TOTP_SECRET=your_totp_secret
+```
+
+### Run Development Server
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000)
+
+### Build for Production
+
+```bash
+npm run build
+npm start
+```
+
 ---
 
-## 🔐 Security
+## 🔐 Security Features
 
-- CodeQL Advanced scanning
-- Snyk vulnerability detection
-- Semgrep static analysis
-- PIN-based wallet freeze
-- Biometric 2FA support
-- Alchemy Webhook monitoring
+- ✅ **CodeQL Advanced** — Automated security scanning
+- ✅ **Snyk** — Vulnerability detection
+- ✅ **Semgrep** — Static analysis
+- ✅ **PIN-Based Freeze** — Emergency wallet lock
+- ✅ **Biometric 2FA** — Face/Fingerprint support
+- ✅ **Alchemy Webhooks** — Real-time monitoring
 
 ---
 
-## 🦋 Emowall AI
+## 🦋 Emowall AI — Web3 Guardian
 
-AI-powered Web3 guardian built with Grok (xAI).
-Watches your wallet 24/7 — ask about swaps,
-chains, gas, security, prices. Always watching. 🦋
+AI-powered Web3 guardian built with **Grok (xAI)**.
+
+Watches your wallet 24/7:
+- Ask about swaps, chains, gas fees
+- Get security alerts
+- Price monitoring
+- Transaction insights
+
+**Always watching** 🦋
 
 ---
 
 ## 🏆 Backed By
 
-Alchemy Ecosystem Fund · Personal credits from
-Mike Garland (Head of Product, Solana @ Alchemy)
+- **Alchemy Ecosystem Fund**
+- Personal credits from **Mike Garland** (Head of Product, Solana @ Alchemy)
 
 ---
 
 ## 📱 Part of Dwin Universe
 
-| App | Description |
-|-----|-------------|
-| 📱 Emobies | Mobile repair platform |
-| 🦋 Emowall AI | Multi-gen AI safety |
-| 🧱 TheWall | Web3 wallet (this) |
-| 🤖 Emo Robos | Robotics & automation |
-| 🧠 Emo AI Pro | Advanced AI platform |
+| Project | Description |
+|---------|-------------|
+| 📱 **Emobies** | Mobile repair platform (Play Store) |
+| 🦋 **Emowall AI 2.0** | Multi-generational AI safety (Play Store) |
+| 🧱 **TheWall** | Web3 wallet (this) — Live |
+| 🤖 **Emo Robos** | Robotics & automation |
+| 🧠 **Emo AI Pro** | Advanced emotional AI platform |
+| 🔑 **Emo-Key API** | Ecosystem key generator |
 
 ---
 
-## 👤 Developer
+## 📊 API Reference
+
+### Authentication
+
+```bash
+POST /api/auth/login
+POST /api/auth/register
+POST /api/auth/verify-totp
+```
+
+### Wallet
+
+```bash
+GET /api/wallet/balance/:address/:chain
+GET /api/wallet/transactions/:address/:chain
+POST /api/wallet/send
+```
+
+### Market Data
+
+```bash
+GET /api/market/price/:token
+GET /api/market/chart/:token/:period
+GET /api/market/news
+```
+
+### AI Guardian
+
+```bash
+POST /api/ai/chat
+GET /api/ai/alerts
+```
+
+---
+
+## 🎯 Roadmap
+
+- [ ] Mobile app (Flutter)
+- [ ] Multi-sig wallets
+- [ ] Advanced portfolio analytics
+- [ ] DeFi yield farming
+- [ ] NFT marketplace integration
+- [ ] Hardware wallet support
+
+---
+
+## 👤 Creator
 
 **Thewin (Emobies05)**
-India 🇮🇳 → Dubai 🇦🇪
-Self-taught · Built on phone using Termux + Acode
-0 coding knowledge → 3.5 months → production Web3 wallet
 
-[github.com/Emobies-app](https://github.com/Emobies-app)
+- 🇮🇳 India → 🇦🇪 Dubai
+- Self-taught developer
+- Built entirely on phone using **Termux + Acode**
+- **Journey:** 0 coding knowledge → 3.5 months → Production Web3 wallet
 
-> *"Follow the flow"* · 🦋
+**GitHub:** [@EmoThewall05](https://github.com/EmoThewall05)
+
+---
+
+## 📄 License
+
+MIT License — Built with ❤️
+
+---
+
+**Follow the flow** 🦋
