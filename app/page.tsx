@@ -230,7 +230,7 @@ export default function TheWall() {
     try {
       let ethBalance=0,txCount=0
       if(address.startsWith('0x')){
-        const [b,t]=await Promise.all([fetch('https://eth.llamarpc.com',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_getBalance',params:[address,'latest']})}),fetch('https://eth.llamarpc.com',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:2,method:'eth_getTransactionCount',params:[address,'latest']})})])
+        const [b,t]=await Promise.all([fetch('https://cloudflare-eth.com',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_getBalance',params:[address,'latest']})}),fetch('https://cloudflare-eth.com',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:2,method:'eth_getTransactionCount',params:[address,'latest']})})])
         const [bd,td]=await Promise.all([b.json(),t.json()])
         if(bd.result)ethBalance=parseInt(bd.result,16)/1e18
         if(td.result)txCount=parseInt(td.result,16)
