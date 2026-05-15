@@ -51,14 +51,12 @@ function getWaypoints(W: number, H: number) {
   ]
 }
 
-function ease(t: number) { return t<0.5?2*t*t:-1+(4-2*t)*t }
+function ease(t: number) { return t<<0.5?2*t*t:-1+(4-2*t)*t }
 
-// Auto get or generate emo_key
 async function getOrCreateEmoKey(): Promise<string> {
   try {
     const stored = localStorage.getItem(EMO_KEY_STORAGE)
     if (stored) return stored
-
     const res = await fetch(`${EMO_KEY_API}?name=thewall_user`)
     const data = await res.json()
     if (data?.success && data?.key) {
@@ -70,8 +68,8 @@ async function getOrCreateEmoKey(): Promise<string> {
 }
 
 export default function EmowallButterfly() {
-  const bfRef   = useRef<HTMLDivElement>(null)
-  const chatRef = useRef<HTMLDivElement>(null)
+  const bfRef   = useRef<<HTMLDivElement>(null)
+  const chatRef = useRef<<HTMLDivElement>(null)
   const raf     = useRef<number>(0)
   const frame   = useRef(0)
   const flapAngle  = useRef(0)
@@ -122,7 +120,7 @@ export default function EmowallButterfly() {
     const chatW=300, chatH=Math.min(window.innerHeight*0.6,400), m=14
     let cl=x+165+m, ct=y-10
     if (cl+chatW>window.innerWidth-8) cl=x-chatW-m
-    if (cl<8) cl=Math.max(8,(window.innerWidth-chatW)/2)
+    if (cl<<8) cl=Math.max(8,(window.innerWidth-chatW)/2)
     ct=Math.max(8,Math.min(ct,window.innerHeight-chatH-8))
     chatPos.current={left:cl,top:ct}
     setChatStyle({left:cl+'px',top:ct+'px'})
@@ -181,7 +179,7 @@ export default function EmowallButterfly() {
   function onBfUp() {
     bfDown.current=false; clearTimeout(holdTimer.current)
     const el=Date.now()-tapStart.current
-    if (!tapMoved.current&&el<350) {
+    if (!tapMoved.current&&el<<350) {
       if (stateRef.current==='idle') applyState('chat')
       else if (stateRef.current==='chat') closeChat()
       else if (stateRef.current==='held') applyState('idle')
@@ -225,10 +223,12 @@ export default function EmowallButterfly() {
           history: chatHistory.current
         })
       })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data=await res.json()
       const reply=data?.reply||'🦋 Ask me about your wallet!'
       chatHistory.current.push({role:'user',content:val})
       chatHistory.current.push({role:'model',content:reply})
+      if (chatHistory.current.length > 40) chatHistory.current = chatHistory.current.slice(-40)
       setMsgs(p=>[...p.slice(0,-1),{role:'ai',text:reply}])
     } catch {
       setMsgs(p=>[...p.slice(0,-1),{role:'ai',text:'🦋 Ask me about ETH, SOL, BTC, security or swaps!'}])
@@ -236,11 +236,7 @@ export default function EmowallButterfly() {
   }
 
   useEffect(()=>{
-    // Auto get or create emo_key on mount
-    getOrCreateEmoKey().then(key => {
-      emoKey.current = key
-    })
-
+    getOrCreateEmoKey().then(key => { emoKey.current = key })
     pos.current = { x: 100, y: 100 }
     wpRef.current = getWaypoints(window.innerWidth-165, window.innerHeight-155)
     startSound()
@@ -286,6 +282,14 @@ export default function EmowallButterfly() {
     return ()=>{ cancelAnimationFrame(raf.current); if(soundInt.current)clearInterval(soundInt.current) }
   },[])
 
+  useEffect(() => {
+    const handleResize = () => {
+      wpRef.current = getWaypoints(window.innerWidth - 165, window.innerHeight - 155)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
   const glow = state==='chat'  ? 'drop-shadow(0 0 20px #00e5ff) drop-shadow(0 0 40px #00e5ffaa)'
              : state==='alert' ? 'drop-shadow(0 0 20px #ff2244) drop-shadow(0 0 40px #ff2244aa)'
              : state==='held'  ? 'drop-shadow(0 0 15px #9945ff) drop-shadow(0 0 30px #9945ff88)'
@@ -293,14 +297,14 @@ export default function EmowallButterfly() {
 
   return (
     <>
-      {alertVisible&&<div style={{position:'fixed',top:20,left:'50%',transform:'translateX(-50%)',
+      {alertVisible&&<<div style={{position:'fixed',top:20,left:'50%',transform:'translateX(-50%)',
         padding:'12px 24px',background:'rgba(255,34,68,0.15)',border:'1px solid #ff2244',
         borderRadius:12,color:'#ff2244',fontSize:'0.8rem',zIndex:99999,fontFamily:'monospace',
         animation:'bfRed 0.6s ease-in-out infinite'}}>
         🚨 Security Alert: Suspicious transaction detected!
       </div>}
 
-      {chatOpen&&<div ref={chatRef} style={{position:'fixed',width:300,maxHeight:'60vh',left:chatStyle.left,top:chatStyle.top,
+      {chatOpen&&<<div ref={chatRef} style={{position:'fixed',width:300,maxHeight:'60vh',left:chatStyle.left,top:chatStyle.top,
         background:'#070e1d',border:'1px solid #627eea33',borderRadius:20,zIndex:9998,
         display:'flex',flexDirection:'column',overflow:'hidden',boxShadow:'0 0 40px #627eea22'}}>
         <div onPointerDown={onChatDown} onPointerMove={onChatMove} onPointerUp={onChatUp}
