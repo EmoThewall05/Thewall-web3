@@ -304,7 +304,7 @@ export default function EmowallButterfly() {
         🚨 Security Alert: Suspicious transaction detected!
       </div>}
 
-      {chatOpen&&<<div ref={chatRef} style={{position:'fixed',width:300,maxHeight:'60vh',left:chatStyle.left,top:chatStyle.top,
+      {chatOpen&&<div ref={chatRef} style={{position:'fixed',width:300,maxHeight:'60vh',left:chatStyle.left,top:chatStyle.top,
         background:'#070e1d',border:'1px solid #627eea33',borderRadius:20,zIndex:9998,
         display:'flex',flexDirection:'column',overflow:'hidden',boxShadow:'0 0 40px #627eea22'}}>
         <div onPointerDown={onChatDown} onPointerMove={onChatMove} onPointerUp={onChatUp}
