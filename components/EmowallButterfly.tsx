@@ -297,7 +297,7 @@ export default function EmowallButterfly() {
 
   return (
     <>
-      {alertVisible&&<<div style={{position:'fixed',top:20,left:'50%',transform:'translateX(-50%)',
+      {alertVisible&&<div style={{position:'fixed',top:20,left:'50%',transform:'translateX(-50%)',
         padding:'12px 24px',background:'rgba(255,34,68,0.15)',border:'1px solid #ff2244',
         borderRadius:12,color:'#ff2244',fontSize:'0.8rem',zIndex:99999,fontFamily:'monospace',
         animation:'bfRed 0.6s ease-in-out infinite'}}>
