@@ -68,8 +68,8 @@ async function getOrCreateEmoKey(): Promise<string> {
 }
 
 export default function EmowallButterfly() {
-  const bfRef   = useRef<<HTMLDivElement>(null)
-  const chatRef = useRef<<HTMLDivElement>(null)
+  const bfRef   = useRef<HTMLDivElement>(null)
+  const chatRef = useRef<HTMLDivElement>(null)
   const raf     = useRef<number>(0)
   const frame   = useRef(0)
   const flapAngle  = useRef(0)
