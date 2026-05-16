@@ -430,7 +430,7 @@ export default function TheWall() {
           <div style={{marginBottom:12}}>
             
             <button
-  onClick={() => { import('../context/wallet').then(m => { m.initAppKit().then(kit => { kit?.open() }) }) }}
+  onClick={() => { import('./context/wallet').then(m => {
   style={{width:'100%',padding:'14px',background:'linear-gradient(135deg,#FF5500,#ff8844)',border:'none',borderRadius:10,color:'#fff',fontFamily:'monospace',fontSize:'0.9rem',fontWeight:700,cursor:'pointer',marginBottom:4}}
 >
   🔗 Connect Wallet
