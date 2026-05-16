@@ -1,39 +1,40 @@
 'use client'
 
-import { createAppKit } from '@reown/appkit/react'
-import { mainnet, arbitrum } from '@reown/appkit/networks'
-import { EthersAdapter } from '@reown/appkit-adapter-ethers'
 import { useEffect, useState } from 'react'
 
-const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || ''
+export let appkitModal: any = null
 
-let appkitInitialized = false
-
-if (typeof window !== 'undefined' && projectId && !appkitInitialized) {
-  try {
-    const ethersAdapter = new EthersAdapter()
-    createAppKit({
-      adapters: [ethersAdapter] as any[],
-      networks: [mainnet, arbitrum],
-      projectId,
-      metadata: {
-        name: 'TheWall',
-        description: 'Gasless Web3 Wallet • Emowall AI 2.0',
-        url: 'https://thewall.e-mobies.com',
-        icons: ['https://thewall.e-mobies.com/icon-512.png'],
-      },
-      themeMode: 'dark',
-      themeVariables: { '--w3m-accent': '#FF5500' },
-    })
-    appkitInitialized = true
-  } catch (e) {
-    console.error('AppKit init error:', e)
-  }
+export async function initAppKit() {
+  if (appkitModal) return appkitModal
+  const { createAppKit } = await import('@reown/appkit/react')
+  const { mainnet, arbitrum } = await import('@reown/appkit/networks')
+  const { EthersAdapter } = await import('@reown/appkit-adapter-ethers')
+  const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 
+                    process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || ''
+  if (!projectId) { console.error('No WC ProjectId!'); return null }
+  const ethersAdapter = new EthersAdapter()
+  appkitModal = createAppKit({
+    adapters: [ethersAdapter] as any[],
+    networks: [mainnet, arbitrum],
+    projectId,
+    metadata: {
+      name: 'TheWall',
+      description: 'Gasless Web3 Wallet • Emowall AI 2.0',
+      url: 'https://thewall.e-mobies.com',
+      icons: ['https://thewall.e-mobies.com/icon-512.png'],
+    },
+    themeMode: 'dark',
+    themeVariables: { '--w3m-accent': '#FF5500' },
+  })
+  return appkitModal
 }
 
 export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false)
-  useEffect(() => { setMounted(true); if(projectId) console.log('WC ProjectId:', projectId.slice(0,8)+'...') }, [])
+  useEffect(() => { 
+    setMounted(true)
+    initAppKit().then(m => { if(m) console.log('AppKit ready!') })
+  }, [])
   if (!mounted) return <>{children}</>
   return <>{children}</>
 }
