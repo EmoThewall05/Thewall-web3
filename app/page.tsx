@@ -428,8 +428,13 @@ export default function TheWall() {
 
         {bottomTab==='trade'&&<div>
           <div style={{marginBottom:12}}>
-            {/* @ts-ignore */}
-            <appkit-button />
+            
+            <button
+  onClick={() => { try { (window as any).appkit?.open() } catch(e){} }}
+  style={{width:'100%',padding:'14px',background:'linear-gradient(135deg,#FF5500,#ff8844)',border:'none',borderRadius:10,color:'#fff',fontFamily:'monospace',fontSize:'0.9rem',fontWeight:700,cursor:'pointer',marginBottom:4}}
+>
+  🔗 Connect Wallet
+</button>
           </div>
           <div style={{display:'flex',gap:8,marginBottom:16}}>{(['swap','send','receive']as const).map(t=><button key={t} onClick={()=>{if(t!=='swap'){setSendOpen(true);setSendTab(t as 'send'|'receive')}}} style={{flex:1,padding:'10px',border:'1px solid var(--border)',borderRadius:8,background:t==='swap'?'var(--cyan-glow)':'var(--bg2)',color:t==='swap'?'var(--cyan)':'var(--text-muted)',...s.mono,fontSize:'0.75rem',cursor:'pointer'}}>{t==='swap'?'🔄 Swap':t==='send'?'📤 Send':'📥 Receive'}</button>)}</div>
           <div style={s.card}><div style={s.label}>FROM</div><div style={{display:'flex',gap:8,alignItems:'center'}}><select value={swap.fromToken} onChange={e=>setSwap(p=>({...p,fromToken:e.target.value,toToken:e.target.value===p.toToken?SWAP_TOKENS.filter(t=>t!==e.target.value)[0]:p.toToken,estimatedOut:''}))} style={{flex:1,padding:'10px',background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:8,color:'var(--text)',...s.mono,fontSize:'0.82rem',cursor:'pointer'}}>{SWAP_TOKENS.map(t=><option key={t} value={t}>{t}</option>)}</select><input type="number" placeholder="0.00" value={swap.amount} onChange={e=>setSwap(p=>({...p,amount:e.target.value}))} style={{flex:1.5,padding:'10px',background:'var(--bg3)',border:'1px solid var(--border-bright)',borderRadius:8,color:'var(--text)',...s.mono,fontSize:'1rem'}}/></div>{swap.amount&&prices[swap.fromToken]&&<div style={{fontSize:'0.68rem',...s.muted,marginTop:6}}>≈ ${(parseFloat(swap.amount)*(prices[swap.fromToken]?.price||0)).toFixed(2)}</div>}</div>
