@@ -33,7 +33,7 @@ if (typeof window !== 'undefined' && projectId && !appkitInitialized) {
 
 export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false)
-  useEffect(() => { setMounted(true) }, [])
+  useEffect(() => { setMounted(true); if(projectId) console.log('WC ProjectId:', projectId.slice(0,8)+'...') }, [])
   if (!mounted) return <>{children}</>
   return <>{children}</>
 }
