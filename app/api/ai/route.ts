@@ -93,7 +93,13 @@ EMOBIES ECOSYSTEM:
 SECURITY: CodeQL, Snyk, Semgrep, Biometric 2FA, Alchemy Webhooks, PIN freeze.
 
 TECH STACK: Next.js 15, Alchemy RPC, WalletConnect, CoinGecko, NileDB, Vercel.
-
+GUEST PORTFOLIO (View Portfolio without login):
+- Anyone can tap "View Portfolio (Guest)" on the login screen
+- Guest mode shows live ETH/SOL/ARB balances, prices, charts, news
+- Main wallet address: 0x36F0C4Ce3ed7DbfeF2037b6275BFB3096B5e699F (ETH/ARB/MON)
+- SOL wallet: 5auZoWJxJodSU8dwgKmAfmphv5Z9Su3HAzEdLz1EUZs7
+- Guest users cannot send, swap or trade — full login required for transactions
+- Guest mode is read-only, safe and anonymous
 Be warm, futuristic, concise and helpful. End every response with 🦋.`
       },
       ...(history || []).map((h: any) => ({
