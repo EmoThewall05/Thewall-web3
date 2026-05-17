@@ -357,7 +357,7 @@ export default function EmowallButterfly() {
         style={{position:'fixed',overflow:'visible',width:170,height:160,cursor:state==='held'?'grab':'pointer',
           zIndex:50,filter:glow,transition:'filter 0.2s',
           left:pos.current.x,top:pos.current.y}}>
-        <svg viewBox="-30 -30 390 360" xmlns="http://www.w3.org/2000/svg" style={{width:'100%',height:'100%'}}>
+        <svg viewBox="-60 -60 450 420" xmlns="http://www.w3.org/2000/svg" style={{width:'100%',height:'100%'}}>
           <defs>
             <radialGradient id="bful" cx="32%" cy="35%" r="72%"><stop offset="0%" stopColor="#3a5fd4" stopOpacity=".96"/><stop offset="55%" stopColor="#627eea" stopOpacity=".9"/><stop offset="100%" stopColor="#1a2f6e" stopOpacity=".88"/></radialGradient>
             <radialGradient id="bfsl" cx="18%" cy="18%" r="46%"><stop offset="0%" stopColor="#9945ff" stopOpacity=".7"/><stop offset="100%" stopColor="#9945ff" stopOpacity="0"/></radialGradient>
