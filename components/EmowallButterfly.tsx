@@ -51,12 +51,14 @@ function getWaypoints(W: number, H: number) {
   ]
 }
 
-function ease(t: number) { return t<<0.5?2*t*t:-1+(4-2*t)*t }
+function ease(t: number) { return t<0.5?2*t*t:-1+(4-2*t)*t }
 
+// Auto get or generate emo_key
 async function getOrCreateEmoKey(): Promise<string> {
   try {
     const stored = localStorage.getItem(EMO_KEY_STORAGE)
     if (stored) return stored
+
     const res = await fetch(`${EMO_KEY_API}?name=thewall_user`)
     const data = await res.json()
     if (data?.success && data?.key) {
@@ -120,7 +122,7 @@ export default function EmowallButterfly() {
     const chatW=300, chatH=Math.min(window.innerHeight*0.6,400), m=14
     let cl=x+165+m, ct=y-10
     if (cl+chatW>window.innerWidth-8) cl=x-chatW-m
-    if (cl<<8) cl=Math.max(8,(window.innerWidth-chatW)/2)
+    if (cl<8) cl=Math.max(8,(window.innerWidth-chatW)/2)
     ct=Math.max(8,Math.min(ct,window.innerHeight-chatH-8))
     chatPos.current={left:cl,top:ct}
     setChatStyle({left:cl+'px',top:ct+'px'})
@@ -179,7 +181,7 @@ export default function EmowallButterfly() {
   function onBfUp() {
     bfDown.current=false; clearTimeout(holdTimer.current)
     const el=Date.now()-tapStart.current
-    if (!tapMoved.current&&el<<350) {
+    if (!tapMoved.current&&el<350) {
       if (stateRef.current==='idle') applyState('chat')
       else if (stateRef.current==='chat') closeChat()
       else if (stateRef.current==='held') applyState('idle')
@@ -223,12 +225,10 @@ export default function EmowallButterfly() {
           history: chatHistory.current
         })
       })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data=await res.json()
       const reply=data?.reply||'🦋 Ask me about your wallet!'
       chatHistory.current.push({role:'user',content:val})
       chatHistory.current.push({role:'model',content:reply})
-      if (chatHistory.current.length > 40) chatHistory.current = chatHistory.current.slice(-40)
       setMsgs(p=>[...p.slice(0,-1),{role:'ai',text:reply}])
     } catch {
       setMsgs(p=>[...p.slice(0,-1),{role:'ai',text:'🦋 Ask me about ETH, SOL, BTC, security or swaps!'}])
@@ -236,8 +236,12 @@ export default function EmowallButterfly() {
   }
 
   useEffect(()=>{
-    getOrCreateEmoKey().then(key => { emoKey.current = key })
-    pos.current = { x: 150, y: 100 }
+    // Auto get or create emo_key on mount
+    getOrCreateEmoKey().then(key => {
+      emoKey.current = key
+    })
+
+    pos.current = { x: 100, y: 100 }
     wpRef.current = getWaypoints(window.innerWidth-165, window.innerHeight-155)
     startSound()
 
@@ -281,14 +285,6 @@ export default function EmowallButterfly() {
     raf.current=requestAnimationFrame(loop)
     return ()=>{ cancelAnimationFrame(raf.current); if(soundInt.current)clearInterval(soundInt.current) }
   },[])
-
-  useEffect(() => {
-    const handleResize = () => {
-      wpRef.current = getWaypoints(window.innerWidth - 165, window.innerHeight - 155)
-    }
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
 
   const glow = state==='chat'  ? 'drop-shadow(0 0 20px #00e5ff) drop-shadow(0 0 40px #00e5ffaa)'
              : state==='alert' ? 'drop-shadow(0 0 20px #ff2244) drop-shadow(0 0 40px #ff2244aa)'
@@ -354,10 +350,10 @@ export default function EmowallButterfly() {
         zIndex:9996,pointerEvents:'none'}}>{status}</div>
 
       <div ref={bfRef} onPointerDown={onBfDown} onPointerMove={onBfMove} onPointerUp={onBfUp}
-        style={{position:'fixed',overflow:'visible',width:170,height:160,cursor:state==='held'?'grab':'pointer',
-          zIndex:50,filter:glow,transition:'filter 0.2s',
+        style={{position:'fixed',width:160,height:150,cursor:state==='held'?'grab':'pointer',
+          zIndex:9999,filter:glow,transition:'filter 0.2s',
           left:pos.current.x,top:pos.current.y}}>
-        <svg viewBox="-60 -60 450 420" xmlns="http://www.w3.org/2000/svg" style={{width:'100%',height:'100%'}}>
+        <svg viewBox="-30 -30 390 360" xmlns="http://www.w3.org/2000/svg" style={{width:'100%',height:'100%'}}>
           <defs>
             <radialGradient id="bful" cx="32%" cy="35%" r="72%"><stop offset="0%" stopColor="#3a5fd4" stopOpacity=".96"/><stop offset="55%" stopColor="#627eea" stopOpacity=".9"/><stop offset="100%" stopColor="#1a2f6e" stopOpacity=".88"/></radialGradient>
             <radialGradient id="bfsl" cx="18%" cy="18%" r="46%"><stop offset="0%" stopColor="#9945ff" stopOpacity=".7"/><stop offset="100%" stopColor="#9945ff" stopOpacity="0"/></radialGradient>
