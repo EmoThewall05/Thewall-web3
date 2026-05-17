@@ -137,7 +137,7 @@ export default function EmowallButterfly() {
       flapSpeed.current=0; openChatPanel(); playFlutter(false)
       const cl=chatPos.current.left
       const nx=cl>window.innerWidth/2?20:W()-20
-      pos.current={x:nx,y:20}
+      pos.current={x:Math.max(nx,85),y:20}
       if (bfRef.current) { bfRef.current.style.left=nx+'px'; bfRef.current.style.top='20px' }
     } else if (s==='alert') {
       setFly(true); setStatus('🚨 Security Alert · Rush Mode')
@@ -237,7 +237,7 @@ export default function EmowallButterfly() {
 
   useEffect(()=>{
     getOrCreateEmoKey().then(key => { emoKey.current = key })
-    pos.current = { x: 100, y: 100 }
+    pos.current = { x: 150, y: 100 }
     wpRef.current = getWaypoints(window.innerWidth-165, window.innerHeight-155)
     startSound()
 
