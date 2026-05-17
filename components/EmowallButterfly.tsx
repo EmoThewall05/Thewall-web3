@@ -354,7 +354,7 @@ export default function EmowallButterfly() {
         zIndex:9996,pointerEvents:'none'}}>{status}</div>
 
       <div ref={bfRef} onPointerDown={onBfDown} onPointerMove={onBfMove} onPointerUp={onBfUp}
-        style={{position:'fixed',width:170,height:160,cursor:state==='held'?'grab':'pointer',
+        style={{position:'fixed',overflow:'visible',width:170,height:160,cursor:state==='held'?'grab':'pointer',
           zIndex:50,filter:glow,transition:'filter 0.2s',
           left:pos.current.x,top:pos.current.y}}>
         <svg viewBox="-30 -30 390 360" xmlns="http://www.w3.org/2000/svg" style={{width:'100%',height:'100%'}}>
