@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 const ALCHEMY_KEY = process.env.ALCHEMY_API_KEY
 const HELIUS_KEY  = process.env.HELIUS_API_KEY
+const SOUL_KEY    = process.env.THEWALL_SOUL_KEY || process.env.ALCHEMY_API_KEY
 
 const RPC = {
   eth:      `https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
@@ -56,7 +57,7 @@ async function getSolBalance(address: string): Promise<number> {
   try {
     const url = HELIUS_KEY
       ? `https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`
-      : `https://solana-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`
+      : `https://solana-mainnet.g.alchemy.com/v2/${SOUL_KEY}`
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
