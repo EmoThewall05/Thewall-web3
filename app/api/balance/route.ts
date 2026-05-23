@@ -3,9 +3,10 @@ import { NextResponse } from 'next/server'
 const ALCHEMY_KEY = process.env.ALCHEMY_API_KEY
 const HELIUS_KEY  = process.env.HELIUS_API_KEY
 const SOUL_KEY    = process.env.THEWALL_SOUL_KEY || process.env.ALCHEMY_API_KEY
+const EARTH_KEY   = process.env.THEWALL_EARTH_MAIN_KEY || process.env.ALCHEMY_API_KEY
 
 const RPC = {
-  eth:      `https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
+  eth:      `https://eth-mainnet.g.alchemy.com/v2/${EARTH_KEY}`,
   arb:      `https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
   monad:    `https://monad-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
   polygon:  `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
