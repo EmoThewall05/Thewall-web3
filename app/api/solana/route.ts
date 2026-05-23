@@ -5,8 +5,9 @@ const SOLANA_ADDRESS = '5auZoWJxJodSU8dwgKmAfmphv5Z9Su3HAzEdLz1EUZs7';
 const RPC_URLS = [
   process.env.THEWALL_SOUL_KEY ? `https://solana-mainnet.g.alchemy.com/v2/${process.env.THEWALL_SOUL_KEY}` : null,
   process.env.NEXT_PUBLIC_HELIUS_URL || null,
+  'https://rpc.ankr.com/solana',
+  'https://solana-mainnet.rpc.extrnode.com',
   'https://api.mainnet-beta.solana.com',
-  'https://solana-api.projectserum.com',
 ].filter(Boolean) as string[];
 
 async function tryRPC(url: string) {
