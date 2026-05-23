@@ -6,6 +6,29 @@ export async function POST(req: NextRequest) {
     const emoKey = req.headers.get('x-emo-key') || 'emo_guest'
     console.log('🦋 emo-key:', emoKey)
 
+    // Validate emo-key via Supabase
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseKey = process.env.SUPABASE_ANON_KEY
+    if (emoKey !== 'emo_guest' && supabaseUrl && supabaseKey) {
+      const validateRes = await fetch(
+        `${supabaseUrl}/rest/v1/emo_keys?key=eq.${emoKey}&is_active=eq.true&select=key,last_used`,
+        { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } }
+      )
+      const keys = await validateRes.json()
+      if (!keys || keys.length === 0) {
+        return NextResponse.json({ reply: '🦋 Invalid Emo Key. Please check your key and try again.' })
+      }
+      // Update last_used
+      await fetch(
+        `${supabaseUrl}/rest/v1/emo_keys?key=eq.${emoKey}`,
+        {
+          method: 'PATCH',
+          headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ last_used: new Date().toISOString() })
+        }
+      )
+    }
+
     const accountId = process.env.CLOUDFLARE_ACCOUNT_ID
     const apiToken = process.env.CLOUDFLARE_API_KEY
 
