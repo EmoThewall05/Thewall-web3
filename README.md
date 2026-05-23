@@ -139,7 +139,7 @@ npm start
 
 ## 🦋 Emowall AI — Web3 Guardian
 
-AI-powered Web3 guardian built with **Grok (xAI)**.
+AI-powered Web3 guardian built with **Anthropic**.
 
 Watches your wallet 24/7:
 - Ask about swaps, chains, gas fees
