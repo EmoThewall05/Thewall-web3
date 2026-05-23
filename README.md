@@ -17,7 +17,7 @@ Built entirely on phone using **Termux + Acode**
 
 ## 🌍 Live Demo
 
-🚀 **[thewall.e-mobies.com](https://thewall.e-mobies.com)**
+🚀 **[thewall.e-mobies.com](https://thewall-web3-iie7.vercel.app**
 
 ---
 
