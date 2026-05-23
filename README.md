@@ -60,7 +60,7 @@ Built entirely on phone using **Termux + Acode**
 | **RPC + Gas** | Alchemy (all 6 chains) |
 | **Wallet Connect** | Reown AppKit (530+ wallets) |
 | **Market Data** | CoinGecko + CoinDesk RSS |
-| **AI Guardian** | Grok API (xAI) |
+| **AI Guardian** | Emo-key |
 | **Database** | NileDB (Postgres) |
 | **Deployment** | Vercel |
 | **Styling** | TailwindCSS |
