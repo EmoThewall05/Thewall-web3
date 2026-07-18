@@ -9,6 +9,7 @@ const nextConfig = {
       'pino-pretty': false,
       'porto/internal': false,
       'porto': false,
+      'crypto': false,
     }
     return config
   },

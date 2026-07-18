@@ -34,6 +34,7 @@ const CHAIN_COLORS: Record<string,string> = { earth:'#627eea', soul:'#9945ff', m
 const SEND_CHAINS = [{id:'ETH',label:'🌍 ETH',color:'#627eea'},{id:'SOL',label:'🌟 SOL',color:'#9945ff'},{id:'ARB',label:'🪐 ARB',color:'#12aaff'},{id:'MON',label:'🌙 MON',color:'#836ef9'},{id:'BTC',label:'₿ BTC',color:'#f7931a'}]
 const CHAIN_DOTS  = [{id:'earth',label:'🌍',c:'#627eea'},{id:'soul',label:'🌟',c:'#9945ff'},{id:'moon',label:'🌙',c:'#836ef9'},{id:'orbit',label:'🪐',c:'#12aaff'},{id:'birth',label:'₿',c:'#f7931a'}]
 const DAPP_LIST   = [{name:'Uniswap',url:'https://app.uniswap.org',icon:'🦄'},{name:'OpenSea',url:'https://opensea.io',icon:'🌊'},{name:'Aave',url:'https://app.aave.com',icon:'👻'},{name:'1inch',url:'https://app.1inch.io',icon:'🦅'},{name:'Compound',url:'https://app.compound.finance',icon:'🏦'},{name:'Raydium',url:'https://raydium.io',icon:'⚡'}]
+const IFRAME_BLOCKED = ['uniswap.org','opensea.io']
 
 type BottomTab = 'home'|'trade'|'markets'|'settings'
 
@@ -74,6 +75,10 @@ export default function TheWall() {
   const [user, setUser]             = useState<UserWallet|null>(null)
   const [prices, setPrices]         = useState<Prices>({})
   const [walletData, setWalletData] = useState<WalletData|null>(null)
+  const [emoBalance, setEmoBalance] = useState(0)
+  const [emoClaiming, setEmoClaiming] = useState(false)
+  const [emoClaimMsg, setEmoClaimMsg] = useState('')
+  const [emoNextClaimAt, setEmoNextClaimAt] = useState<number|null>(null)
   const [bottomTab, setBottomTab]   = useState<BottomTab>('home')
   const [refreshing, setRefreshing] = useState(false)
   const [searchOpen, setSearchOpen]     = useState(false)
@@ -108,12 +113,50 @@ export default function TheWall() {
   const [txLoading, setTxLoading]     = useState(false)
   const [dappUrl, setDappUrl]         = useState('')
   const [dappOpen, setDappOpen]       = useState(false)
+  const [iframeError, setIframeError] = useState(false)
+  const [dappLoaded, setDappLoaded] = useState(false)
   const [frozen, setFrozen]           = useState(false)
   const [pin, setPin]                 = useState('')
   const [pinSet, setPinSet]           = useState(false)
   const [pinInput, setPinInput]       = useState('')
   const [pinError, setPinError]       = useState('')
   const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  const fetchBalance = useCallback(async (address: string) => {
+    try {
+      const [er,sr,ar] = await Promise.all([fetch('/api/balance?address='+address),fetch('/api/solana'),fetch('https://arb1.arbitrum.io/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_getBalance',params:[address,'latest']})})])
+      const [ed,sd,ad] = await Promise.all([er.json(),sr.json(),ar.json()])
+      setWalletData({...ed,solBalance:sd.solBalance||0,arbBalance:ad.result?parseInt(ad.result,16)/1e18:0})
+    } catch {}
+  }, [])
+
+  useEffect(() => {
+    const checkExistingConnection = async () => {
+      const {initAppKit} = await import('@/app/context/wallet')
+      const modal = await initAppKit()
+      if (!modal) return
+      const account = modal.getAccount()
+      if (account?.isConnected && account?.address) {
+        setUser({address: account.address, type: 'external'})
+        fetchBalance(account.address)
+        fetchEmoBalance(account.address)
+        setScreen('dashboard')
+      }
+      modal.subscribeAccount((acc: any) => {
+        if (acc?.isConnected && acc?.address) {
+          setUser({address: acc.address, type: 'external'})
+          fetchBalance(acc.address)
+        fetchEmoBalance(acc.address)
+          setScreen('dashboard')
+        } else if (!acc?.isConnected) {
+          setUser(null)
+          setWalletData(null)
+          setScreen('login')
+        }
+      })
+    }
+    checkExistingConnection()
+  }, [fetchBalance])
 
   useEffect(() => {
     checkChainStatus()
@@ -141,14 +184,6 @@ export default function TheWall() {
   }
 
   const fetchPrices = useCallback(async () => { try { const r=await fetch('/api/prices'); const d=await r.json(); if(d.prices&&Object.keys(d.prices).length>0) setPrices(d.prices) } catch {} }, [])
-  const fetchBalance = useCallback(async (address: string) => {
-    try {
-      const [er,sr,ar] = await Promise.all([fetch('/api/balance?address='+address),fetch('/api/solana'),fetch('https://arb1.arbitrum.io/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_getBalance',params:[address,'latest']})})])
-      const [ed,sd,ad] = await Promise.all([er.json(),sr.json(),ar.json()])
-      setWalletData({...ed,solBalance:sd.solBalance||0,arbBalance:ad.result?parseInt(ad.result,16)/1e18:0})
-    } catch {}
-  }, [])
-
   const fetchChart = useCallback(async (symbol: string, days: string) => {
     const token = TOKENS.find(t=>t.symbol===symbol)
     if (!token?.cgId) { setChartData([]); return }
@@ -162,6 +197,46 @@ export default function TheWall() {
     try { const r=await fetch('/api/news'); const d=await r.json(); setNews(d.news||[]) } catch { setNews([]) }
     setNewsLoading(false)
   }, [])
+
+  const fetchEmoBalance = useCallback(async (address: string) => {
+    try {
+      const res = await fetch('/api/emocoin/claim?address=' + address)
+      const data = await res.json()
+      if (typeof data.balance === 'number') setEmoBalance(data.balance)
+      if (data.lastClaimAt) {
+        const next = new Date(data.lastClaimAt).getTime() + 24*60*60*1000
+        setEmoNextClaimAt(next > Date.now() ? next : null)
+      } else {
+        setEmoNextClaimAt(null)
+      }
+    } catch (e) {}
+  }, [])
+
+  const claimEmoCoin = useCallback(async () => {
+    if (!user?.address || emoClaiming) return
+    setEmoClaiming(true)
+    setEmoClaimMsg('')
+    try {
+      const res = await fetch('/api/emocoin/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: user.address })
+      })
+      const data = await res.json()
+      if (res.status === 429) {
+        setEmoClaimMsg('Already claimed today')
+        setEmoNextClaimAt(Date.now() + data.remainingMs)
+        if (typeof data.balance === 'number') setEmoBalance(data.balance)
+      } else if (typeof data.balance === 'number') {
+        setEmoBalance(data.balance)
+        setEmoClaimMsg('+10 EMC claimed!')
+        setEmoNextClaimAt(Date.now() + 24*60*60*1000)
+      }
+    } catch (e) {
+      setEmoClaimMsg('Claim failed')
+    }
+    setEmoClaiming(false)
+  }, [user, emoClaiming])
 
   const fetchTxHistory = useCallback(async (address: string) => {
     setTxLoading(true)
@@ -207,6 +282,7 @@ export default function TheWall() {
   useEffect(()=>{if(bottomTab==='markets'&&marketsTab==='charts')fetchChart(chartToken,chartDays)},[bottomTab,marketsTab,chartToken,chartDays,fetchChart])
   useEffect(()=>{if(bottomTab==='markets'&&marketsTab==='news'&&!news.length)fetchNews()},[bottomTab,marketsTab,fetchNews,news.length])
   useEffect(()=>{if(bottomTab==='settings'&&settingsTab==='history'&&user?.address&&!txHistory.length)fetchTxHistory(user.address)},[bottomTab,settingsTab,user,txHistory.length,fetchTxHistory])
+  useEffect(()=>{if(!dappOpen)return;const isBlocked=IFRAME_BLOCKED.some(d=>dappUrl.includes(d));if(isBlocked){setIframeError(true);setDappLoaded(false);return}setIframeError(false);setDappLoaded(false);const timer=setTimeout(()=>{setDappLoaded(loaded=>{if(!loaded)setIframeError(true);return loaded})},2500);return ()=>clearTimeout(timer)},[dappOpen,dappUrl])
 
   const estimateSwap = useCallback((amount:string,from:string,to:string)=>{
     if(!amount||parseFloat(amount)<=0)return
@@ -243,7 +319,7 @@ export default function TheWall() {
     if(!sendTo||!sendAmount)return
     setSendLoading(true);setSendError('');setSendSuccess('')
     try {
-      const r=await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'prepare',chain:sendChain,to:sendTo,amount:sendAmount,from:user?.address||MAIN_WALLET})})
+      const r=await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'prepare',chain:sendChain,to:sendTo,amount:sendAmount,from:user?.address||''})})
       const d=await r.json()
       if(d.success){setSendSuccess(`✅ ${sendAmount} ${sendChain} → ${sendTo.slice(0,8)}... · FREE ⚡`);setSendAmount('');setSendTo('')}
       else setSendError(d.error||'Send failed')
@@ -258,20 +334,23 @@ export default function TheWall() {
     setAlertPrice('')
   }
 
-  const handleEmailContinue=()=>{if(!email.includes('@'))return;setError('');setLoginStep('choose2fa')}
-  const handleTotpAuth=async()=>{
-    if(totpCode.length!==6)return;setError('')
-    try {
-      const r=await fetch('/api/auth/totp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'totp',token:totpCode})})
-      const d=await r.json()
-      if(d.valid){setLoginStep('creating');await new Promise(r=>setTimeout(r,1500));setUser({address:MAIN_WALLET,type:'smart',email,twoFaMethod:'totp'});await fetchBalance(MAIN_WALLET);setScreen('dashboard')}
-      else setError('Invalid code.')
-    } catch { setError('Verification failed.') }
+  const handleConnectWallet=async()=>{
+    const {initAppKit}=await import('@/app/context/wallet')
+    const modal=await initAppKit()
+    if(!modal)return
+    modal.open()
+    modal.subscribeAccount((account:any)=>{
+      if(account.isConnected&&account.address){
+        setUser({address:account.address,type:'external'})
+        fetchBalance(account.address)
+        setScreen('dashboard')
+      }
+    })
   }
-  const handleGuestView=()=>{setUser({address:MAIN_WALLET,type:'external'});fetchBalance(MAIN_WALLET);setScreen('dashboard')}
-  const handleRefresh=async()=>{setRefreshing(true);await Promise.all([fetchPrices(),fetchBalance(user?.address||MAIN_WALLET),checkChainStatus()]);setRefreshing(false)}
+  const handleGuestView=()=>{setUser({address:'',type:'external'});setScreen('dashboard')}
+  const handleRefresh=async()=>{setRefreshing(true);await Promise.all([fetchPrices(),fetchBalance(user?.address||''),checkChainStatus()]);setRefreshing(false)}
 
-  const portfolioTotal=(walletData?.ethBalance||0)*(prices.ETH?.price||0)+(walletData?.solBalance||0)*(prices.SOL?.price||0)+(walletData?.arbBalance||0)*(prices.ARB?.price||0)+EMOCOIN.balance*EMOCOIN.priceUsd
+  const portfolioTotal=(walletData?.ethBalance||0)*(prices.ETH?.price||0)+(walletData?.solBalance||0)*(prices.SOL?.price||0)+(walletData?.arbBalance||0)*(prices.ARB?.price||0)+emoBalance*EMOCOIN.priceUsd
   const goalPct=Math.min((portfolioTotal/GOAL_USD)*100,100)
   const fmt=(n:number)=>n>=1000?'$'+(n/1000).toFixed(1)+'K':'$'+n.toFixed(2)
   const fmtAddr=(a:string)=>a.slice(0,8)+'...'+a.slice(-6)
@@ -310,39 +389,11 @@ export default function TheWall() {
               </div>
             ))}
           </div>
-          <button className={styles.btnPrimary} onClick={()=>setLoginStep('email')}>Sign Up / Login</button>
+          <button className={styles.btnPrimary} onClick={handleConnectWallet}>Sign Up / Login</button>
           <button className={styles.btnSecondary} onClick={handleGuestView}>View Portfolio (Guest)</button>
           <div className={styles.gasNote}>✅ Gas FREE · 🛡️ CodeQL + Snyk + Semgrep</div>
         </div>}
 
-        {loginStep==='email'&&<div className="fade-up-1">
-          <p className={styles.loginDesc}>Enter your email.</p>
-          <input className={styles.input} type="email" placeholder="you@example.com" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==='Enter'&&handleEmailContinue()} autoFocus/>
-          {error&&<p style={{color:'#ff4466',fontSize:'0.72rem',marginBottom:8}}>{error}</p>}
-          <button className={styles.btnPrimary} onClick={handleEmailContinue}>Continue →</button>
-          <button className={styles.btnGhost} onClick={()=>setLoginStep('home')}>← Back</button>
-        </div>}
-
-        {loginStep==='choose2fa'&&<div className="fade-up-1">
-          <p className={styles.loginDesc}><strong style={s.cyan}>Choose 2FA</strong></p>
-          <button className={styles.btnPrimary} onClick={()=>setLoginStep('totp')}>🔢 Google Authenticator</button>
-          <button className={styles.btnGhost} onClick={()=>setLoginStep('email')}>← Back</button>
-        </div>}
-
-        {loginStep==='totp'&&<div className="fade-up-1">
-          <p className={styles.loginDesc}>🔢 Google Authenticator</p>
-          <TotpQr email={email} />
-          <input className={styles.input} type="text" maxLength={6} placeholder="000000" value={totpCode} onChange={e=>setTotpCode(e.target.value.replace(/\D/g,'').slice(0,6))} autoFocus/>
-          {error&&<p style={{color:'#ff4466',fontSize:'0.72rem',marginBottom:8}}>{error}</p>}
-          <button className={styles.btnPrimary} onClick={handleTotpAuth} disabled={totpCode.length!==6}>Verify →</button>
-          <button className={styles.btnGhost} onClick={()=>setLoginStep('choose2fa')}>← Back</button>
-        </div>}
-
-        {loginStep==='creating'&&<div className={styles.creating+' fade-up-1'}>
-          <div className={styles.spinner}/>
-          <p>Setting up wallet...</p>
-          <p className={styles.creatingNote}>5 chains · Charts · News · Alerts</p>
-        </div>}
       </div>
       <div className={styles.loginFooter}>⬡ THE WALL · DWIN · 2026 · IND → DXB · 🇮🇳🇦🇪</div>
     </div>
@@ -352,7 +403,7 @@ export default function TheWall() {
     <div className={styles.dashWrap} style={{paddingBottom:70}}>
       <header className={styles.header+' fade-up'}>
         <div className={styles.headerLeft}><span className={styles.hexSmall}>⬡</span><span className={styles.headerTitle}>THE WALL</span></div>
-        <div className={styles.headerRight}><button className={styles.searchIconBtn} onClick={()=>setSearchOpen(true)}>🔍</button><button className={styles.refreshBtn} onClick={handleRefresh} disabled={refreshing}><span style={{display:'inline-block',animation:refreshing?'spin 0.8s linear infinite':'none'}}>↻</span></button><button className={styles.logoutBtn} onClick={()=>{setScreen('login');setLoginStep('home')}}>⏻</button></div>
+        <div className={styles.headerRight}><button className={styles.searchIconBtn} onClick={()=>setSearchOpen(true)}>🔍</button><button className={styles.refreshBtn} onClick={handleRefresh} disabled={refreshing}><span style={{display:'inline-block',animation:refreshing?'spin 0.8s linear infinite':'none'}}>↻</span></button><button className={styles.logoutBtn} onClick={async()=>{const {appkitModal}=await import('@/app/context/wallet');if(appkitModal)await appkitModal.disconnect();setUser(null);setWalletData(null);setScreen('login')}}>⏻</button></div>
       </header>
 
       {searchOpen&&<div className={styles.searchOverlay} onClick={()=>setSearchOpen(false)}><div className={styles.searchModal} onClick={e=>e.stopPropagation()}>
@@ -399,7 +450,7 @@ export default function TheWall() {
           <button className={styles.searchBtn} style={{width:'100%',padding:'13px'}} onClick={handleSend} disabled={sendLoading||!sendTo||!sendAmount}>{sendLoading?'⏳ Processing...':`📤 Send ${sendChain} · FREE ⚡`}</button>
         </div>}
         {sendTab==='receive'&&<div style={{textAlign:'center'}}>
-          <div style={{marginBottom:16}}><div style={{...s.label,marginBottom:8}}>ETH / ARB / MON</div><div style={{padding:'14px',background:'var(--bg2)',border:'1px solid var(--border-bright)',borderRadius:10,fontSize:'0.72rem',...s.cyan,wordBreak:'break-all',...s.mono,lineHeight:1.6}}>{user?.address||MAIN_WALLET}</div><button onClick={()=>navigator.clipboard.writeText(user?.address||MAIN_WALLET)} style={{marginTop:10,padding:'10px 20px',background:'var(--bg3)',border:'1px solid var(--border-bright)',borderRadius:8,...s.cyan,...s.mono,fontSize:'0.8rem',cursor:'pointer'}}>📋 Copy ETH</button></div>
+          <div style={{marginBottom:16}}><div style={{...s.label,marginBottom:8}}>ETH / ARB / MON</div><div style={{padding:'14px',background:'var(--bg2)',border:'1px solid var(--border-bright)',borderRadius:10,fontSize:'0.72rem',...s.cyan,wordBreak:'break-all',...s.mono,lineHeight:1.6}}>{user?.address||''}</div><button onClick={()=>navigator.clipboard.writeText(user?.address||'')} style={{marginTop:10,padding:'10px 20px',background:'var(--bg3)',border:'1px solid var(--border-bright)',borderRadius:8,...s.cyan,...s.mono,fontSize:'0.8rem',cursor:'pointer'}}>📋 Copy ETH</button></div>
           <div style={{padding:'14px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:10,marginBottom:12}}><div style={{...s.label,marginBottom:8}}>SOLANA 🌟</div><div style={{fontSize:'0.68rem',color:'#9945ff',wordBreak:'break-all',...s.mono,lineHeight:1.6}}>{SOL_WALLET}</div><button onClick={()=>navigator.clipboard.writeText(SOL_WALLET)} style={{marginTop:8,padding:'8px 16px',background:'rgba(153,69,255,0.1)',border:'1px solid rgba(153,69,255,0.3)',borderRadius:6,color:'#9945ff',...s.mono,fontSize:'0.72rem',cursor:'pointer'}}>📋 Copy SOL</button></div>
           <div style={{fontSize:'0.68rem',...s.muted,lineHeight:1.8}}>⚠️ ETH → ETH only · SOL → Solana only</div>
         </div>}
@@ -410,20 +461,20 @@ export default function TheWall() {
           <input value={dappUrl} onChange={e=>setDappUrl(e.target.value)} style={{flex:1,padding:'8px 10px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:6,...s.mono,color:'var(--text)',fontSize:'0.75rem'}} placeholder="https://"/>
           <button onClick={()=>setDappOpen(false)} style={{padding:'6px 10px',background:'rgba(255,68,102,0.1)',border:'1px solid rgba(255,68,102,0.2)',borderRadius:6,color:'#ff4466',cursor:'pointer'}}>✕</button>
         </div>
-        <iframe src={dappUrl.startsWith('https://')?dappUrl:'about:blank'} style={{width:'100%',height:'70vh',border:'none'}} sandbox="allow-scripts allow-same-origin allow-forms allow-popups" title="DApp"/>
+        {(!iframeError) ? <iframe src={dappUrl.startsWith('https://')?dappUrl:'about:blank'} style={{width:'100%',height:'70vh',border:'none'}} sandbox="allow-scripts allow-same-origin allow-forms allow-popups" title="DApp" onLoad={()=>setDappLoaded(true)}/> : <div style={{width:'100%',height:'70vh',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:16,padding:20,textAlign:'center'}}><span style={{fontSize:'0.85rem',color:'var(--text-muted)'}}>ഈ site iframe-ൽ open ചെയ്യാൻ അനുവദിക്കുന്നില്ല</span><a href={dappUrl} target="_blank" rel="noopener noreferrer" style={{padding:'12px 20px',background:'var(--cyan-glow)',border:'1px solid var(--cyan)',borderRadius:8,color:'var(--cyan)',textDecoration:'none',fontSize:'0.8rem'}}>Open in Browser →</a></div>}
       </div></div>}
 
       <main className={styles.main}>
         {bottomTab==='home'&&<div>
           <section className={styles.walletCard+' fade-up-1'}>
-            <div className={styles.walletTop}><div><div className={styles.walletLabel}>{walletLabel}</div><div className={styles.walletAddr}>{fmtAddr(user?.address||MAIN_WALLET)}<button className={styles.copyBtn} onClick={()=>navigator.clipboard.writeText(user?.address||MAIN_WALLET)}>📋</button></div>{user?.email&&<div className={styles.walletEmail}>{user.email}</div>}</div><div className={styles.walletTotal}><div className={styles.totalLabel}>TOTAL PORTFOLIO</div><div className={styles.totalAmount}>{portfolioTotal>0?fmt(portfolioTotal):<span className={styles.loading}>$···</span>}</div></div></div>
+            <div className={styles.walletTop}><div><div className={styles.walletLabel}>{walletLabel}</div><div className={styles.walletAddr}>{fmtAddr(user?.address||'')}<button className={styles.copyBtn} onClick={()=>navigator.clipboard.writeText(user?.address||'')}>📋</button></div>{user?.email&&<div className={styles.walletEmail}>{user.email}</div>}</div><div className={styles.walletTotal}><div className={styles.totalLabel}>TOTAL PORTFOLIO</div><div className={styles.totalAmount}>{portfolioTotal>0?fmt(portfolioTotal):<span className={styles.loading}>$···</span>}</div></div></div>
             <div className={styles.goalSection}><div className={styles.goalRow}><span className={styles.goalLabel}></span><span className={styles.goalPct}>{goalPct.toFixed(4)}%</span></div><div className={styles.goalBar}><div className={styles.goalFill} style={{width:Math.max(goalPct,0.1)+'%'}}/></div></div>
             <div style={{display:'flex',gap:4,marginTop:12,flexWrap:'wrap'}}>{CHAIN_DOTS.map(c=><div key={c.id} style={{display:'flex',alignItems:'center',gap:4,padding:'3px 8px',borderRadius:12,background:'var(--bg3)',border:`1px solid ${c.c}22`,fontSize:'0.62rem',...s.mono}}><span>{c.label}</span><span style={{width:5,height:5,borderRadius:'50%',background:chainStatus[c.id]==='online'?'#00ff88':chainStatus[c.id]==='offline'?'#ff4466':'#888',display:'inline-block'}}/></div>)}</div>
           </section>
-          <section className={styles.emoSection+' fade-up-2'}><div className={styles.emoCard}><span className={styles.emoIcon}>🪙</span><div><div className={styles.emoTitle}>EMOCOINS</div><div className={styles.emoBalance}>{EMOCOIN.balance} EMC</div></div><div className={styles.emoRight}><div className={styles.emoPrice}>1 EMC = $0.01</div><button className={styles.claimBtn}>+ Daily Claim</button></div></div></section>
+          <section className={styles.emoSection+' fade-up-2'}><div className={styles.emoCard}><span className={styles.emoIcon}>🪙</span><div><div className={styles.emoTitle}>EMOCOINS</div><div className={styles.emoBalance}>{emoBalance} EMC</div></div><div className={styles.emoRight}><div className={styles.emoPrice}>1 EMC = $0.01</div><button className={styles.claimBtn} disabled={emoClaiming || !!emoNextClaimAt} onClick={claimEmoCoin} style={{opacity:(emoClaiming||emoNextClaimAt)?0.5:1}}>{emoClaiming?'Claiming...':emoNextClaimAt?'Claimed':'+ Daily Claim'}</button>{emoClaimMsg&&<div style={{fontSize:'0.6rem',marginTop:4}}>{emoClaimMsg}</div>}</div></div></section>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:16}}><button onClick={()=>{setSendOpen(true);setSendTab('send')}} style={{padding:'14px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:12,...s.cyan,...s.mono,fontSize:'0.82rem',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>📤 Send</button><button onClick={()=>{setSendOpen(true);setSendTab('receive')}} style={{padding:'14px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:12,color:'#9945ff',...s.mono,fontSize:'0.82rem',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>📥 Receive</button></div>
           <div style={{...s.label,marginBottom:8}}>TOP HOLDINGS</div>
-          {TOKENS.slice(0,4).map(token=>{const p=prices[token.symbol],bal=token.symbol==='ETH'?walletData?.ethBalance||0:token.symbol==='SOL'?walletData?.solBalance||0:token.symbol==='ARB'?walletData?.arbBalance||0:token.symbol==='EMC'?EMOCOIN.balance:0;return <div key={token.symbol} onClick={()=>{setBottomTab('markets');setMarketsTab('charts');setChartToken(token.symbol);fetchChart(token.symbol,chartDays)}}  style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 14px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:10,marginBottom:8,cursor:'pointer',WebkitTapHighlightColor:'rgba(0,0,0,0)',touchAction:'manipulation'}}><div style={{display:'flex',alignItems:'center',gap:10}}><div style={{width:8,height:8,borderRadius:'50%',background:token.color}}/><div><div style={{fontSize:'0.82rem',color:'var(--text)',...s.mono,fontWeight:700}}>{token.symbol}</div><div style={{fontSize:'0.62rem',...s.muted}}>{token.chain}</div></div></div><div style={{textAlign:'right'}}><div style={{fontSize:'0.82rem',color:'var(--text)',...s.mono}}>{p?'$'+p.price.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}):<span style={s.muted}>$···</span>}</div>{p&&<div style={{fontSize:'0.65rem',color:p.change24h>=0?'#00ff88':'#ff4466'}}>{p.change24h>=0?'▲':'▼'} {Math.abs(p.change24h).toFixed(2)}%</div>}{bal>0&&<div style={{fontSize:'0.62rem',...s.muted}}>{bal.toFixed(4)} {token.symbol}</div>}</div></div>})}
+          {TOKENS.slice(0,4).map(token=>{const p=prices[token.symbol],bal=token.symbol==='ETH'?walletData?.ethBalance||0:token.symbol==='SOL'?walletData?.solBalance||0:token.symbol==='ARB'?walletData?.arbBalance||0:token.symbol==='EMC'?emoBalance:0;return <div key={token.symbol} onClick={()=>{setBottomTab('markets');setMarketsTab('charts');setChartToken(token.symbol);fetchChart(token.symbol,chartDays)}}  style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 14px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:10,marginBottom:8,cursor:'pointer',WebkitTapHighlightColor:'rgba(0,0,0,0)',touchAction:'manipulation'}}><div style={{display:'flex',alignItems:'center',gap:10}}><div style={{width:8,height:8,borderRadius:'50%',background:token.color}}/><div><div style={{fontSize:'0.82rem',color:'var(--text)',...s.mono,fontWeight:700}}>{token.symbol}</div><div style={{fontSize:'0.62rem',...s.muted}}>{token.chain}</div></div></div><div style={{textAlign:'right'}}><div style={{fontSize:'0.82rem',color:'var(--text)',...s.mono}}>{p?'$'+p.price.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}):<span style={s.muted}>$···</span>}</div>{p&&<div style={{fontSize:'0.65rem',color:p.change24h>=0?'#00ff88':'#ff4466'}}>{p.change24h>=0?'▲':'▼'} {Math.abs(p.change24h).toFixed(2)}%</div>}{bal>0&&<div style={{fontSize:'0.62rem',...s.muted}}>{bal.toFixed(4)} {token.symbol}</div>}</div></div>})}
         </div>}
 
         {bottomTab==='trade'&&<div>
@@ -487,11 +538,7 @@ export default function TheWall() {
         {bottomTab==='settings'&&<div>
           <div style={{display:'flex',gap:6,marginBottom:16,flexWrap:'wrap'}}>{(['profile','security','history','dapps']as const).map(t=><button key={t} onClick={()=>setSettingsTab(t)} style={{flex:1,padding:'9px',border:'1px solid',borderColor:settingsTab===t?'var(--cyan)':'var(--border)',borderRadius:8,background:settingsTab===t?'var(--cyan-glow)':'var(--bg2)',color:settingsTab===t?'var(--cyan)':'var(--text-muted)',...s.mono,fontSize:'0.68rem',cursor:'pointer',minWidth:60}}>{t==='profile'?'👤':t==='security'?'🔐':t==='history'?'💳':'🌐'} {t}</button>)}</div>
           {settingsTab==='profile'&&<div style={{position:'relative',zIndex:10000}}>
-            <div style={{...s.card,textAlign:'center'}}><div style={{fontSize:'3rem',marginBottom:8}}>🦋</div><div style={{fontSize:'0.9rem',...s.mono,color:'var(--text)',fontWeight:700,marginBottom:4}}>{user?.email||'EmoThewall05'}</div><div style={{fontSize:'0.68rem',...s.muted,marginBottom:12}}>{user?.type==='smart'?'Smart Wallet · TOTP 🔢':'External Wallet'}</div><div style={{padding:'10px',background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:8,fontSize:'0.7rem',...s.mono,...s.cyan,wordBreak:'break-all'}}>{user?.address||MAIN_WALLET}</div><button onClick={()=>navigator.clipboard.writeText(user?.address||MAIN_WALLET)} style={{marginTop:8,padding:'8px 16px',background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:6,...s.cyan,...s.mono,fontSize:'0.72rem',cursor:'pointer'}}>📋 Copy Address</button></div>
-            <div style={s.card}><div style={{...s.label,marginBottom:12}}>WALLET STATS</div>{[{label:'Portfolio',value:fmt(portfolioTotal)},{label:'EmoCoins',value:EMOCOIN.balance+' EMC'},{label:'Goal',value:goalPct.toFixed(4)+'%'},{label:'Active Alerts',value:alerts.filter(a=>!a.triggered).length.toString()},{label:'Address Book',value:addressBook.length.toString()}].map(stat=><div key={stat.label} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid var(--border)'}}><span style={{fontSize:'0.72rem',...s.muted}}>{stat.label}</span><span style={{fontSize:'0.72rem',...s.mono,color:'var(--text)',fontWeight:700}}>{stat.value}</span></div>)}</div>
-            <div style={{...s.label,marginBottom:8}}>TREASURY</div>
-            <div className={styles.treasuryCard}><div className={styles.treasuryIcon}>🏛️</div><div><div className={styles.treasuryLabel}>ETH / ARB / MON</div><div className={styles.treasuryAddr}>{TREASURY}</div></div><button className={styles.copyBtn} onClick={()=>navigator.clipboard.writeText(TREASURY)}>📋</button></div>
-            <div className={styles.treasuryCard}><div className={styles.treasuryIcon}>🌟</div><div><div className={styles.treasuryLabel}>SOLANA</div><div className={styles.treasuryAddr}>{SOL_WALLET}</div></div><button className={styles.copyBtn} onClick={()=>navigator.clipboard.writeText(SOL_WALLET)}>📋</button></div>
+            <div style={{...s.card,textAlign:'center'}}><div style={{fontSize:'3rem',marginBottom:8}}>🦋</div><div style={{fontSize:'0.9rem',...s.mono,color:'var(--text)',fontWeight:700,marginBottom:4}}>{user?.email||'Guest'}</div><div style={{fontSize:'0.68rem',...s.muted,marginBottom:12}}>{user?.address?(user?.type==='smart'?'Smart Wallet · TOTP 🔢':'External Wallet'):'Not Connected'}</div><div style={{padding:'10px',background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:8,fontSize:'0.7rem',...s.mono,...s.cyan,wordBreak:'break-all'}}>{user?.address||'No wallet connected'}</div>{user?.address&&<button onClick={()=>navigator.clipboard.writeText(user.address)} style={{marginTop:8,padding:'8px 16px',background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:6,...s.cyan,...s.mono,fontSize:'0.72rem',cursor:'pointer'}}>📋 Copy Address</button>}</div>
           </div>}
           {settingsTab==='security'&&<div style={{position:'relative',zIndex:10000}}>
             <div style={{...s.card,border:`1px solid ${frozen?'rgba(0,255,136,0.3)':'rgba(255,68,102,0.2)'}`}}><div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8}}><div><div style={{fontSize:'0.82rem',...s.mono,color:'var(--text)',fontWeight:700}}>❄️ Freeze Wallet</div><div style={{fontSize:'0.65rem',...s.muted,marginTop:2}}>{frozen?'Wallet is FROZEN':'Emergency lock'}</div></div><button onClick={()=>{if(!pinSet){alert('Set PIN first!');return}setFrozen(!frozen)}} style={{padding:'8px 14px',background:frozen?'rgba(0,255,136,0.1)':'rgba(255,68,102,0.1)',border:`1px solid ${frozen?'rgba(0,255,136,0.3)':'rgba(255,68,102,0.3)'}`,borderRadius:8,color:frozen?'#00ff88':'#ff4466',...s.mono,fontSize:'0.75rem',cursor:'pointer'}}>{frozen?'Unfreeze':'Freeze'}</button></div><div style={{fontSize:'0.62rem',...s.muted}}>Freezing locks all transactions immediately</div></div>
@@ -502,7 +549,7 @@ export default function TheWall() {
             <div style={{textAlign:'center',fontSize:'0.62rem',...s.muted,marginTop:8}}>🛡️ CodeQL · Snyk · Semgrep</div>
           </div>}
           {settingsTab==='history'&&<div style={{position:'relative',zIndex:10000}}>
-            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}><div style={{...s.label,marginBottom:0}}>TX HISTORY</div><button onClick={()=>fetchTxHistory(user?.address||MAIN_WALLET)} style={{padding:'4px 10px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:6,...s.cyan,...s.mono,fontSize:'0.65rem',cursor:'pointer'}}>↻</button></div>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}><div style={{...s.label,marginBottom:0}}>TX HISTORY</div><button onClick={()=>fetchTxHistory(user?.address||'')} style={{padding:'4px 10px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:6,...s.cyan,...s.mono,fontSize:'0.65rem',cursor:'pointer'}}>↻</button></div>
             {txLoading&&<div style={{display:'flex',justifyContent:'center',padding:24}}><div className={styles.spinner}/></div>}
             {!txLoading&&txHistory.length===0&&<div style={{textAlign:'center',padding:24,fontSize:'0.75rem',...s.muted}}>No transactions.<br/>Check ETHERSCAN_API_KEY</div>}
             {txHistory.map((tx,i)=><div key={i} style={{...s.card,padding:12,marginBottom:8,cursor:'pointer'}} onClick={()=>window.open(`https://etherscan.io/tx/${tx.hash}`,'_blank')}>
@@ -513,9 +560,9 @@ export default function TheWall() {
           </div>}
           {settingsTab==='dapps'&&<div style={{position:'relative',zIndex:10000}}>
             <div style={{...s.label,marginBottom:12}}>POPULAR DApps</div>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:16}}>{DAPP_LIST.map(dapp=><button key={dapp.name} onClick={()=>{setDappUrl(dapp.url);setDappOpen(true)}} style={{padding:'14px 10px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:10,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:6}}><span style={{fontSize:'1.5rem'}}>{dapp.icon}</span><span style={{fontSize:'0.72rem',...s.mono,color:'var(--text)'}}>{dapp.name}</span></button>)}</div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:16}}>{DAPP_LIST.map(dapp=><button key={dapp.name} onClick={()=>{setDappUrl(dapp.url);setIframeError(false);setDappLoaded(false);setBottomTab('home');setDappOpen(true)}} style={{padding:'14px 10px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:10,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:6}}><span style={{fontSize:'1.5rem'}}>{dapp.icon}</span><span style={{fontSize:'0.72rem',...s.mono,color:'var(--text)'}}>{dapp.name}</span></button>)}</div>
             <div style={{...s.label,marginBottom:8}}>CUSTOM DApp</div>
-            <div style={{display:'flex',gap:8}}><input value={dappUrl} onChange={e=>setDappUrl(e.target.value)} placeholder="https://..." style={{flex:1,padding:'10px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:8,color:'var(--text)',...s.mono,fontSize:'0.75rem'}}/><button onClick={()=>{if(dappUrl)setDappOpen(true)}} style={{padding:'10px 14px',background:'var(--cyan-glow)',border:'1px solid var(--cyan)',borderRadius:8,...s.cyan,...s.mono,fontSize:'0.8rem',cursor:'pointer'}}>→</button></div>
+            <div style={{display:'flex',gap:8}}><input value={dappUrl} onChange={e=>setDappUrl(e.target.value)} placeholder="https://..." style={{flex:1,padding:'10px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:8,color:'var(--text)',...s.mono,fontSize:'0.75rem'}}/><button onClick={()=>{if(dappUrl){setIframeError(false);setDappLoaded(false);setDappOpen(true)}}} style={{padding:'10px 14px',background:'var(--cyan-glow)',border:'1px solid var(--cyan)',borderRadius:8,...s.cyan,...s.mono,fontSize:'0.8rem',cursor:'pointer'}}>→</button></div>
             <div style={{fontSize:'0.62rem',...s.muted,marginTop:8}}>⚠️ Only visit trusted DApps</div>
           </div>}
         </div>}

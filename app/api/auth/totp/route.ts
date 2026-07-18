@@ -29,7 +29,7 @@ export async function POST(request: Request) {
       const { authenticator } = await import('otplib')
       authenticator.options = { window: 1 }
       const valid = authenticator.verify({ token, secret: totpSecret })
-      return NextResponse.json({ valid })
+      return NextResponse.json({ valid, address: valid ? (process.env.THEWALL_EARTH_MAIN_ID || '') : '' })
     }
     if (type === 'send_email_otp') {
       if (!email) return NextResponse.json({ error: 'Email required' }, { status: 400 })
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
       if (Date.now() > record.expires) { emailOtps.delete(email); return NextResponse.json({ valid: false, error: 'OTP expired' }) }
       const valid = record.otp === token
       if (valid) emailOtps.delete(email)
-      return NextResponse.json({ valid })
+      return NextResponse.json({ valid, address: valid ? (process.env.THEWALL_EARTH_MAIN_ID || '') : '' })
     }
     return NextResponse.json({ error: 'Unknown type' }, { status: 400 })
   } catch (e) {

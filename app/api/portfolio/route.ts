@@ -1,3 +1,5 @@
+export const runtime = 'edge'
+
 import { NextResponse } from 'next/server'
 
 // നിന്റെ പൈസയുള്ള ആ സോളാന ട്രഷറി അഡ്രസ്സ് ഇതാ ഇവിടെ കൊടുക്കുന്നു

@@ -1,3 +1,5 @@
+export const runtime = 'edge'
+
 import { NextResponse } from 'next/server'
 
 const ALCHEMY_KEY = process.env.ALCHEMY_API_KEY

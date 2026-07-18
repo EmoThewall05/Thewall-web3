@@ -2,8 +2,6 @@ import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 import './globals.css'
 
-import { SpeedInsights } from "@vercel/speed-insights/next"
-import { Analytics } from "@vercel/analytics/react"
 import { WalletProvider } from './context/wallet'
 import SWRegister from './sw-register'
 import EmowallAIChatWrapper from '@/components/EmowallAIChatWrapper'
@@ -33,8 +31,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <SWRegister />
           {children}
           <EmowallAIChatWrapper />
-          <SpeedInsights />
-          <Analytics />
         </WalletProvider>
       </body>
     </html>
