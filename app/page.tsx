@@ -569,7 +569,7 @@ export default function TheWall() {
             {tokensLoading&&<div style={{display:'flex',justifyContent:'center',padding:24}}><div className={styles.spinner}/></div>}
             {!tokensLoading&&tokenBalances.length===0&&<div style={{textAlign:'center',padding:24,fontSize:'0.75rem',...s.muted}}>No token balances found.</div>}
             {tokenBalances.map((tok,i)=><div key={i} style={{...s.card,padding:12,marginBottom:8,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-              <div style={{display:'flex',alignItems:'center',gap:10}}>{tok.logo?<img src={tok.logo} alt={tok.symbol} style={{width:28,height:28,borderRadius:'50%'}}/>:<div style={{width:28,height:28,borderRadius:'50%',background:'var(--bg3)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.7rem'}}>🪙</div>}<div><div style={{fontSize:'0.78rem',...s.mono,color:'var(--text)',fontWeight:700}}>{tok.symbol}</div><div style={{fontSize:'0.62rem',...s.muted}}>{tok.name}</div></div></div>
+              <div style={{display:'flex',alignItems:'center',gap:10}}>{tok.logo?<img src={tok.logo} alt={tok.symbol} style={{width:28,height:28,borderRadius:'50%'}}/>:<div style={{width:28,height:28,borderRadius:'50%',background:'var(--cyan-glow)',border:'1px solid var(--cyan)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.7rem'}}>🔷</div>}<div><div style={{fontSize:'0.78rem',...s.mono,color:'var(--text)',fontWeight:700}}>{tok.symbol}</div><div style={{fontSize:'0.62rem',...s.muted}}>{tok.name}</div></div></div>
               <div style={{fontSize:'0.8rem',...s.mono,...s.cyan,fontWeight:700}}>{tok.balance}</div>
             </div>)}
           </div>}
