@@ -107,9 +107,11 @@ export default function TheWall() {
   const [alertPrice, setAlertPrice]   = useState('')
   const [alertCondition, setAlertCondition] = useState<'above'|'below'>('above')
   const [marketsTab, setMarketsTab]   = useState<'charts'|'news'|'alerts'>('charts')
-  const [settingsTab, setSettingsTab] = useState<'profile'|'security'|'history'|'dapps'>('profile')
+  const [settingsTab, setSettingsTab] = useState<'profile'|'security'|'history'|'assets'|'dapps'>('profile')
   const [txHistory, setTxHistory]     = useState<TxItem[]>([])
   const [txLoading, setTxLoading]     = useState(false)
+  const [tokenBalances, setTokenBalances] = useState<any[]>([])
+  const [tokensLoading, setTokensLoading] = useState(false)
   const [dappUrl, setDappUrl]         = useState('')
   const [dappOpen, setDappOpen]       = useState(false)
   const [iframeError, setIframeError] = useState(false)
@@ -243,6 +245,12 @@ export default function TheWall() {
     setTxLoading(false)
   }, [])
 
+  const fetchTokenBalances = useCallback(async (address: string) => {
+    setTokensLoading(true)
+    try { const r=await fetch('/api/tokenbalances?address='+address); const d=await r.json(); setTokenBalances(d.tokens||[]) } catch { setTokenBalances([]) }
+    setTokensLoading(false)
+  }, [])
+
   useEffect(() => {
     alerts.forEach(alert => {
       if (alert.triggered) return
@@ -281,6 +289,7 @@ export default function TheWall() {
   useEffect(()=>{if(bottomTab==='markets'&&marketsTab==='charts')fetchChart(chartToken,chartDays)},[bottomTab,marketsTab,chartToken,chartDays,fetchChart])
   useEffect(()=>{if(bottomTab==='markets'&&marketsTab==='news'&&!news.length)fetchNews()},[bottomTab,marketsTab,fetchNews,news.length])
   useEffect(()=>{if(bottomTab==='settings'&&settingsTab==='history'&&user?.address&&!txHistory.length)fetchTxHistory(user.address)},[bottomTab,settingsTab,user,txHistory.length,fetchTxHistory])
+  useEffect(()=>{if(bottomTab==='settings'&&settingsTab==='assets'&&user?.address&&!tokenBalances.length)fetchTokenBalances(user.address)},[bottomTab,settingsTab,user,tokenBalances.length,fetchTokenBalances])
   useEffect(()=>{if(!dappOpen)return;const isBlocked=IFRAME_BLOCKED.some(d=>dappUrl.includes(d));if(isBlocked){setIframeError(true);setDappLoaded(false);return}setIframeError(false);setDappLoaded(false);const timer=setTimeout(()=>{setDappLoaded(loaded=>{if(!loaded)setIframeError(true);return loaded})},2500);return ()=>clearTimeout(timer)},[dappOpen,dappUrl])
 
   const estimateSwap = useCallback((amount:string,from:string,to:string)=>{
@@ -533,7 +542,7 @@ export default function TheWall() {
         </div>}
 
         {bottomTab==='settings'&&<div>
-          <div style={{display:'flex',gap:6,marginBottom:16,flexWrap:'wrap'}}>{(['profile','security','history','dapps']as const).map(t=><button key={t} onClick={()=>setSettingsTab(t)} style={{flex:1,padding:'9px',border:'1px solid',borderColor:settingsTab===t?'var(--cyan)':'var(--border)',borderRadius:8,background:settingsTab===t?'var(--cyan-glow)':'var(--bg2)',color:settingsTab===t?'var(--cyan)':'var(--text-muted)',...s.mono,fontSize:'0.68rem',cursor:'pointer',minWidth:60}}>{t==='profile'?'👤':t==='security'?'🔐':t==='history'?'💳':'🌐'} {t}</button>)}</div>
+          <div style={{display:'flex',gap:6,marginBottom:16,flexWrap:'wrap'}}>{(['profile','security','history','assets','dapps']as const).map(t=><button key={t} onClick={()=>setSettingsTab(t)} style={{flex:1,padding:'9px',border:'1px solid',borderColor:settingsTab===t?'var(--cyan)':'var(--border)',borderRadius:8,background:settingsTab===t?'var(--cyan-glow)':'var(--bg2)',color:settingsTab===t?'var(--cyan)':'var(--text-muted)',...s.mono,fontSize:'0.68rem',cursor:'pointer',minWidth:60}}>{t==='profile'?'👤':t==='security'?'🔐':t==='history'?'💳':t==='assets'?'🪙':'🌐'} {t}</button>)}</div>
           {settingsTab==='profile'&&<div style={{position:'relative',zIndex:10000}}>
             <div style={{...s.card,textAlign:'center'}}><div style={{fontSize:'3rem',marginBottom:8}}>🦋</div><div style={{fontSize:'0.9rem',...s.mono,color:'var(--text)',fontWeight:700,marginBottom:4}}>{user?.email||'Guest'}</div><div style={{fontSize:'0.68rem',...s.muted,marginBottom:12}}>{user?.address?(user?.type==='smart'?'Smart Wallet · TOTP 🔢':'External Wallet'):'Not Connected'}</div><div style={{padding:'10px',background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:8,fontSize:'0.7rem',...s.mono,...s.cyan,wordBreak:'break-all'}}>{user?.address||'No wallet connected'}</div>{user?.address&&<button onClick={()=>navigator.clipboard.writeText(user.address)} style={{marginTop:8,padding:'8px 16px',background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:6,...s.cyan,...s.mono,fontSize:'0.72rem',cursor:'pointer'}}>📋 Copy Address</button>}</div>
           </div>}
@@ -553,6 +562,15 @@ export default function TheWall() {
               <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:4}}><div style={{display:'flex',alignItems:'center',gap:8}}><span style={{width:6,height:6,borderRadius:'50%',background:tx.status==='success'?'#00ff88':'#ff4466',display:'inline-block'}}/><span style={{fontSize:'0.75rem',...s.mono,color:'var(--text)',fontWeight:700}}>{tx.method}</span></div><span style={{fontSize:'0.72rem',...s.mono,color:tx.from.toLowerCase()===(user?.address||'').toLowerCase()?'#ff4466':'#00ff88'}}>{tx.from.toLowerCase()===(user?.address||'').toLowerCase()?'- ':''}{tx.value} ETH</span></div>
               <div style={{fontSize:'0.62rem',...s.muted}}>To: {tx.to.slice(0,10)}...{tx.to.slice(-6)}</div>
               <div style={{display:'flex',justifyContent:'space-between',marginTop:4,fontSize:'0.62rem',...s.muted}}><span>{tx.time}</span><span>Gas: {tx.gas}</span><span style={s.cyan}>↗ Etherscan</span></div>
+            </div>)}
+          </div>}
+          {settingsTab==='assets'&&<div style={{position:'relative',zIndex:10000}}>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}><div style={{...s.label,marginBottom:0}}>TOKEN ASSETS</div><button onClick={()=>fetchTokenBalances(user?.address||'')} style={{padding:'4px 10px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:6,...s.cyan,...s.mono,fontSize:'0.65rem',cursor:'pointer'}}>↻</button></div>
+            {tokensLoading&&<div style={{display:'flex',justifyContent:'center',padding:24}}><div className={styles.spinner}/></div>}
+            {!tokensLoading&&tokenBalances.length===0&&<div style={{textAlign:'center',padding:24,fontSize:'0.75rem',...s.muted}}>No token balances found.</div>}
+            {tokenBalances.map((tok,i)=><div key={i} style={{...s.card,padding:12,marginBottom:8,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+              <div style={{display:'flex',alignItems:'center',gap:10}}>{tok.logo?<img src={tok.logo} alt={tok.symbol} style={{width:28,height:28,borderRadius:'50%'}}/>:<div style={{width:28,height:28,borderRadius:'50%',background:'var(--bg3)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.7rem'}}>🪙</div>}<div><div style={{fontSize:'0.78rem',...s.mono,color:'var(--text)',fontWeight:700}}>{tok.symbol}</div><div style={{fontSize:'0.62rem',...s.muted}}>{tok.name}</div></div></div>
+              <div style={{fontSize:'0.8rem',...s.mono,...s.cyan,fontWeight:700}}>{tok.balance}</div>
             </div>)}
           </div>}
           {settingsTab==='dapps'&&<div style={{position:'relative',zIndex:10000}}>

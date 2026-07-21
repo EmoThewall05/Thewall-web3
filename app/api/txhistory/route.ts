@@ -6,35 +6,49 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url)
     const address = searchParams.get('address')
-    const key     = process.env.ETHERSCAN_API_KEY
+    const key     = process.env.THEWALL_EARTH_MAIN_KEY
 
     if (!address || !key) return NextResponse.json({ txs: [] })
 
-    const res = await fetch(
-      `https://api.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=20&sort=desc&apikey=${key}`,
-      { next: { revalidate: 60 } }
-    )
+    const url = `https://eth-mainnet.g.alchemy.com/v2/${key}`
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: 1,
+        jsonrpc: '2.0',
+        method: 'alchemy_getAssetTransfers',
+        params: [{
+          fromBlock: '0x0',
+          toAddress: address,
+          category: ['external', 'erc20', 'internal'],
+          order: 'desc',
+          maxCount: '0x14',
+          withMetadata: true,
+        }],
+      }),
+      next: { revalidate: 60 },
+    })
     const data = await res.json()
 
-    const txs = (data.result || []).map((tx: {
+    const txs = (data.result?.transfers || []).map((tx: {
       hash: string
       from: string
       to: string
-      value: string
-      timeStamp: string
-      gasUsed: string
-      gasPrice: string
-      isError: string
-      functionName?: string
+      value: number | null
+      metadata: { blockTimestamp: string }
+      category: string
+      asset: string | null
     }) => ({
       hash:      tx.hash,
       from:      tx.from,
       to:        tx.to,
-      value:     (parseInt(tx.value) / 1e18).toFixed(6),
-      time:      new Date(parseInt(tx.timeStamp) * 1000).toLocaleDateString(),
-      gas:       (parseInt(tx.gasUsed) * parseInt(tx.gasPrice) / 1e18).toFixed(6),
-      status:    tx.isError === '0' ? 'success' : 'failed',
-      method:    tx.functionName?.split('(')[0] || 'Transfer',
+      value:     tx.value?.toFixed(6) ?? '0.000000',
+      time:      new Date(tx.metadata.blockTimestamp).toLocaleDateString(),
+      gas:       '—',
+      status:    'success',
+      method:    tx.category === 'external' ? 'Transfer' : tx.category,
     }))
 
     return NextResponse.json({ txs })

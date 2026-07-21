@@ -2,7 +2,7 @@ export const runtime = 'edge'
 
 import { NextRequest, NextResponse } from 'next/server';
 
-const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY;
+const ALCHEMY_API_KEY = process.env.THEWALL_EARTH_MAIN_KEY || process.env.ALCHEMY_API_KEY;
 
 export async function GET(request: NextRequest) {
   if (!ALCHEMY_API_KEY) {

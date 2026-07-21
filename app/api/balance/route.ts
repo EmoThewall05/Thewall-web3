@@ -120,10 +120,10 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url)
     const address    = searchParams.get('address')
     const btcAddress = searchParams.get('btcAddress') || ''
+    const solAddress = searchParams.get('solAddress') || ''
 
     if (!address) return NextResponse.json({ error: 'Address required' }, { status: 400 })
 
-    const SOL_ADDRESS = '5auZoWJxJodSU8dwgKmAfmphv5Z9Su3HAzEdLz1EUZs7'
 
     const [
       ethBalance, arbBalance, monadBalance,
@@ -148,7 +148,7 @@ export async function GET(req: Request) {
       getEvmBalance(RPC.abstract, address),
       getEvmBalance(RPC.crossfi, address),
       getEvmBalance(RPC.metis, address),
-      getSolBalance(SOL_ADDRESS),
+      solAddress ? getSolBalance(solAddress) : Promise.resolve(0),
       getTokenBalances(address),
       btcAddress ? getBtcBalance(btcAddress) : Promise.resolve(0),
     ])
