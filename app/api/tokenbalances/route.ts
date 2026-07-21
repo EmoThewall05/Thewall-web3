@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
         const meta = (await alchemyPost(url, 'alchemy_getTokenMetadata', [t.contractAddress])).result || {};
         const dec = meta.decimals || 18;
         const raw = BigInt(t.tokenBalance);
-        const div = BigInt(10) ** BigInt(dec);
+        let div = BigInt(1); for (let i = 0; i < dec; i++) div *= BigInt(10);
         const bal = Number(raw / div) + Number(raw % div) / Math.pow(10, dec);
         return {
           address: t.contractAddress,
