@@ -468,7 +468,15 @@ export default function TheWall() {
           <button className={styles.searchBtn} style={{width:'100%',padding:'13px'}} onClick={handleSend} disabled={sendLoading||!sendTo||!sendAmount}>{sendLoading?'⏳ Processing...':`📤 Send ${sendChain} · FREE ⚡`}</button>
         </div>}
         {sendTab==='receive'&&<div style={{textAlign:'center'}}>
+          <div style={{marginBottom:12,display:'flex',gap:6,justifyContent:'center'}}>
+            <button onClick={()=>setSendChain('ETH')} style={{padding:'8px 14px',border:'1px solid',borderColor:sendChain!=='SOL'?'var(--cyan)':'var(--border)',borderRadius:8,background:sendChain!=='SOL'?'var(--cyan-glow)':'var(--bg3)',color:sendChain!=='SOL'?'var(--cyan)':'var(--text-muted)',...s.mono,fontSize:'0.75rem',fontWeight:700,cursor:'pointer'}}>🌍 ETH/ARB/MON</button>
+            <button onClick={()=>setSendChain('SOL')} style={{padding:'8px 14px',border:'1px solid',borderColor:sendChain==='SOL'?'#9945ff':'var(--border)',borderRadius:8,background:sendChain==='SOL'?'#9945ff15':'var(--bg3)',color:sendChain==='SOL'?'#9945ff':'var(--text-muted)',...s.mono,fontSize:'0.75rem',fontWeight:700,cursor:'pointer'}}>🌟 SOL</button>
+          </div>
+          {sendChain!=='SOL'?
           <div style={{marginBottom:16}}><div style={{...s.label,marginBottom:8}}>ETH / ARB / MON</div><div style={{padding:'14px',background:'var(--bg2)',border:'1px solid var(--border-bright)',borderRadius:10,fontSize:'0.72rem',...s.cyan,wordBreak:'break-all',...s.mono,lineHeight:1.6}}>{user?.address||''}</div><button onClick={()=>navigator.clipboard.writeText(user?.address||'')} style={{marginTop:10,padding:'10px 20px',background:'var(--bg3)',border:'1px solid var(--border-bright)',borderRadius:8,...s.cyan,...s.mono,fontSize:'0.8rem',cursor:'pointer'}}>📋 Copy ETH</button></div>
+          :
+          <div style={{marginBottom:16}}><div style={{...s.label,marginBottom:8}}>SOLANA</div><div style={{padding:'14px',background:'var(--bg2)',border:'1px solid rgba(153,69,255,0.4)',borderRadius:10,fontSize:'0.72rem',color:'#9945ff',wordBreak:'break-all',...s.mono,lineHeight:1.6}}>{SOL_WALLET}</div><button onClick={()=>navigator.clipboard.writeText(SOL_WALLET)} style={{marginTop:10,padding:'10px 20px',background:'var(--bg3)',border:'1px solid rgba(153,69,255,0.4)',borderRadius:8,color:'#9945ff',...s.mono,fontSize:'0.8rem',cursor:'pointer'}}>📋 Copy SOL</button></div>
+          }
         </div>}
       </div></div>}
 
