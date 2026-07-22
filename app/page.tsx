@@ -113,6 +113,8 @@ export default function TheWall() {
   const [txLoading, setTxLoading]     = useState(false)
   const [tokenBalances, setTokenBalances] = useState<any[]>([])
   const [tokensLoading, setTokensLoading] = useState(false)
+  const [nfts, setNfts] = useState<any[]>([])
+  const [nftsLoading, setNftsLoading] = useState(false)
   const [dappUrl, setDappUrl]         = useState('')
   const [dappOpen, setDappOpen]       = useState(false)
   const [iframeError, setIframeError] = useState(false)
@@ -252,6 +254,12 @@ export default function TheWall() {
     setTokensLoading(false)
   }, [])
 
+  const fetchNfts = useCallback(async (address: string) => {
+    setNftsLoading(true)
+    try { const r=await fetch('/api/nfts?address='+address); const d=await r.json(); setNfts(d.nfts||[]) } catch { setNfts([]) }
+    setNftsLoading(false)
+  }, [])
+
   useEffect(() => {
     alerts.forEach(alert => {
       if (alert.triggered) return
@@ -291,6 +299,7 @@ export default function TheWall() {
   useEffect(()=>{if(bottomTab==='markets'&&marketsTab==='news'&&!news.length)fetchNews()},[bottomTab,marketsTab,fetchNews,news.length])
   useEffect(()=>{if(bottomTab==='settings'&&settingsTab==='history'&&user?.address&&!txHistory.length)fetchTxHistory(user.address)},[bottomTab,settingsTab,user,txHistory.length,fetchTxHistory])
   useEffect(()=>{if(bottomTab==='settings'&&settingsTab==='assets'&&user?.address&&!tokenBalances.length)fetchTokenBalances(user.address)},[bottomTab,settingsTab,user,tokenBalances.length,fetchTokenBalances])
+  useEffect(()=>{if(bottomTab==='settings'&&settingsTab==='assets'&&user?.address&&!nfts.length)fetchNfts(user.address)},[bottomTab,settingsTab,user,nfts.length,fetchNfts])
   useEffect(()=>{if(!dappOpen)return;const isBlocked=IFRAME_BLOCKED.some(d=>dappUrl.includes(d));if(isBlocked){setIframeError(true);setDappLoaded(false);return}setIframeError(false);setDappLoaded(false);const timer=setTimeout(()=>{setDappLoaded(loaded=>{if(!loaded)setIframeError(true);return loaded})},2500);return ()=>clearTimeout(timer)},[dappOpen,dappUrl])
 
   const estimateSwap = useCallback((amount:string,from:string,to:string)=>{
@@ -577,6 +586,14 @@ export default function TheWall() {
               <div style={{display:'flex',alignItems:'center',gap:10}}>{tok.logo?<img src={tok.logo} alt={tok.symbol} style={{width:28,height:28,borderRadius:'50%'}}/>:<div style={{width:28,height:28,borderRadius:'50%',background:'var(--cyan-glow)',border:'1px solid var(--cyan)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.7rem'}}>🔷</div>}<div><div style={{fontSize:'0.78rem',...s.mono,color:'var(--text)',fontWeight:700}}>{tok.symbol}</div><div style={{fontSize:'0.62rem',...s.muted}}>{tok.name}</div></div></div>
               <div style={{fontSize:'0.8rem',...s.mono,...s.cyan,fontWeight:700}}>{tok.balance}</div>
             </div>)}
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginTop:20,marginBottom:12}}><div style={{...s.label,marginBottom:0}}>NFTs</div><button onClick={()=>fetchNfts(user?.address||'')} style={{padding:'4px 10px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:6,...s.cyan,...s.mono,fontSize:'0.65rem',cursor:'pointer'}}>↻</button></div>
+            {nftsLoading&&<div style={{display:'flex',justifyContent:'center',padding:24}}><div className={styles.spinner}/></div>}
+            {!nftsLoading&&nfts.length===0&&<div style={{textAlign:'center',padding:24,fontSize:'0.75rem',...s.muted}}>No NFTs found.</div>}
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>{nfts.map((nft,i)=><div key={i} style={{...s.card,padding:8}}>
+              <img src={nft.image} alt={nft.name} style={{width:'100%',aspectRatio:'1',objectFit:'cover',borderRadius:8,marginBottom:6}}/>
+              <div style={{fontSize:'0.68rem',...s.mono,color:'var(--text)',fontWeight:700,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{nft.name}</div>
+              <div style={{fontSize:'0.58rem',...s.muted,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{nft.collection}</div>
+            </div>)}</div>
           </div>}
           {settingsTab==='dapps'&&<div style={{position:'relative',zIndex:10000}}>
             <div style={{...s.label,marginBottom:12}}>POPULAR DApps</div>
