@@ -3,153 +3,98 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function WithdrawEthPage() {
+export default function WithdrawPage() {
   const [amount, setAmount] = useState('');
   const [address, setAddress] = useState('');
-  const [fromAddress, setFromAddress] = useState(''); // TODO: connected wallet address ivide set cheyyanam
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(false);
-  const [simResult, setSimResult] = useState<any>(null);
-  const [showPreview, setShowPreview] = useState(false);
   const router = useRouter();
 
-  const handlePreview = async () => {
-    if (!amount || !address || !fromAddress) {
-      alert("Amount, Address, ഉം wallet connect ഉം നിർബന്ധമാണ്!");
+  const handleWithdraw = async () => {
+    if (!amount || !address) {
+      alert("Amount-ഉം Address-ഉം നിർബന്ധമാണ്!");
       return;
     }
 
     setLoading(true);
-    setStatus('Simulating...');
+    setStatus('Processing...');
 
     try {
       const response = await fetch('/api/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action: 'simulate',
-          chain: 'ETH',
-          from: fromAddress,
+          action: 'broadcast',
+          chain: 'SOL',
           to: address,
-          amount: amount,
+          amount: amount
         }),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        setSimResult(data.result);
-        setShowPreview(true);
-        setStatus('');
+        setStatus(`വിജയിച്ചു! TX: ${data.txHash}`);
+        alert("വിത്ത്ഡ്രോവൽ സക്സസ് ആയി മച്ചാനേ!");
       } else {
         setStatus(`Error: ${data.error}`);
       }
     } catch (error) {
-      setStatus('Simulation Failed!');
+      setStatus('Transaction Failed!');
       console.error(error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleConfirmSend = async () => {
-    // TODO: ivide nilavil ulla wallet signer function upayogichu
-    // signedTx undakkanam, ath il apo /api/send action=broadcast call cheyyanam.
-    // Signer function ethaan ennu ariyillathond ee part manually connect cheyyanam.
-    alert("Signing logic connect cheyyendathund — nilavil ulla wallet signer vachu ee function complete cheyyu");
-  };
-
   return (
-    <div className="min-h-screen bg-black text-white p-6 flex flex-col items-center justify-center">
-      <div className="w-full max-w-md bg-gray-900 p-8 rounded-2xl border border-blue-500/30">
-        <h1 className="text-2xl font-bold mb-6 text-center text-blue-400">Withdraw ETH</h1>
+    <div style={{minHeight:'100vh',background:'#000',color:'#fff',padding:'24px',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
+      <div style={{width:'100%',maxWidth:'420px',background:'#111827',padding:'32px',borderRadius:'16px',border:'1px solid rgba(59,130,246,0.3)'}}>
+        <h1 style={{fontSize:'1.5rem',fontWeight:'bold',marginBottom:'24px',textAlign:'center',color:'#60a5fa'}}>Withdraw Soul (SOL)</h1>
 
-        <div className="mb-4">
-          <label className="block text-sm text-gray-400 mb-2">To Address</label>
+        <div style={{marginBottom:'16px'}}>
+          <label style={{display:'block',fontSize:'0.85rem',color:'#9ca3af',marginBottom:'8px'}}>Binance / Exchange Address</label>
           <input
             type="text"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
-            placeholder="Enter ETH Address"
-            className="w-full p-3 bg-black border border-gray-700 rounded-lg focus:border-blue-500 outline-none"
+            placeholder="Enter Solana Address"
+            style={{width:'100%',padding:'12px',background:'#000',border:'1px solid #374151',borderRadius:'8px',color:'#fff',outline:'none'}}
           />
         </div>
 
-        <div className="mb-6">
-          <label className="block text-sm text-gray-400 mb-2">Amount (ETH)</label>
+        <div style={{marginBottom:'24px'}}>
+          <label style={{display:'block',fontSize:'0.85rem',color:'#9ca3af',marginBottom:'8px'}}>Amount (SOL)</label>
           <input
             type="number"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             placeholder="0.00"
-            className="w-full p-3 bg-black border border-gray-700 rounded-lg focus:border-blue-500 outline-none"
+            style={{width:'100%',padding:'12px',background:'#000',border:'1px solid #374151',borderRadius:'8px',color:'#fff',outline:'none'}}
           />
         </div>
 
         <button
-          onClick={handlePreview}
+          onClick={handleWithdraw}
           disabled={loading}
-          className={`w-full p-4 rounded-xl font-bold transition-all ${loading ? 'bg-gray-700' : 'bg-blue-600 hover:bg-blue-700 active:scale-95'}`}
+          style={{width:'100%',padding:'16px',borderRadius:'12px',fontWeight:'bold',border:'none',cursor:'pointer',background:loading?'#374151':'#2563eb',color:'#fff'}}
         >
-          {loading ? 'Simulating...' : 'Preview Transaction'}
+          {loading ? 'Sending...' : 'Confirm Withdrawal'}
         </button>
 
         {status && (
-          <p className="mt-4 text-xs text-center text-gray-400 break-all bg-black p-2 rounded">
+          <p style={{marginTop:'16px',fontSize:'0.75rem',textAlign:'center',color:'#9ca3af',wordBreak:'break-all',background:'#000',padding:'8px',borderRadius:'6px'}}>
             {status}
           </p>
         )}
 
         <button
           onClick={() => router.back()}
-          className="w-full mt-4 text-sm text-gray-500 hover:text-white"
+          style={{width:'100%',marginTop:'16px',fontSize:'0.85rem',color:'#6b7280',background:'none',border:'none',cursor:'pointer'}}
         >
           Back to Wallet
         </button>
       </div>
-
-      {/* PREVIEW MODAL */}
-      {showPreview && simResult && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-6 z-50">
-          <div className="w-full max-w-md bg-gray-900 p-6 rounded-2xl border border-blue-500/30">
-            <h2 className="text-xl font-bold mb-4 text-blue-400">Transaction Preview</h2>
-
-            {simResult.error ? (
-              <p className="text-red-400 text-sm mb-4">⚠️ {simResult.error}</p>
-            ) : (
-              <div className="mb-4 space-y-2">
-                {(simResult.changes || []).length === 0 && (
-                  <p className="text-gray-400 text-sm">No asset changes detected.</p>
-                )}
-                {(simResult.changes || []).map((c: any, i: number) => (
-                  <div key={i} className="bg-black p-3 rounded-lg text-sm">
-                    <div className="text-gray-400">{c.changeType} — {c.assetType}</div>
-                    <div className="text-white font-bold">{c.amount} {c.symbol || ''}</div>
-                  </div>
-                ))}
-                {simResult.gasUsed && (
-                  <div className="text-xs text-gray-500 mt-2">Estimated Gas: {simResult.gasUsed}</div>
-                )}
-              </div>
-            )}
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowPreview(false)}
-                className="flex-1 p-3 rounded-xl bg-gray-700 hover:bg-gray-600"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmSend}
-                className="flex-1 p-3 rounded-xl bg-blue-600 hover:bg-blue-700 font-bold"
-              >
-                Confirm Send
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -130,92 +130,92 @@ export default function WithdrawEthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white p-6 flex flex-col items-center justify-center">
-      <div className="w-full max-w-md bg-gray-900 p-8 rounded-2xl border border-purple-500/30">
-        <h1 className="text-2xl font-bold mb-6 text-center text-purple-400">Withdraw Ethereum (ETH)</h1>
+    <div style={{minHeight:'100vh',background:'#000',color:'#fff',padding:'24px',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
+      <div style={{width:'100%',maxWidth:'420px',background:'#111827',padding:'32px',borderRadius:'16px',border:'1px solid rgba(168,85,247,0.3)'}}>
+        <h1 style={{fontSize:'1.5rem',fontWeight:'bold',marginBottom:'24px',textAlign:'center',color:'#c084fc'}}>Withdraw Ethereum (ETH)</h1>
 
-        <div className="mb-4">
-          <label className="block text-sm text-gray-400 mb-2">Exchange / Wallet Address</label>
+        <div style={{marginBottom:'16px'}}>
+          <label style={{display:'block',fontSize:'0.85rem',color:'#9ca3af',marginBottom:'8px'}}>Exchange / Wallet Address</label>
           <input
             type="text"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             placeholder="0x..."
-            className="w-full p-3 bg-black border border-gray-700 rounded-lg focus:border-purple-500 outline-none"
+            style={{width:'100%',padding:'12px',background:'#000',border:'1px solid #374151',borderRadius:'8px',color:'#fff',outline:'none'}}
           />
         </div>
 
-        <div className="mb-6">
-          <label className="block text-sm text-gray-400 mb-2">Amount (ETH)</label>
+        <div style={{marginBottom:'24px'}}>
+          <label style={{display:'block',fontSize:'0.85rem',color:'#9ca3af',marginBottom:'8px'}}>Amount (ETH)</label>
           <input
             type="number"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             placeholder="0.00"
-            className="w-full p-3 bg-black border border-gray-700 rounded-lg focus:border-purple-500 outline-none"
+            style={{width:'100%',padding:'12px',background:'#000',border:'1px solid #374151',borderRadius:'8px',color:'#fff',outline:'none'}}
           />
         </div>
 
         <button
           onClick={handlePreview}
           disabled={loading}
-          className={`w-full p-4 rounded-xl font-bold transition-all ${loading ? 'bg-gray-700' : 'bg-purple-600 hover:bg-purple-700 active:scale-95'}`}
+          style={{width:'100%',padding:'16px',borderRadius:'12px',fontWeight:'bold',border:'none',cursor:'pointer',background:loading?'#374151':'#9333ea',color:'#fff'}}
         >
           {loading ? 'Please wait...' : 'Preview & Confirm'}
         </button>
 
         {status && (
-          <p className="mt-4 text-xs text-center text-gray-400 break-all bg-black p-2 rounded">
+          <p style={{marginTop:'16px',fontSize:'0.75rem',textAlign:'center',color:'#9ca3af',wordBreak:'break-all',background:'#000',padding:'8px',borderRadius:'6px'}}>
             {status}
           </p>
         )}
 
         <button
           onClick={() => router.back()}
-          className="w-full mt-4 text-sm text-gray-500 hover:text-white"
+          style={{width:'100%',marginTop:'16px',fontSize:'0.85rem',color:'#6b7280',background:'none',border:'none',cursor:'pointer'}}
         >
           Back to Wallet
         </button>
       </div>
 
       {showPreview && preview && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-6 z-50">
-          <div className="w-full max-w-md bg-gray-900 p-6 rounded-2xl border border-purple-500/50">
-            <h2 className="text-lg font-bold mb-4 text-purple-400">Transaction Preview</h2>
-            <div className="bg-black p-4 rounded-lg mb-4 text-sm space-y-2">
-              <div className="flex justify-between">
-                <span className="text-gray-400">Sending</span>
-                <span className="text-white">{amount} ETH</span>
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',display:'flex',alignItems:'center',justifyContent:'center',padding:'24px',zIndex:50}}>
+          <div style={{width:'100%',maxWidth:'420px',background:'#111827',padding:'24px',borderRadius:'16px',border:'1px solid rgba(168,85,247,0.5)'}}>
+            <h2 style={{fontSize:'1.1rem',fontWeight:'bold',marginBottom:'16px',color:'#c084fc'}}>Transaction Preview</h2>
+            <div style={{background:'#000',padding:'16px',borderRadius:'8px',marginBottom:'16px',fontSize:'0.85rem'}}>
+              <div style={{display:'flex',justifyContent:'space-between',marginBottom:'8px'}}>
+                <span style={{color:'#9ca3af'}}>Sending</span>
+                <span style={{color:'#fff'}}>{amount} ETH</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">To</span>
-                <span className="text-white text-xs break-all">{address}</span>
+              <div style={{display:'flex',justifyContent:'space-between',marginBottom:'8px'}}>
+                <span style={{color:'#9ca3af'}}>To</span>
+                <span style={{color:'#fff',fontSize:'0.75rem',wordBreak:'break-all'}}>{address}</span>
               </div>
               {preview.gasEstimate && (
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Est. Gas Fee</span>
-                  <span className="text-yellow-400">{preview.gasEstimate}</span>
+                <div style={{display:'flex',justifyContent:'space-between',marginBottom:'8px'}}>
+                  <span style={{color:'#9ca3af'}}>Est. Gas Fee</span>
+                  <span style={{color:'#facc15'}}>{preview.gasEstimate}</span>
                 </div>
               )}
               {preview.assetChanges && preview.assetChanges.map((c: any, i: number) => (
-                <div key={i} className="flex justify-between border-t border-gray-800 pt-2">
-                  <span className="text-gray-400">{c.type}</span>
-                  <span className={c.type === 'SEND' ? 'text-red-400' : 'text-green-400'}>
+                <div key={i} style={{display:'flex',justifyContent:'space-between',borderTop:'1px solid #1f2937',paddingTop:'8px',marginTop:'8px'}}>
+                  <span style={{color:'#9ca3af'}}>{c.type}</span>
+                  <span style={{color: c.type === 'SEND' ? '#f87171' : '#4ade80'}}>
                     {c.amount}
                   </span>
                 </div>
               ))}
             </div>
-            <div className="flex gap-3">
+            <div style={{display:'flex',gap:'12px'}}>
               <button
                 onClick={() => setShowPreview(false)}
-                className="flex-1 p-3 rounded-xl font-bold bg-gray-700 hover:bg-gray-600"
+                style={{flex:1,padding:'12px',borderRadius:'12px',fontWeight:'bold',border:'none',cursor:'pointer',background:'#374151',color:'#fff'}}
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmSend}
-                className="flex-1 p-3 rounded-xl font-bold bg-purple-600 hover:bg-purple-700"
+                style={{flex:1,padding:'12px',borderRadius:'12px',fontWeight:'bold',border:'none',cursor:'pointer',background:'#9333ea',color:'#fff'}}
               >
                 Confirm Send
               </button>
