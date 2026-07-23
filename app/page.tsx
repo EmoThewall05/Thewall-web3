@@ -8,7 +8,7 @@ interface WalletData  { address: string; ethBalance: number; solBalance?: number
 interface UserWallet  { address: string; type: 'smart'|'external'; email?: string; twoFaMethod?: 'totp' }
 interface NewsItem    { title: string; url: string; published: string; source: string; currencies: string[]; positive: number; negative: number }
 interface TxItem      { hash: string; from: string; to: string; value: string; time: string; gas: string; status: string; method: string }
-interface SwapState   { fromToken: string; toToken: string; amount: string; estimatedOut: string; loading: boolean; error: string; success: string; priceImpact: number; route: string }
+interface SwapState   { fromToken: string; toToken: string; amount: string; estimatedOut: string; loading: boolean; error: string; success: string; priceImpact: number; route: string; simStatus: 'idle'|'simulating'|'ok'|'fail'|'nowallet'; simGas: string; simError: string }
 interface BridgeState { fromChain: string; toChain: string; fromToken: string; toToken: string; amount: string; estimatedOut: string; loading: boolean; error: string; success: string; estimatedTime: string; feesUsd: string; bridge: string; route: string }
 interface PriceAlert  { id: string; symbol: string; targetPrice: number; condition: 'above'|'below'; triggered: boolean }
 interface SearchResult { address: string; ethBalance: number; ethUsd: number; txCount: number; loading: boolean; error: string }
@@ -96,7 +96,7 @@ export default function TheWall() {
   const [sendSuccess, setSendSuccess] = useState('')
   // FIX 1: Address book state - loads from localStorage correctly
   const [addressBook, setAddressBook] = useState<{name:string;address:string}[]>([])
-  const [swap, setSwap] = useState<SwapState>({ fromToken:'ETH', toToken:'SOL', amount:'', estimatedOut:'', loading:false, error:'', success:'', priceImpact:0, route:'' })
+  const [swap, setSwap] = useState<SwapState>({ fromToken:'ETH', toToken:'SOL', amount:'', estimatedOut:'', loading:false, error:'', success:'', priceImpact:0, route:'', simStatus:'idle', simGas:'', simError:'' })
   const [bridge, setBridge] = useState<BridgeState>({ fromChain:'ETH', toChain:'ARB', fromToken:'ETH', toToken:'ETH', amount:'', estimatedOut:'', loading:false, error:'', success:'', estimatedTime:'', feesUsd:'', bridge:'', route:'' })
   const [tradeTab, setTradeTab] = useState<'swap'|'bridge'>('swap')
   const [chainStatus, setChainStatus] = useState<Record<string,'online'|'offline'|'checking'>>({ earth:'checking', soul:'checking', moon:'checking', orbit:'checking', birth:'checking' })
@@ -316,13 +316,21 @@ export default function TheWall() {
 
   const handleSwap = async()=>{
     if(!swap.amount)return
-    setSwap(p=>({...p,loading:true,error:'',success:''}))
+    setSwap(p=>({...p,loading:true,error:'',success:'',simStatus:'idle',simError:''}))
     try {
       const qRes = await fetch('/api/swap', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ action:'quote', fromToken:swap.fromToken, toToken:swap.toToken, amount:swap.amount }) })
       const qData = await qRes.json()
       if(!qData.success) throw new Error(qData.error||'Quote failed')
       const q = qData.quote
       setSwap(p=>({...p, loading:false, estimatedOut:q.toAmount, priceImpact:q.priceImpact, route:q.route, success:`OK ${swap.amount} ${swap.fromToken} to ${q.toAmount} ${swap.toToken}`}))
+      if(!user?.address){ setSwap(p=>({...p,simStatus:'nowallet'})); return }
+      setSwap(p=>({...p,simStatus:'simulating'}))
+      try {
+        const sRes = await fetch('/api/swap', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ action:'simulate', fromToken:swap.fromToken, toToken:swap.toToken, amount:swap.amount, fromAddress:user.address }) })
+        const sData = await sRes.json()
+        if(sData.simOk) setSwap(p=>({...p,simStatus:'ok',simGas:sData.gas||'',simError:''}))
+        else setSwap(p=>({...p,simStatus:'fail',simError:sData.simError||sData.error||'Simulation failed'}))
+      } catch(e:any) { setSwap(p=>({...p,simStatus:'fail',simError:e.message||'Simulation failed'})) }
     } catch(e:any) { setSwap(p=>({...p,loading:false,error:e.message||'Swap failed'})) }
   }
 
@@ -580,7 +588,9 @@ export default function TheWall() {
           {swap.estimatedOut&&<div style={{...s.card,marginBottom:12,fontSize:'0.7rem',...s.mono}}><div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}><span style={s.muted}>Route</span><span style={s.cyan}>{swap.route}</span></div><div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}><span style={s.muted}>Impact</span><span style={{color:swap.priceImpact<1?'#00ff88':'#ff4466'}}>{swap.priceImpact.toFixed(2)}%</span></div><div style={{display:'flex',justifyContent:'space-between'}}><span style={s.muted}>Gas</span><span style={{color:'#00ff88'}}>FREE ⚡</span></div></div>}
           {swap.error&&<div style={{padding:'10px',background:'rgba(255,68,102,0.08)',border:'1px solid rgba(255,68,102,0.2)',borderRadius:8,color:'#ff4466',fontSize:'0.75rem',marginBottom:12}}>⚠ {swap.error}</div>}
           {swap.success&&<div style={{padding:'10px',background:'rgba(0,255,136,0.05)',border:'1px solid rgba(0,255,136,0.2)',borderRadius:8,color:'#00ff88',fontSize:'0.75rem',marginBottom:12}}>{swap.success}</div>}
-          <button onClick={handleSwap} disabled={swap.loading||!swap.amount||!swap.estimatedOut} style={{width:'100%',padding:'14px',background:swap.loading||!swap.amount?'var(--bg3)':'linear-gradient(135deg,#627eea,#9945ff)',border:'none',borderRadius:10,color:'#fff',...s.mono,fontSize:'0.9rem',fontWeight:700,cursor:swap.loading||!swap.amount?'not-allowed':'pointer'}}>{swap.loading?'⏳ Swapping...':`🔄 Swap ${swap.fromToken} to ${swap.toToken}`}</button>
+          <button onClick={handleSwap} disabled={swap.loading||!swap.amount||swap.simStatus==='simulating'||swap.simStatus==='fail'} style={{width:'100%',padding:'14px',background:swap.loading||!swap.amount?'var(--bg3)':swap.simStatus==='fail'?'#ff4466':swap.simStatus==='ok'?'linear-gradient(135deg,#00cc66,#00ff88)':'linear-gradient(135deg,#627eea,#9945ff)',border:'none',borderRadius:10,color:'#fff',...s.mono,fontSize:'0.9rem',fontWeight:700,cursor:swap.loading||!swap.amount||swap.simStatus==='fail'?'not-allowed':'pointer'}}>{swap.loading?'⏳ Getting quote...':swap.simStatus==='simulating'?'🔍 Simulating...':swap.simStatus==='ok'?`✅ Verified — Swap ${swap.fromToken} to ${swap.toToken}`:swap.simStatus==='fail'?'⚠️ Simulation failed':swap.simStatus==='nowallet'?'🔗 Connect wallet to verify':`🔄 Swap ${swap.fromToken} to ${swap.toToken}`}</button>
+          {swap.simStatus==='fail'&&swap.simError&&<div style={{padding:'10px',background:'rgba(255,68,102,0.08)',border:'1px solid rgba(255,68,102,0.2)',borderRadius:8,color:'#ff4466',fontSize:'0.75rem',marginTop:8}}>⚠️ {swap.simError}</div>}
+          {swap.simStatus==='nowallet'&&<div style={{padding:'10px',background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:8,color:'var(--text-muted)',fontSize:'0.72rem',marginTop:8}}>Connect your wallet to verify this swap before sending it.</div>}
           <div style={{textAlign:'center',fontSize:'0.62rem',...s.muted,marginTop:10}}>UniSwap V3 · Gasless ⚡ · TheWall Universal 🦋</div>
           </div>}
         </div>}

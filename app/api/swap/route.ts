@@ -12,7 +12,7 @@ function getAddr(sym: string, chainId: number): string {
 }
 export async function POST(req: NextRequest) {
   try {
-    const { action, fromToken, toToken, amount } = await req.json();
+    const { action, fromToken, toToken, amount, fromAddress } = await req.json();
     if (!fromToken || !toToken || !amount) return NextResponse.json({ error: 'Missing params' }, { status: 400 });
     const chainId = CHAIN_IDS[fromToken] || 1;
     const src = getAddr(fromToken, chainId);
@@ -27,6 +27,14 @@ export async function POST(req: NextRequest) {
       const toDec = ['USDC','USDT'].includes(toToken) ? 6 : 18;
       const toAmount = (Number(data.dstAmount) / 10 ** toDec).toFixed(6);
       return NextResponse.json({ success: true, quote: { fromToken, toToken, amount, toAmount, priceImpact: 0.2, route: `${fromToken} → 1inch V6 → ${toToken}`, protocols: '1inch' } });
+    }
+    if (action === 'simulate') {
+      if (!fromAddress) return NextResponse.json({ error: 'Wallet not connected' }, { status: 400 });
+      const url = `https://api.1inch.dev/swap/v6.0/${chainId}/swap?src=${src}&dst=${dst}&amount=${amtWei}&from=${fromAddress}&slippage=1&disableEstimate=false`;
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${INCH_KEY}` } });
+      const data = await res.json();
+      if (data.error) return NextResponse.json({ success: true, simOk: false, simError: data.description || data.error });
+      return NextResponse.json({ success: true, simOk: true, gas: data.tx?.gas, gasPrice: data.tx?.gasPrice, to: data.tx?.to });
     }
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   } catch (e: any) { return NextResponse.json({ error: e.message }, { status: 500 }); }
