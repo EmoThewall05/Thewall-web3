@@ -17,6 +17,7 @@ export async function initAppKit() {
   const mainnetChains = Object.keys(allNetworks)
     .filter(k => k !== 'AVAILABLE_NAMESPACES' && typeof (allNetworks as any)[k] === 'object' && (allNetworks as any)[k] !== null && !TEST_PATTERN.test(k))
     .map(k => (allNetworks as any)[k])
+    .filter((net: any) => !net.chainNamespace || net.chainNamespace === 'eip155')
   const networks = mainnetChains.length > 0 ? mainnetChains : [allNetworks.mainnet, allNetworks.arbitrum]
   const ethersAdapter = new EthersAdapter()
   appkitModal = createAppKit({
