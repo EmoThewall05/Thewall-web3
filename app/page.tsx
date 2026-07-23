@@ -9,6 +9,7 @@ interface UserWallet  { address: string; type: 'smart'|'external'; email?: strin
 interface NewsItem    { title: string; url: string; published: string; source: string; currencies: string[]; positive: number; negative: number }
 interface TxItem      { hash: string; from: string; to: string; value: string; time: string; gas: string; status: string; method: string }
 interface SwapState   { fromToken: string; toToken: string; amount: string; estimatedOut: string; loading: boolean; error: string; success: string; priceImpact: number; route: string }
+interface BridgeState { fromChain: string; toChain: string; fromToken: string; toToken: string; amount: string; estimatedOut: string; loading: boolean; error: string; success: string; estimatedTime: string; feesUsd: string; bridge: string; route: string }
 interface PriceAlert  { id: string; symbol: string; targetPrice: number; condition: 'above'|'below'; triggered: boolean }
 interface SearchResult { address: string; ethBalance: number; ethUsd: number; txCount: number; loading: boolean; error: string }
 
@@ -96,6 +97,8 @@ export default function TheWall() {
   // FIX 1: Address book state - loads from localStorage correctly
   const [addressBook, setAddressBook] = useState<{name:string;address:string}[]>([])
   const [swap, setSwap] = useState<SwapState>({ fromToken:'ETH', toToken:'SOL', amount:'', estimatedOut:'', loading:false, error:'', success:'', priceImpact:0, route:'' })
+  const [bridge, setBridge] = useState<BridgeState>({ fromChain:'ETH', toChain:'ARB', fromToken:'ETH', toToken:'ETH', amount:'', estimatedOut:'', loading:false, error:'', success:'', estimatedTime:'', feesUsd:'', bridge:'', route:'' })
+  const [tradeTab, setTradeTab] = useState<'swap'|'bridge'>('swap')
   const [chainStatus, setChainStatus] = useState<Record<string,'online'|'offline'|'checking'>>({ earth:'checking', soul:'checking', moon:'checking', orbit:'checking', birth:'checking' })
   const [chartToken, setChartToken]   = useState('ETH')
   const [chartDays, setChartDays]     = useState('7')
@@ -311,10 +314,27 @@ export default function TheWall() {
   useEffect(()=>{if(swap.amount)estimateSwap(swap.amount,swap.fromToken,swap.toToken)},[swap.amount,swap.fromToken,swap.toToken,estimateSwap])
 
   const handleSwap = async()=>{
-    if(!swap.amount||!swap.estimatedOut)return
+    if(!swap.amount)return
     setSwap(p=>({...p,loading:true,error:'',success:''}))
-    await new Promise(r=>setTimeout(r,2000))
-    setSwap(p=>({...p,loading:false,success:`✅ Swapped ${swap.amount} ${swap.fromToken} → ${swap.estimatedOut} ${swap.toToken}`,amount:'',estimatedOut:''}))
+    try {
+      const qRes = await fetch('/api/swap', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ action:'quote', fromToken:swap.fromToken, toToken:swap.toToken, amount:swap.amount }) })
+      const qData = await qRes.json()
+      if(!qData.success) throw new Error(qData.error||'Quote failed')
+      const q = qData.quote
+      setSwap(p=>({...p, loading:false, estimatedOut:q.toAmount, priceImpact:q.priceImpact, route:q.route, success:`OK ${swap.amount} ${swap.fromToken} to ${q.toAmount} ${swap.toToken}`}))
+    } catch(e:any) { setSwap(p=>({...p,loading:false,error:e.message||'Swap failed'})) }
+  }
+
+  const handleBridgeQuote = async()=>{
+    if(!bridge.amount)return
+    setBridge(p=>({...p,loading:true,error:'',success:''}))
+    try {
+      const res = await fetch('/api/bridge', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ action:'quote', fromChain:bridge.fromChain, toChain:bridge.toChain, fromToken:bridge.fromToken, toToken:bridge.toToken, amount:bridge.amount }) })
+      const data = await res.json()
+      if(!data.success) throw new Error(data.error||'Bridge quote failed')
+      const q = data.quote
+      setBridge(p=>({...p, loading:false, estimatedOut:q.toAmount, estimatedTime:q.estimatedTime, feesUsd:q.feesUsd, bridge:q.bridge, route:q.route, success:`OK ${q.toAmount} ${bridge.toToken} via ${q.bridge} | ${q.estimatedTime} | $${q.feesUsd}`}))
+    } catch(e:any) { setBridge(p=>({...p,loading:false,error:e.message||'Bridge failed'})) }
   }
 
   const searchWallet = async(addr:string)=>{
@@ -511,7 +531,48 @@ export default function TheWall() {
   🔗 Connect Wallet
 </button>
           </div>
-          <div style={{display:'flex',gap:8,marginBottom:16}}>{(['swap','send','receive']as const).map(t=><button key={t} onClick={()=>{if(t!=='swap'){setSendOpen(true);setSendTab(t as 'send'|'receive')}}} style={{flex:1,padding:'10px',border:'1px solid var(--border)',borderRadius:8,background:t==='swap'?'var(--cyan-glow)':'var(--bg2)',color:t==='swap'?'var(--cyan)':'var(--text-muted)',...s.mono,fontSize:'0.75rem',cursor:'pointer'}}>{t==='swap'?'🔄 Swap':t==='send'?'📤 Send':'📥 Receive'}</button>)}</div>
+          <div style={{display:'flex',gap:6,marginBottom:16}}>
+            {(['swap','bridge'] as const).map(t=><button key={t} onClick={()=>setTradeTab(t)} style={{flex:1,padding:'10px',border:'1px solid',borderColor:tradeTab===t?'var(--cyan)':'var(--border)',borderRadius:8,background:tradeTab===t?'var(--cyan-glow)':'var(--bg2)',color:tradeTab===t?'var(--cyan)':'var(--text-muted)',...s.mono,fontSize:'0.75rem',cursor:'pointer'}}>{t==='swap'?'🔄 Swap':'🌉 Bridge'}</button>)}
+            <button onClick={()=>{setSendOpen(true);setSendTab('send')}} style={{flex:1,padding:'10px',border:'1px solid var(--border)',borderRadius:8,background:'var(--bg2)',color:'var(--text-muted)',...s.mono,fontSize:'0.75rem',cursor:'pointer'}}>📤 Send</button>
+            <button onClick={()=>{setSendOpen(true);setSendTab('receive')}} style={{flex:1,padding:'10px',border:'1px solid var(--border)',borderRadius:8,background:'var(--bg2)',color:'var(--text-muted)',...s.mono,fontSize:'0.75rem',cursor:'pointer'}}>📥 Rcv</button>
+          </div>
+          {tradeTab==='bridge'&&<div>
+            <div style={s.card}>
+              <div style={s.label}>FROM</div>
+              <div style={{display:'flex',gap:8,marginBottom:8}}>
+                <select value={bridge.fromChain} onChange={e=>setBridge(p=>({...p,fromChain:e.target.value,estimatedOut:'',success:''}))} style={{flex:1,padding:'10px',background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:8,color:'var(--text)',...s.mono,fontSize:'0.82rem'}}>
+                  {['ETH','ARB','BNB','POL'].map(ch=><option key={ch}>{ch}</option>)}
+                </select>
+                <select value={bridge.fromToken} onChange={e=>setBridge(p=>({...p,fromToken:e.target.value,estimatedOut:'',success:''}))} style={{flex:1,padding:'10px',background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:8,color:'var(--text)',...s.mono,fontSize:'0.82rem'}}>
+                  {['ETH','USDC','USDT'].map(tk=><option key={tk}>{tk}</option>)}
+                </select>
+              </div>
+              <input type="number" placeholder="0.00" value={bridge.amount} onChange={e=>setBridge(p=>({...p,amount:e.target.value,estimatedOut:'',success:''}))} style={{width:'100%',padding:'10px',background:'var(--bg3)',border:'1px solid var(--border-bright)',borderRadius:8,color:'var(--text)',...s.mono,fontSize:'1rem',boxSizing:'border-box'}}/>
+            </div>
+            <div style={{textAlign:'center',margin:'8px 0',fontSize:'1.4rem'}}>🌉</div>
+            <div style={s.card}>
+              <div style={s.label}>TO</div>
+              <div style={{display:'flex',gap:8,marginBottom:8}}>
+                <select value={bridge.toChain} onChange={e=>setBridge(p=>({...p,toChain:e.target.value,estimatedOut:'',success:''}))} style={{flex:1,padding:'10px',background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:8,color:'var(--text)',...s.mono,fontSize:'0.82rem'}}>
+                  {['ETH','ARB','BNB','POL'].filter(ch=>ch!==bridge.fromChain).map(ch=><option key={ch}>{ch}</option>)}
+                </select>
+                <select value={bridge.toToken} onChange={e=>setBridge(p=>({...p,toToken:e.target.value,estimatedOut:'',success:''}))} style={{flex:1,padding:'10px',background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:8,color:'var(--text)',...s.mono,fontSize:'0.82rem'}}>
+                  {['ETH','USDC','USDT'].map(tk=><option key={tk}>{tk}</option>)}
+                </select>
+              </div>
+              <div style={{padding:'10px',background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:8,color:bridge.estimatedOut?'#00ff88':'var(--text-muted)',...s.mono,fontSize:'1rem',minHeight:42}}>{bridge.estimatedOut||'0.00'}</div>
+            </div>
+            {bridge.estimatedOut&&<div style={{...s.card,marginBottom:12,fontSize:'0.7rem',...s.mono}}>
+              <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}><span style={s.muted}>Bridge</span><span style={s.cyan}>{bridge.bridge}</span></div>
+              <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}><span style={s.muted}>Time</span><span style={{color:'#ffd700'}}>{bridge.estimatedTime}</span></div>
+              <div style={{display:'flex',justifyContent:'space-between'}}><span style={s.muted}>Fees</span><span style={{color:'#00ff88'}}>${bridge.feesUsd}</span></div>
+            </div>}
+            {bridge.error&&<div style={{padding:'10px',background:'rgba(255,68,102,0.08)',border:'1px solid rgba(255,68,102,0.2)',borderRadius:8,color:'#ff4466',fontSize:'0.75rem',marginBottom:12}}>{bridge.error}</div>}
+            {bridge.success&&<div style={{padding:'10px',background:'rgba(0,255,136,0.05)',border:'1px solid rgba(0,255,136,0.2)',borderRadius:8,color:'#00ff88',fontSize:'0.72rem',marginBottom:12,wordBreak:'break-word'}}>{bridge.success}</div>}
+            <button onClick={handleBridgeQuote} disabled={bridge.loading||!bridge.amount} style={{width:'100%',padding:'14px',background:bridge.loading||!bridge.amount?'var(--bg3)':'linear-gradient(135deg,#f7931a,#9945ff)',border:'none',borderRadius:10,color:'#fff',...s.mono,fontSize:'0.9rem',fontWeight:700,cursor:bridge.loading||!bridge.amount?'not-allowed':'pointer'}}>{bridge.loading?'Finding Route...':'🌉 Get Bridge Quote'}</button>
+            <div style={{textAlign:'center',fontSize:'0.62rem',...s.muted,marginTop:10}}>Powered by LI.FI · TheWall 🦋</div>
+          </div>}
+          {tradeTab==='swap'&&<div>
           <div style={s.card}><div style={s.label}>FROM</div><div style={{display:'flex',gap:8,alignItems:'center'}}><select value={swap.fromToken} onChange={e=>setSwap(p=>({...p,fromToken:e.target.value,toToken:e.target.value===p.toToken?SWAP_TOKENS.filter(t=>t!==e.target.value)[0]:p.toToken,estimatedOut:''}))} style={{flex:1,padding:'10px',background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:8,color:'var(--text)',...s.mono,fontSize:'0.82rem',cursor:'pointer'}}>{SWAP_TOKENS.map(t=><option key={t} value={t}>{t}</option>)}</select><input type="number" placeholder="0.00" value={swap.amount} onChange={e=>setSwap(p=>({...p,amount:e.target.value}))} style={{flex:1.5,padding:'10px',background:'var(--bg3)',border:'1px solid var(--border-bright)',borderRadius:8,color:'var(--text)',...s.mono,fontSize:'1rem'}}/></div>{swap.amount&&prices[swap.fromToken]&&<div style={{fontSize:'0.68rem',...s.muted,marginTop:6}}>≈ ${(parseFloat(swap.amount)*(prices[swap.fromToken]?.price||0)).toFixed(2)}</div>}</div>
           <div style={{textAlign:'center',margin:'4px 0'}}><button onClick={()=>setSwap(p=>({...p,fromToken:p.toToken,toToken:p.fromToken,estimatedOut:'',amount:''}))} style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:'50%',width:36,height:36,...s.cyan,fontSize:'1rem',cursor:'pointer'}}>⇅</button></div>
           <div style={{...s.card,marginBottom:16}}><div style={s.label}>TO</div><div style={{display:'flex',gap:8,alignItems:'center'}}><select value={swap.toToken} onChange={e=>setSwap(p=>({...p,toToken:e.target.value,estimatedOut:''}))} style={{flex:1,padding:'10px',background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:8,color:'var(--text)',...s.mono,fontSize:'0.82rem',cursor:'pointer'}}>{SWAP_TOKENS.filter(t=>t!==swap.fromToken).map(t=><option key={t} value={t}>{t}</option>)}</select><div style={{flex:1.5,padding:'10px',background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:8,color:swap.estimatedOut?'#00ff88':'var(--text-muted)',...s.mono,fontSize:'1rem',minHeight:42}}>{swap.estimatedOut||'0.00'}</div></div></div>
@@ -520,6 +581,7 @@ export default function TheWall() {
           {swap.success&&<div style={{padding:'10px',background:'rgba(0,255,136,0.05)',border:'1px solid rgba(0,255,136,0.2)',borderRadius:8,color:'#00ff88',fontSize:'0.75rem',marginBottom:12}}>{swap.success}</div>}
           <button onClick={handleSwap} disabled={swap.loading||!swap.amount||!swap.estimatedOut} style={{width:'100%',padding:'14px',background:swap.loading||!swap.amount?'var(--bg3)':'linear-gradient(135deg,#627eea,#9945ff)',border:'none',borderRadius:10,color:'#fff',...s.mono,fontSize:'0.9rem',fontWeight:700,cursor:swap.loading||!swap.amount?'not-allowed':'pointer'}}>{swap.loading?'⏳ Swapping...':`🔄 Swap ${swap.fromToken} to ${swap.toToken}`}</button>
           <div style={{textAlign:'center',fontSize:'0.62rem',...s.muted,marginTop:10}}>UniSwap V3 · Gasless ⚡ · TheWall Universal 🦋</div>
+          </div>}
         </div>}
 
         {bottomTab==='markets'&&<div>
