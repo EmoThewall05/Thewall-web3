@@ -138,6 +138,35 @@ export default function TheWall() {
     } catch {}
   }, [])
 
+  // Capture ?ref= param on load and store pending referral
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const ref = params.get('ref')
+    if (ref && ref.length === 42 && ref.startsWith('0x') && !localStorage.getItem('referralApplied')) {
+      localStorage.setItem('pendingReferral', ref)
+    }
+  }, [])
+
+  // Auto-apply pending referral once wallet connects
+  useEffect(() => {
+    if (!user?.address) return
+    const pending = localStorage.getItem('pendingReferral')
+    const applied = localStorage.getItem('referralApplied')
+    if (!pending || applied) return
+    if (pending.toLowerCase() === user.address.toLowerCase()) {
+      localStorage.removeItem('pendingReferral')
+      return
+    }
+    fetch('/api/referral/apply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ referrerAddress: pending, referredAddress: user.address })
+    }).then(r => r.json()).then(() => {
+      localStorage.setItem('referralApplied', 'true')
+      localStorage.removeItem('pendingReferral')
+    }).catch(() => {})
+  }, [user?.address])
+
   useEffect(() => {
     const checkExistingConnection = async () => {
       const {initAppKit} = await import('@/app/context/wallet')
