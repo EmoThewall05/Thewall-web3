@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 const SUPABASE_URL = process.env.SUPABASE_URL!
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_MY_NETWORK!
 const DAY_MS = 24 * 60 * 60 * 1000
+const PREMIUM_COOLDOWN_MS = 6 * 60 * 60 * 1000
 const REFERRER_BONUS = 50
 const REFERRED_BONUS = 20
 
@@ -56,6 +57,12 @@ async function processReferralReward(wallet: string) {
   })
 }
 
+function isPremiumActive(row: any) {
+  if (!row.is_premium) return false
+  if (!row.premium_expires_at) return false
+  return new Date(row.premium_expires_at).getTime() > Date.now()
+}
+
 export async function GET(req: NextRequest) {
   const address = req.nextUrl.searchParams.get('address')
   if (!address) return NextResponse.json({ error: 'address required' }, { status: 400 })
@@ -70,10 +77,21 @@ export async function GET(req: NextRequest) {
       body: JSON.stringify({ wallet_address: wallet, balance: 0, last_claim_at: null })
     })
     const inserted = await insertRes.json()
-    return NextResponse.json({ balance: inserted[0]?.balance ?? 0, lastClaimAt: null })
+    return NextResponse.json({
+      balance: inserted[0]?.balance ?? 0,
+      lastClaimAt: null,
+      isPremium: false,
+      premiumExpiresAt: null
+    })
   }
 
-  return NextResponse.json({ balance: rows[0].balance, lastClaimAt: rows[0].last_claim_at })
+  const row = rows[0]
+  return NextResponse.json({
+    balance: row.balance,
+    lastClaimAt: row.last_claim_at,
+    isPremium: isPremiumActive(row),
+    premiumExpiresAt: row.premium_expires_at
+  })
 }
 
 export async function POST(req: NextRequest) {
@@ -102,9 +120,10 @@ export async function POST(req: NextRequest) {
 
   const row = rows[0]
   const lastClaim = row.last_claim_at ? new Date(row.last_claim_at) : null
+  const cooldownMs = isPremiumActive(row) ? PREMIUM_COOLDOWN_MS : DAY_MS
 
-  if (lastClaim && now.getTime() - lastClaim.getTime() < DAY_MS) {
-    const remainingMs = DAY_MS - (now.getTime() - lastClaim.getTime())
+  if (lastClaim && now.getTime() - lastClaim.getTime() < cooldownMs) {
+    const remainingMs = cooldownMs - (now.getTime() - lastClaim.getTime())
     return NextResponse.json(
       { error: 'already_claimed', remainingMs, balance: row.balance },
       { status: 429 }
