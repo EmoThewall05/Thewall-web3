@@ -118,16 +118,14 @@ export default function TransactionApproval({
     setLoading(false)
   }
 
-  // 🚀 ബയോമെട്രിക് ലോജിക് (WebAuthn)
+  // 🚀 ബയോമെട്രിക് ലോജിക് (WebAuthn) - backend verify ചെയ്യുന്ന version
   const handleBiometric = async () => {
     setLoading(true)
     setError('')
     try {
-      // ചലഞ്ച് ഉണ്ടാക്കുന്നു
       const challenge = new Uint8Array(32)
       window.crypto.getRandomValues(challenge)
 
-      // ആൻഡ്രോയിഡ് ഫിംഗർപ്രിന്റ്/ഫേസ് ഐഡി പോപ്പ്അപ്പ് കാണിക്കുന്നു
       const credential = await navigator.credentials.get({
         publicKey: {
           challenge,
@@ -135,11 +133,34 @@ export default function TransactionApproval({
           userVerification: "required",
           rpId: window.location.hostname
         }
-      })
+      }) as PublicKeyCredential | null
 
-      if (credential) {
+      if (!credential) {
+        setError('Biometric verification cancelled. 🦋')
+        setLoading(false)
+        return
+      }
+
+      // Credential response backend-ലേക്ക് അയക്കുന്നു - server verify ചെയ്യും
+      const assertionResponse = credential.response as AuthenticatorAssertionResponse
+      const res = await fetch('/api/auth/webauthn-verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          txId,
+          credentialId: credential.id,
+          authenticatorData: Array.from(new Uint8Array(assertionResponse.authenticatorData)),
+          clientDataJSON: Array.from(new Uint8Array(assertionResponse.clientDataJSON)),
+          signature: Array.from(new Uint8Array(assertionResponse.signature)),
+        }),
+      })
+      const data = await res.json()
+
+      if (data.valid) {
         setLayer('done')
         setTimeout(() => onApproved(), 1000)
+      } else {
+        setError('Biometric verification failed. 🦋')
       }
     } catch (err: any) {
       console.error(err)

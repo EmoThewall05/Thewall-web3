@@ -1,0 +1,2 @@
+#!/data/data/com.termux/files/usr/bin/bash
+exec "/data/data/com.termux/files/usr/lib/node_modules/@anthropic-ai/claude-code-linux-arm64-musl/claude" "$@"
