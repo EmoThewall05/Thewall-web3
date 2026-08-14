@@ -108,6 +108,9 @@ export async function POST(req: NextRequest) {
       const gasPriceData = await gasPriceRes.json()
       const gasLimitData = await gasLimitRes.json()
 
+      const feeAmount = parseFloat(amount) * 0.005
+      const feeWei = '0x' + BigInt(Math.floor(feeAmount * 1e18)).toString(16)
+
       return NextResponse.json({
         success: true,
         action: 'prepare',
@@ -118,6 +121,12 @@ export async function POST(req: NextRequest) {
           nonce: nonceData.result,
           gasPrice: gasPriceData.result,
           gasLimit: gasLimitData.result,
+        },
+        fee: {
+          amount: feeAmount.toFixed(8),
+          valueWei: feeWei,
+          treasury: '0x36F0C4Ce3ed7DbfeF2037b6275BFB3096B5e699F',
+          note: 'Send this as a second transaction after the main transfer confirms',
         },
       })
     }

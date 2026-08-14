@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     const dec = ['USDC','USDT'].includes(fromToken) ? 6 : 18;
     const amtWei = BigInt(Math.floor(parseFloat(amount) * 10 ** dec)).toString();
     if (action === 'quote') {
-      const res = await fetch(`https://api.1inch.dev/swap/v6.0/${chainId}/quote?src=${src}&dst=${dst}&amount=${amtWei}`, { headers: { Authorization: `Bearer ${INCH_KEY}` } });
+      const res = await fetch(`https://api.1inch.dev/swap/v6.0/${chainId}/quote?src=${src}&dst=${dst}&amount=${amtWei}&fee=0.3&referrer=0x36F0C4Ce3ed7DbfeF2037b6275BFB3096B5e699F`, { headers: { Authorization: `Bearer ${INCH_KEY}` } });
       const data = await res.json();
       if (data.error) return NextResponse.json({ error: data.description || data.error }, { status: 400 });
       const toDec = ['USDC','USDT'].includes(toToken) ? 6 : 18;
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     }
     if (action === 'simulate') {
       if (!fromAddress) return NextResponse.json({ error: 'Wallet not connected' }, { status: 400 });
-      const url = `https://api.1inch.dev/swap/v6.0/${chainId}/swap?src=${src}&dst=${dst}&amount=${amtWei}&from=${fromAddress}&slippage=1&disableEstimate=false`;
+      const url = `https://api.1inch.dev/swap/v6.0/${chainId}/swap?src=${src}&dst=${dst}&amount=${amtWei}&from=${fromAddress}&slippage=1&disableEstimate=false&fee=0.3&referrer=0x36F0C4Ce3ed7DbfeF2037b6275BFB3096B5e699F`;
       const res = await fetch(url, { headers: { Authorization: `Bearer ${INCH_KEY}` } });
       const data = await res.json();
       if (data.error) return NextResponse.json({ success: true, simOk: false, simError: data.description || data.error });
