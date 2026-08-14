@@ -80,6 +80,10 @@ export default function TheWall() {
   const [emoClaiming, setEmoClaiming] = useState(false)
   const [emoClaimMsg, setEmoClaimMsg] = useState('')
   const [emoNextClaimAt, setEmoNextClaimAt] = useState<number|null>(null)
+  const [isPremium, setIsPremium] = useState(false)
+  const [premiumExpiresAt, setPremiumExpiresAt] = useState<string|null>(null)
+  const [premiumLoading, setPremiumLoading] = useState(false)
+  const [premiumMsg, setPremiumMsg] = useState('')
   const [bottomTab, setBottomTab]   = useState<BottomTab>('home')
   const [refreshing, setRefreshing] = useState(false)
   const [searchOpen, setSearchOpen]     = useState(false)
@@ -240,12 +244,15 @@ export default function TheWall() {
       const res = await fetch('/api/emocoin/claim?address=' + address)
       const data = await res.json()
       if (typeof data.balance === 'number') setEmoBalance(data.balance)
+      const cooldownMs = data.isPremium ? 6*60*60*1000 : 24*60*60*1000
       if (data.lastClaimAt) {
-        const next = new Date(data.lastClaimAt).getTime() + 24*60*60*1000
+        const next = new Date(data.lastClaimAt).getTime() + cooldownMs
         setEmoNextClaimAt(next > Date.now() ? next : null)
       } else {
         setEmoNextClaimAt(null)
       }
+      setIsPremium(!!data.isPremium)
+      setPremiumExpiresAt(data.premiumExpiresAt || null)
     } catch (e) {}
   }, [])
 
@@ -274,6 +281,33 @@ export default function TheWall() {
     }
     setEmoClaiming(false)
   }, [user, emoClaiming])
+
+  const buyPremium = useCallback(async () => {
+    if (!user?.address || premiumLoading) return
+    setPremiumLoading(true)
+    setPremiumMsg('')
+    try {
+      const res = await fetch('/api/emocoin/premium', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: user.address })
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        setIsPremium(true)
+        setPremiumExpiresAt(data.premiumExpiresAt)
+        if (typeof data.balance === 'number') setEmoBalance(data.balance)
+        setPremiumMsg('Premium activated! ⭐')
+      } else if (data.error === 'insufficient_balance') {
+        setPremiumMsg(`Need ${data.required} EMC, you have ${data.balance}`)
+      } else {
+        setPremiumMsg('Upgrade failed')
+      }
+    } catch (e) {
+      setPremiumMsg('Upgrade failed')
+    }
+    setPremiumLoading(false)
+  }, [user, premiumLoading])
 
   const fetchTxHistory = useCallback(async (address: string) => {
     setTxLoading(true)
@@ -664,7 +698,16 @@ export default function TheWall() {
         {bottomTab==='settings'&&<div>
           <div style={{display:'flex',gap:6,marginBottom:16,flexWrap:'wrap'}}>{(['profile','security','history','assets','dapps']as const).map(t=><button key={t} onClick={()=>setSettingsTab(t)} style={{flex:1,padding:'9px',border:'1px solid',borderColor:settingsTab===t?'var(--cyan)':'var(--border)',borderRadius:8,background:settingsTab===t?'var(--cyan-glow)':'var(--bg2)',color:settingsTab===t?'var(--cyan)':'var(--text-muted)',...s.mono,fontSize:'0.68rem',cursor:'pointer',minWidth:60}}>{t==='profile'?'👤':t==='security'?'🔐':t==='history'?'💳':t==='assets'?'💎':'🌐'} {t}</button>)}</div>
           {settingsTab==='profile'&&<div style={{position:'relative',zIndex:10000}}>
-            <div style={{...s.card,textAlign:'center'}}><div style={{fontSize:'3rem',marginBottom:8}}>🦋</div><div style={{fontSize:'0.9rem',...s.mono,color:'var(--text)',fontWeight:700,marginBottom:4}}>{user?.email||'Guest'}</div><div style={{fontSize:'0.68rem',...s.muted,marginBottom:12}}>{user?.address?(user?.type==='smart'?'Smart Wallet · TOTP 🔢':'External Wallet'):'Not Connected'}</div><div style={{padding:'10px',background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:8,fontSize:'0.7rem',...s.mono,...s.cyan,wordBreak:'break-all'}}>{user?.address||'No wallet connected'}</div>{user?.address&&<button onClick={()=>navigator.clipboard.writeText(user.address)} style={{marginTop:8,padding:'8px 16px',background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:6,...s.cyan,...s.mono,fontSize:'0.72rem',cursor:'pointer'}}>📋 Copy Address</button>}</div>
+            <div style={{...s.card,textAlign:'center'}}><div style={{fontSize:'3rem',marginBottom:8}}>🦋</div><div style={{fontSize:'0.68rem',...s.muted,marginBottom:12}}>{user?.address?(user?.type==='smart'?'Smart Wallet · TOTP 🔢':'External Wallet'):'Not Connected'}</div><div style={{padding:'10px',background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:8,fontSize:'0.7rem',...s.mono,...s.cyan,wordBreak:'break-all'}}>{user?.address||'No wallet connected'}</div>{user?.address&&<button onClick={()=>navigator.clipboard.writeText(user.address)} style={{marginTop:8,padding:'8px 16px',background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:6,...s.cyan,...s.mono,fontSize:'0.72rem',cursor:'pointer'}}>📋 Copy Address</button>}</div>
+            <div style={{...s.card,border:`1px solid ${isPremium?'rgba(0,255,136,0.3)':'var(--border)'}`,background:isPremium?'rgba(0,255,136,0.04)':'var(--bg2)'}}>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:isPremium?8:12}}>
+                <div style={{display:'flex',alignItems:'center',gap:8}}><span style={{fontSize:'1.2rem'}}>⭐</span><span style={{fontSize:'0.82rem',...s.mono,color:isPremium?'#00ff88':'var(--text)',fontWeight:700}}>{isPremium?'Premium ✓':'Free Plan'}</span></div>
+                {!isPremium&&<span style={{fontSize:'0.62rem',...s.muted}}>500 EMC/mo</span>}
+              </div>
+              {isPremium?<div style={{fontSize:'0.68rem',color:'#00ff88',...s.mono,marginBottom:8}}>Ad-free · 6hr claim cooldown{premiumExpiresAt?` · Renews ${new Date(premiumExpiresAt).toLocaleDateString()}`:''}</div>:<div style={{fontSize:'0.68rem',...s.muted,...s.mono,marginBottom:10,lineHeight:1.5}}>Go ad-free and cut your daily claim cooldown from 24hr to 6hr.</div>}
+              {!isPremium&&<button onClick={buyPremium} disabled={premiumLoading||!user?.address} style={{width:'100%',padding:'10px',background:premiumLoading||!user?.address?'var(--bg3)':'linear-gradient(135deg,#00cc66,#00ff88)',border:'none',borderRadius:8,color:premiumLoading||!user?.address?'var(--text-muted)':'#04140b',...s.mono,fontSize:'0.8rem',fontWeight:700,cursor:premiumLoading||!user?.address?'not-allowed':'pointer'}}>{premiumLoading?'Processing...':'⭐ Upgrade to Premium — 500 EMC'}</button>}
+              {premiumMsg&&<div style={{fontSize:'0.65rem',marginTop:8,color:isPremium?'#00ff88':'#ff4466',...s.mono}}>{premiumMsg}</div>}
+            </div>
             <div style={s.card}><div style={{...s.label,marginBottom:12}}>WALLET STATS</div>{[{label:'Portfolio',value:fmt(portfolioTotal)},{label:'EmoCoins',value:EMOCOIN.balance+' EMC'},{label:'Goal',value:goalPct.toFixed(4)+'%'},{label:'Active Alerts',value:alerts.filter(a=>!a.triggered).length.toString()},{label:'Address Book',value:addressBook.length.toString()}].map(stat=><div key={stat.label} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid var(--border)'}}><span style={{fontSize:'0.72rem',...s.muted}}>{stat.label}</span><span style={{fontSize:'0.72rem',...s.mono,color:'var(--text)',fontWeight:700}}>{stat.value}</span></div>)}</div>
             <div style={{...s.card,marginBottom:16}}><div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}><span style={{fontSize:'1.3rem'}}>🎁</span><div style={{...s.label}}>INVITE & EARN</div></div><div style={{fontSize:'0.75rem',color:'var(--text-muted)',...s.mono,marginBottom:10,lineHeight:1.5}}>Share your link — you get <span style={{color:'var(--cyan)'}}>+50 EMC</span>, your friend gets <span style={{color:'var(--cyan)'}}>+20 EMC</span> bonus on their first claim.</div><div style={{padding:'10px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:8,fontSize:'0.7rem',...s.mono,wordBreak:'break-all',color:'var(--text)',marginBottom:10}}>{user?.address?`https://thewall-web3.e-mobies.com/?ref=${user.address}`:'Connect wallet to get your link'}</div><button onClick={()=>{if(user?.address){navigator.clipboard.writeText(`https://thewall-web3.e-mobies.com/?ref=${user.address}`);if(navigator.share){navigator.share({title:'Join TheWall',text:'Join me on TheWall — the gasless Web3 wallet!',url:`https://thewall-web3.e-mobies.com/?ref=${user.address}`}).catch(()=>{})}}}} style={{width:'100%',padding:'10px',background:'var(--cyan-glow)',border:'1px solid var(--cyan)',borderRadius:8,color:'var(--cyan)',...s.mono,fontSize:'0.8rem',cursor:'pointer',fontWeight:700}}>🔗 Copy & Share Invite Link</button></div>
 <div style={{...s.label,marginBottom:8}}>TREASURY</div>
