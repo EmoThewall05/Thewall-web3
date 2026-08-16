@@ -6,6 +6,8 @@ const DAY_MS = 24 * 60 * 60 * 1000
 const PREMIUM_COOLDOWN_MS = 6 * 60 * 60 * 1000
 const REFERRER_BONUS = 50
 const REFERRED_BONUS = 20
+const FREE_CLAIM_AMOUNT = 10
+const PREMIUM_CLAIM_AMOUNT = 50
 
 async function sbFetch(path: string, init?: RequestInit) {
   return fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
@@ -130,7 +132,8 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const newBalance = row.balance + 10
+  const claimAmount = isPremiumActive(row) ? PREMIUM_CLAIM_AMOUNT : FREE_CLAIM_AMOUNT
+  const newBalance = row.balance + claimAmount
   await sbFetch(`wallet_emo_coins?wallet_address=eq.${wallet}`, {
     method: 'PATCH',
     body: JSON.stringify({ balance: newBalance, last_claim_at: now.toISOString() })
