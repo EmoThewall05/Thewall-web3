@@ -81,6 +81,88 @@ export default function TheWall() {
   const [emoClaimMsg, setEmoClaimMsg] = useState('')
   const [emoNextClaimAt, setEmoNextClaimAt] = useState<number|null>(null)
   const [isPremium, setIsPremium] = useState(false)
+  const [emcBuyAmount, setEmcBuyAmount] = useState(100)
+  const [emcBuyLoading, setEmcBuyLoading] = useState(false)
+  const [emcBuyMsg, setEmcBuyMsg] = useState('')
+
+  async function buyEmc() {
+    if (!user?.address || emcBuyAmount <= 0) return
+    setEmcBuyLoading(true)
+    setEmcBuyMsg('')
+    try {
+      const orderRes = await fetch('https://thewall-emc.meradivin.workers.dev/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ wallet_address: user.address, emc_amount: emcBuyAmount }),
+      })
+      const orderData = await orderRes.json()
+      if (!orderData.success) {
+        setEmcBuyMsg('Order failed. Try again.')
+        setEmcBuyLoading(false)
+        return
+      }
+
+      const loadRazorpay = () =>
+        new Promise((resolve) => {
+          if ((window as any).Razorpay) return resolve(true)
+          const script = document.createElement('script')
+          script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+          script.onload = () => resolve(true)
+          script.onerror = () => resolve(false)
+          document.body.appendChild(script)
+        })
+
+      const loaded = await loadRazorpay()
+      if (!loaded) {
+        setEmcBuyMsg('Could not load payment gateway.')
+        setEmcBuyLoading(false)
+        return
+      }
+
+      const rzp = new (window as any).Razorpay({
+        key: orderData.key_id,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        order_id: orderData.order_id,
+        name: 'TheWall',
+        description: `Buy ${emcBuyAmount} EMC`,
+        handler: async function (response: any) {
+          try {
+            const verifyRes = await fetch('https://thewall-emc.meradivin.workers.dev/verify-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                wallet_address: user.address,
+                emc_amount: emcBuyAmount,
+              }),
+            })
+            const verifyData = await verifyRes.json()
+            if (verifyData.success) {
+              setEmcBuyMsg(`✅ ${emcBuyAmount} EMC added! New balance: ${verifyData.new_balance}`)
+            } else {
+              setEmcBuyMsg('Payment verification failed. Contact support.')
+            }
+          } catch {
+            setEmcBuyMsg('Verification error. Contact support.')
+          }
+          setEmcBuyLoading(false)
+        },
+        modal: {
+          ondismiss: function () {
+            setEmcBuyLoading(false)
+          },
+        },
+        theme: { color: '#ff3d3d' },
+      })
+      rzp.open()
+    } catch {
+      setEmcBuyMsg('Something went wrong.')
+      setEmcBuyLoading(false)
+    }
+  }
   const [premiumExpiresAt, setPremiumExpiresAt] = useState<string|null>(null)
   const [premiumLoading, setPremiumLoading] = useState(false)
   const [premiumMsg, setPremiumMsg] = useState('')
@@ -707,6 +789,27 @@ export default function TheWall() {
               {isPremium?<div style={{fontSize:'0.68rem',color:'#00ff88',...s.mono,marginBottom:8}}>Ad-free · 6hr claim cooldown{premiumExpiresAt?` · Renews ${new Date(premiumExpiresAt).toLocaleDateString()}`:''}</div>:<div style={{fontSize:'0.68rem',...s.muted,...s.mono,marginBottom:10,lineHeight:1.5}}>Go ad-free and cut your daily claim cooldown from 24hr to 6hr.</div>}
               {!isPremium&&<button onClick={buyPremium} disabled={premiumLoading||!user?.address} style={{width:'100%',padding:'10px',background:premiumLoading||!user?.address?'var(--bg3)':'linear-gradient(135deg,#00cc66,#00ff88)',border:'none',borderRadius:8,color:premiumLoading||!user?.address?'var(--text-muted)':'#04140b',...s.mono,fontSize:'0.8rem',fontWeight:700,cursor:premiumLoading||!user?.address?'not-allowed':'pointer'}}>{premiumLoading?'Processing...':'⭐ Upgrade to Premium — 500 EMC'}</button>}
               {premiumMsg&&<div style={{fontSize:'0.65rem',marginTop:8,color:isPremium?'#00ff88':'#ff4466',...s.mono}}>{premiumMsg}</div>}
+            </div>
+
+            <div style={{...s.card,marginTop:12,border:'1px solid rgba(255,61,61,0.35)',background:'linear-gradient(135deg, rgba(255,61,61,0.08), rgba(255,214,0,0.05))',boxShadow:'0 0 16px rgba(255,180,0,0.08)'}}>
+              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
+                <span style={{fontSize:'1.1rem'}}>🔥</span>
+                <span style={{fontSize:'0.82rem',...s.mono,fontWeight:700,background:'linear-gradient(90deg,#ff3d3d,#ffd600)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>Buy Emo Coins</span>
+              </div>
+              <div style={{fontSize:'0.68rem',...s.muted,marginBottom:10}}>1 EMC = ₹10. Instant top-up via Razorpay.</div>
+              <div style={{display:'flex',gap:8,marginBottom:10}}>
+                <input
+                  type="number"
+                  min={10}
+                  step={10}
+                  value={emcBuyAmount}
+                  onChange={(e)=>setEmcBuyAmount(Math.max(10, parseInt(e.target.value)||0))}
+                  style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid rgba(255,214,0,0.35)',background:'var(--bg2)',color:'#ffd600',...s.mono,fontSize:'0.85rem',fontWeight:700}}
+                />
+                <div style={{display:'flex',alignItems:'center',padding:'0 12px',borderRadius:8,border:'1px solid rgba(255,61,61,0.25)',background:'var(--bg2)',...s.mono,fontSize:'0.78rem',color:'var(--text-muted)'}}>₹{emcBuyAmount*10}</div>
+              </div>
+              <button onClick={buyEmc} disabled={emcBuyLoading||!user?.address} style={{width:'100%',padding:'10px',background:emcBuyLoading||!user?.address?'var(--bg3)':'linear-gradient(135deg,#ff3d3d,#ffd600)',border:'none',borderRadius:8,color:emcBuyLoading||!user?.address?'var(--text-muted)':'#1a0a00',...s.mono,fontSize:'0.8rem',fontWeight:700,cursor:emcBuyLoading||!user?.address?'not-allowed':'pointer'}}>{emcBuyLoading?'Processing...':`🔥 Buy ${emcBuyAmount} EMC`}</button>
+              {emcBuyMsg&&<div style={{fontSize:'0.65rem',marginTop:8,color:emcBuyMsg.startsWith('✅')?'#00ff88':'#ff4466',...s.mono}}>{emcBuyMsg}</div>}
             </div>
             <div style={s.card}><div style={{...s.label,marginBottom:12}}>WALLET STATS</div>{[{label:'Portfolio',value:fmt(portfolioTotal)},{label:'EmoCoins',value:EMOCOIN.balance+' EMC'},{label:'Goal',value:goalPct.toFixed(4)+'%'},{label:'Active Alerts',value:alerts.filter(a=>!a.triggered).length.toString()},{label:'Address Book',value:addressBook.length.toString()}].map(stat=><div key={stat.label} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid var(--border)'}}><span style={{fontSize:'0.72rem',...s.muted}}>{stat.label}</span><span style={{fontSize:'0.72rem',...s.mono,color:'var(--text)',fontWeight:700}}>{stat.value}</span></div>)}</div>
             <div style={{...s.card,marginBottom:16}}><div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}><span style={{fontSize:'1.3rem'}}>🎁</span><div style={{...s.label}}>INVITE & EARN</div></div><div style={{fontSize:'0.75rem',color:'var(--text-muted)',...s.mono,marginBottom:10,lineHeight:1.5}}>Share your link — you get <span style={{color:'var(--cyan)'}}>+50 EMC</span>, your friend gets <span style={{color:'var(--cyan)'}}>+20 EMC</span> bonus on their first claim.</div><div style={{padding:'10px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:8,fontSize:'0.7rem',...s.mono,wordBreak:'break-all',color:'var(--text)',marginBottom:10}}>{user?.address?`https://thewall-web3.e-mobies.com/?ref=${user.address}`:'Connect wallet to get your link'}</div><button onClick={()=>{if(user?.address){navigator.clipboard.writeText(`https://thewall-web3.e-mobies.com/?ref=${user.address}`);if(navigator.share){navigator.share({title:'Join TheWall',text:'Join me on TheWall — the gasless Web3 wallet!',url:`https://thewall-web3.e-mobies.com/?ref=${user.address}`}).catch(()=>{})}}}} style={{width:'100%',padding:'10px',background:'var(--cyan-glow)',border:'1px solid var(--cyan)',borderRadius:8,color:'var(--cyan)',...s.mono,fontSize:'0.8rem',cursor:'pointer',fontWeight:700}}>🔗 Copy & Share Invite Link</button></div>
