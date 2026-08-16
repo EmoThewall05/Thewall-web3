@@ -2,6 +2,7 @@ export const runtime = 'edge'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getFeeTier } from '@/lib/feeTier'
+import { getUsdValue } from '@/lib/priceFeed'
 
 async function broadcastEthTx(signedTx: string): Promise<string> {
   const alchemyKey = process.env.ALCHEMY_API_KEY
@@ -44,7 +45,8 @@ export async function POST(req: NextRequest) {
       const blockhashData = await blockhashRes.json()
       const blockhash = blockhashData.result?.value?.blockhash
       const lamports = Math.floor(parseFloat(amount) * 1e9)
-      const { feePercent, isPremium } = await getFeeTier(from)
+      const usdValue = await getUsdValue('SOL', amount)
+      const { feePercent, isPremium } = await getFeeTier(from, usdValue)
       const feeLamports = Math.floor(lamports * (feePercent / 100))
       return NextResponse.json({
         success: true, action: 'prepare', chain: 'SOL',
@@ -64,7 +66,8 @@ export async function POST(req: NextRequest) {
       const nonceData = await nonceRes.json()
       const gasPriceData = await gasPriceRes.json()
       const gasLimitData = await gasLimitRes.json()
-      const { feePercent, isPremium } = await getFeeTier(from)
+      const usdValue = await getUsdValue('ETH', amount)
+      const { feePercent, isPremium } = await getFeeTier(from, usdValue)
       const feeAmount = parseFloat(amount) * (feePercent / 100)
       const feeWei = '0x' + BigInt(Math.floor(feeAmount * 1e18)).toString(16)
       return NextResponse.json({

@@ -4,7 +4,7 @@ const SUPABASE_KEY = process.env.NEXT_PUBLIC_MY_NETWORK!
 export const FREE_FEE_PCT = 1.0
 export const PREMIUM_FEE_PCT = 0.3
 
-export async function getFeeTier(walletAddress?: string | null): Promise<{ isPremium: boolean; feePercent: number }> {
+export async function getFeeTier(walletAddress?: string | null, txAmountUsd?: number): Promise<{ isPremium: boolean; feePercent: number; isFreeTx?: boolean; freeRemaining?: number }> {
   if (!walletAddress) return { isPremium: false, feePercent: FREE_FEE_PCT }
   try {
     const wallet = walletAddress.toLowerCase()
@@ -14,6 +14,21 @@ export async function getFeeTier(walletAddress?: string | null): Promise<{ isPre
     const rows = await res.json()
     const row = rows?.[0]
     const isPremium = !!(row?.is_premium && row?.premium_expires_at && new Date(row.premium_expires_at).getTime() > Date.now())
+
+    if (isPremium && typeof txAmountUsd === 'number') {
+      try {
+        const freeRes = await fetch(`${SUPABASE_URL}/rest/v1/rpc/check_and_consume_free_tx`, {
+          method: 'POST',
+          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ p_wallet_address: wallet, p_tx_amount_usd: txAmountUsd }),
+        })
+        const freeData = await freeRes.json()
+        if (freeData?.free) {
+          return { isPremium, feePercent: 0, isFreeTx: true, freeRemaining: freeData.remaining }
+        }
+      } catch {}
+    }
+
     return { isPremium, feePercent: isPremium ? PREMIUM_FEE_PCT : FREE_FEE_PCT }
   } catch {
     return { isPremium: false, feePercent: FREE_FEE_PCT }

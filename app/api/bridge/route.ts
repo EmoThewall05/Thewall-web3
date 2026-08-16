@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFeeTier } from '@/lib/feeTier';
+import { getUsdValue } from '@/lib/priceFeed';
 
 const LIFI = 'https://li.quest/v1';
 const CHAINS: Record<string, number> = { ETH: 1, ARB: 42161, BNB: 56, POL: 137 };
@@ -34,7 +35,9 @@ export async function POST(req: NextRequest) {
     const toAmount = (Number(data.estimate.toAmount) / 10 ** toDec).toFixed(6);
     const lifiFees = (data.estimate.feeCosts || []).reduce((s: any, f: any) => s + parseFloat(f.amountUSD || 0), 0);
 
-    const { feePercent, isPremium } = await getFeeTier(fromAddress);
+    const stableSymbols = ['USDC', 'USDT'];
+    const usdValue = stableSymbols.includes(fromToken) ? parseFloat(amount) : await getUsdValue(fromToken, amount);
+    const { feePercent, isPremium } = await getFeeTier(fromAddress, usdValue);
     const platformFeeAmount = parseFloat(amount) * (feePercent / 100);
 
     return NextResponse.json({

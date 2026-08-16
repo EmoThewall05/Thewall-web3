@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFeeTier } from '@/lib/feeTier';
+import { getUsdValue } from '@/lib/priceFeed';
 
 const INCH_KEY = process.env.ONEINCH_API_KEY || '';
 const CHAIN_IDS: Record<string, number> = { ETH: 1, ARB: 42161, BNB: 56 };
@@ -22,7 +23,9 @@ export async function POST(req: NextRequest) {
     const chainId = CHAIN_IDS[fromToken] || 1;
     const src = getAddr(fromToken, chainId);
     const dst = getAddr(toToken, chainId);
-    const { isPremium, feePercent } = await getFeeTier(fromAddress);
+    const stableSymbols = ['USDC', 'USDT'];
+    const usdValue = stableSymbols.includes(fromToken) ? parseFloat(amount) : await getUsdValue(fromToken, amount);
+    const { isPremium, feePercent } = await getFeeTier(fromAddress, usdValue);
 
     if (!src || !dst) {
       return NextResponse.json({ success: true, fallback: true, quote: { fromToken, toToken, amount, toAmount: '0', priceImpact: 0.3, route: `${fromToken} → Bridge → ${toToken}`, feePercent, isPremium } });
