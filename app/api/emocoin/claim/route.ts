@@ -7,7 +7,7 @@ const PREMIUM_COOLDOWN_MS = 6 * 60 * 60 * 1000
 const REFERRER_BONUS = 50
 const REFERRED_BONUS = 20
 const FREE_CLAIM_AMOUNT = 10
-const PREMIUM_CLAIM_AMOUNT = 50
+const PREMIUM_CLAIM_AMOUNT = 10
 
 async function sbFetch(path: string, init?: RequestInit) {
   return fetch(`${SUPABASE_URL}/rest/v1/${path}`, {

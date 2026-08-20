@@ -4,7 +4,7 @@ import styles from './page.module.css'
 
 interface TokenPrice  { price: number; change24h: number }
 interface Prices      { [symbol: string]: TokenPrice }
-interface WalletData  { address: string; ethBalance: number; solBalance?: number; arbBalance?: number; tokenBalances: { contractAddress: string; tokenBalance: string }[] }
+interface WalletData  { address: string; ethBalance: number; solBalance?: number; arbBalance?: number; monadBalance?: number; baseBalance?: number; tokenBalances: { contractAddress: string; tokenBalance: string }[] }
 interface UserWallet  { address: string; type: 'smart'|'external'; email?: string; twoFaMethod?: 'totp' }
 interface NewsItem    { title: string; url: string; published: string; source: string; currencies: string[]; positive: number; negative: number }
 interface TxItem      { hash: string; from: string; to: string; value: string; time: string; gas: string; status: string; method: string }
@@ -24,6 +24,7 @@ const TOKENS = [
   { symbol:'SOL',  name:'Solana',   color:'#9945ff', chain:'Soul 🌟',    cgId:'solana'      },
   { symbol:'MON',  name:'Monad',    color:'#836ef9', chain:'Moon 🌙',    cgId:''            },
   { symbol:'ARB',  name:'Arbitrum', color:'#12aaff', chain:'Orbit 🪐',   cgId:'arbitrum'    },
+  { symbol:'BASE', name:'Base',      color:'#0052ff', chain:'Base 🔵',    cgId:'ethereum'    },
   { symbol:'BTC',  name:'Bitcoin',  color:'#f7931a', chain:'Birth ₿',    cgId:'bitcoin'     },
   { symbol:'BNB',  name:'BNB',      color:'#f0b90b', chain:'BSC',        cgId:'binancecoin' },
   { symbol:'USDC', name:'USD Coin', color:'#2775ca', chain:'Ethereum',   cgId:'usd-coin'    },
@@ -32,7 +33,7 @@ const TOKENS = [
 ]
 const SWAP_TOKENS = ['ETH','SOL','MON','ARB','BTC','USDC','USDT','EMC']
 const CHAIN_COLORS: Record<string,string> = { earth:'#627eea', soul:'#9945ff', moon:'#836ef9', orbit:'#12aaff', birth:'#f7931a', hood:'#00C805' }
-const SEND_CHAINS = [{id:'ETH',label:'🌍 ETH',color:'#627eea'},{id:'SOL',label:'🌟 SOL',color:'#9945ff'},{id:'ARB',label:'🪐 ARB',color:'#12aaff'},{id:'MON',label:'🌙 MON',color:'#836ef9'},{id:'BTC',label:'₿ BTC',color:'#f7931a'}]
+const SEND_CHAINS = [{id:'ETH',label:'🌍 ETH',color:'#627eea'},{id:'SOL',label:'🌟 SOL',color:'#9945ff'},{id:'ARB',label:'🪐 ARB',color:'#12aaff'},{id:'MON',label:'🌙 MON',color:'#836ef9'},{id:'BTC',label:'₿ BTC',color:'#f7931a'},{id:'BASE',label:'🔵 BASE',color:'#0052ff'}]
 const CHAIN_DOTS  = [{id:'earth',label:'🌍',c:'#627eea'},{id:'soul',label:'🌟',c:'#9945ff'},{id:'moon',label:'🌙',c:'#836ef9'},{id:'orbit',label:'🪐',c:'#12aaff'},{id:'birth',label:'₿',c:'#f7931a'}]
 const DAPP_LIST   = [{name:'Uniswap',url:'https://app.uniswap.org',icon:'🦄'},{name:'OpenSea',url:'https://opensea.io',icon:'🌊'},{name:'Aave',url:'https://app.aave.com',icon:'👻'},{name:'1inch',url:'https://app.1inch.io',icon:'🦅'},{name:'Compound',url:'https://app.compound.finance',icon:'🏦'},{name:'Raydium',url:'https://raydium.io',icon:'⚡'}]
 const IFRAME_BLOCKED = ['uniswap.org','opensea.io']
@@ -220,7 +221,7 @@ export default function TheWall() {
     try {
       const [er,sr,ar] = await Promise.all([fetch('/api/balance?address='+address),fetch('/api/solana'),fetch('https://arb1.arbitrum.io/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_getBalance',params:[address,'latest']})})])
       const [ed,sd,ad] = await Promise.all([er.json(),sr.json(),ar.json()])
-      setWalletData({...ed,solBalance:sd.solBalance||0,arbBalance:ad.result?parseInt(ad.result,16)/1e18:0})
+      setWalletData({...ed,solBalance:sd.solBalance||0,arbBalance:ad.result?parseInt(ad.result,16)/1e18:0,monadBalance:ed.monadBalance||0,baseBalance:ed.baseBalance||0})
     } catch {}
   }, [])
 
@@ -595,7 +596,7 @@ export default function TheWall() {
   const handleGuestView=()=>{setUser({address:'',type:'external'});setScreen('dashboard')}
   const handleRefresh=async()=>{setRefreshing(true);await Promise.all([fetchPrices(),fetchBalance(user?.address||''),checkChainStatus()]);setRefreshing(false)}
 
-  const portfolioTotal=(walletData?.ethBalance||0)*(prices.ETH?.price||0)+(walletData?.arbBalance||0)*(prices.ARB?.price||0)+emoBalance*EMOCOIN.priceUsd
+  const portfolioTotal=(walletData?.ethBalance||0)*(prices.ETH?.price||0)+(walletData?.arbBalance||0)*(prices.ARB?.price||0)+(walletData?.monadBalance||0)*(prices.MON?.price||0)+(walletData?.baseBalance||0)*(prices.ETH?.price||0)+emoBalance*EMOCOIN.priceUsd
   const goalPct=Math.min((portfolioTotal/GOAL_USD)*100,100)
   const fmt=(n:number)=>n>=1000?'$'+(n/1000).toFixed(1)+'K':'$'+n.toFixed(2)
   const fmtAddr=(a:string)=>a.slice(0,8)+'...'+a.slice(-6)
@@ -725,7 +726,7 @@ export default function TheWall() {
           <section className={styles.emoSection+' fade-up-2'}><div className={styles.emoCard}><span className={styles.emoIcon}>🪙</span><div><div className={styles.emoTitle}>EMOCOINS</div><div className={styles.emoBalance}>{emoBalance} EMC</div></div><div className={styles.emoRight}><div className={styles.emoPrice}>1 EMC = $0.01</div><button className={styles.claimBtn} disabled={emoClaiming || !!emoNextClaimAt} onClick={claimEmoCoin} style={{opacity:(emoClaiming||emoNextClaimAt)?0.5:1}}>{emoClaiming?'Claiming...':emoNextClaimAt?'Claimed':'+ Daily Claim'}</button>{emoClaimMsg&&<div style={{fontSize:'0.6rem',marginTop:4}}>{emoClaimMsg}</div>}</div></div></section>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10,marginBottom:16}}><button onClick={()=>{setSendOpen(true);setSendTab('send')}} style={{padding:'14px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:12,...s.cyan,...s.mono,fontSize:'0.82rem',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>📤 Send</button><button onClick={()=>{setSendOpen(true);setSendTab('receive')}} style={{padding:'14px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:12,color:'#9945ff',...s.mono,fontSize:'0.82rem',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>📥 Receive</button><button onClick={()=>{window.location.href='/withdraw-eth'}} style={{padding:'14px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:12,color:'#c084fc',...s.mono,fontSize:'0.82rem',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>🏦 Withdraw</button></div>
           <div style={{...s.label,marginBottom:8}}>TOP HOLDINGS</div>
-          {TOKENS.filter(t=>t.symbol!=='SOL'&&['ETH','ARB','EMC'].includes(t.symbol)).map(token=>{const p=prices[token.symbol],bal=token.symbol==='ETH'?walletData?.ethBalance||0:token.symbol==='SOL'?walletData?.solBalance||0:token.symbol==='ARB'?walletData?.arbBalance||0:token.symbol==='EMC'?emoBalance:0;return <div key={token.symbol} onClick={()=>{setBottomTab('markets');setMarketsTab('charts');setChartToken(token.symbol);fetchChart(token.symbol,chartDays)}}  style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 14px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:10,marginBottom:8,cursor:'pointer',WebkitTapHighlightColor:'rgba(0,0,0,0)',touchAction:'manipulation'}}><div style={{display:'flex',alignItems:'center',gap:10}}><div style={{width:8,height:8,borderRadius:'50%',background:token.color}}/><div><div style={{fontSize:'0.82rem',color:'var(--text)',...s.mono,fontWeight:700}}>{token.symbol}</div><div style={{fontSize:'0.62rem',...s.muted}}>{token.chain}</div></div></div><div style={{textAlign:'right'}}><div style={{fontSize:'0.82rem',color:'var(--text)',...s.mono}}>{p?'$'+p.price.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}):<span style={s.muted}>$···</span>}</div>{p&&<div style={{fontSize:'0.65rem',color:p.change24h>=0?'#00ff88':'#ff4466'}}>{p.change24h>=0?'▲':'▼'} {Math.abs(p.change24h).toFixed(2)}%</div>}{bal>0&&<div style={{fontSize:'0.62rem',...s.muted}}>{bal.toFixed(4)} {token.symbol}</div>}</div></div>})}
+          {TOKENS.filter(t=>t.symbol!=='SOL'&&['ETH','ARB','MON','BASE','EMC'].includes(t.symbol)).map(token=>{const p=prices[token.symbol],bal=token.symbol==='ETH'?walletData?.ethBalance||0:token.symbol==='SOL'?walletData?.solBalance||0:token.symbol==='ARB'?walletData?.arbBalance||0:token.symbol==='MON'?walletData?.monadBalance||0:token.symbol==='BASE'?walletData?.baseBalance||0:token.symbol==='EMC'?emoBalance:0;return <div key={token.symbol} onClick={()=>{setBottomTab('markets');setMarketsTab('charts');setChartToken(token.symbol);fetchChart(token.symbol,chartDays)}}  style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 14px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:10,marginBottom:8,cursor:'pointer',WebkitTapHighlightColor:'rgba(0,0,0,0)',touchAction:'manipulation'}}><div style={{display:'flex',alignItems:'center',gap:10}}><div style={{width:8,height:8,borderRadius:'50%',background:token.color}}/><div><div style={{fontSize:'0.82rem',color:'var(--text)',...s.mono,fontWeight:700}}>{token.symbol}</div><div style={{fontSize:'0.62rem',...s.muted}}>{token.chain}</div></div></div><div style={{textAlign:'right'}}><div style={{fontSize:'0.82rem',color:'var(--text)',...s.mono}}>{p?'$'+p.price.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}):<span style={s.muted}>$···</span>}</div>{p&&<div style={{fontSize:'0.65rem',color:p.change24h>=0?'#00ff88':'#ff4466'}}>{p.change24h>=0?'▲':'▼'} {Math.abs(p.change24h).toFixed(2)}%</div>}{bal>0&&<div style={{fontSize:'0.62rem',...s.muted}}>{bal.toFixed(4)} {token.symbol}</div>}</div></div>})}
         </div>}
 
         {bottomTab==='trade'&&<div>

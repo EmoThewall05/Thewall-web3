@@ -3,10 +3,10 @@ import { getFeeTier } from '@/lib/feeTier';
 import { getUsdValue } from '@/lib/priceFeed';
 
 const LIFI = 'https://li.quest/v1';
-const CHAINS: Record<string, number> = { ETH: 1, ARB: 42161, BNB: 56, POL: 137 };
+const CHAINS: Record<string, number> = { ETH: 1, ARB: 42161, BNB: 56, POL: 137, BASE: 8453 };
 const NATIVE = '0x0000000000000000000000000000000000000000';
 const TOKENS: Record<string, Record<string, string>> = {
-  USDC: { '1': '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', '42161': '0xaf88d065e77c8cc2239327c5edb3a432268e5831', '137': '0x2791bca1f2de4661558eb8f5cd76bd0c3fa8ea8' },
+  USDC: { '1': '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', '42161': '0xaf88d065e77c8cc2239327c5edb3a432268e5831', '137': '0x2791bca1f2de4661558eb8f5cd76bd0c3fa8ea8', '8453': '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913' },
   USDT: { '1': '0xdac17f958d2ee523a2206206994597c13d831ec7', '42161': '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9', '137': '0xc2132d05d31c914a87c6611c10748aeb04b58e8' },
 };
 
