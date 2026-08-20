@@ -5,7 +5,7 @@ import styles from './page.module.css'
 interface TokenPrice  { price: number; change24h: number }
 interface Prices      { [symbol: string]: TokenPrice }
 interface WalletData  { address: string; ethBalance: number; solBalance?: number; arbBalance?: number; monadBalance?: number; baseBalance?: number; tokenBalances: { contractAddress: string; tokenBalance: string }[] }
-interface UserWallet  { address: string; type: 'smart'|'external'; email?: string; twoFaMethod?: 'totp' }
+interface UserWallet  { address: string; type: 'smart'|'external'; email?: string; twoFaMethod?: 'totp'; solAddress?: string }
 interface NewsItem    { title: string; url: string; published: string; source: string; currencies: string[]; positive: number; negative: number }
 interface TxItem      { hash: string; from: string; to: string; value: string; time: string; gas: string; status: string; method: string }
 interface SwapState   { fromToken: string; toToken: string; amount: string; estimatedOut: string; loading: boolean; error: string; success: string; priceImpact: number; route: string; simStatus: 'idle'|'simulating'|'ok'|'fail'|'nowallet'; simGas: string; simError: string }
@@ -177,6 +177,7 @@ export default function TheWall() {
   const [sendTab, setSendTab]         = useState<'send'|'receive'>('send')
   const [sendChain, setSendChain]     = useState<'ETH'|'SOL'|'ARB'|'MON'|'BTC'>('ETH')
   const [sendTo, setSendTo]           = useState('')
+  const [solAddrInput, setSolAddrInput] = useState('')
   const [sendAmount, setSendAmount]   = useState('')
   const [sendLoading, setSendLoading] = useState(false)
   const [sendError, setSendError]     = useState('')
@@ -219,7 +220,8 @@ export default function TheWall() {
 
   const fetchBalance = useCallback(async (address: string) => {
     try {
-      const [er,sr,ar] = await Promise.all([fetch('/api/balance?address='+address),fetch('/api/solana'),fetch('https://arb1.arbitrum.io/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_getBalance',params:[address,'latest']})})])
+      const savedSolAddr = typeof window!=='undefined' ? localStorage.getItem('solAddress') : null
+      const [er,sr,ar] = await Promise.all([fetch('/api/balance?address='+address),savedSolAddr?fetch('/api/solana?address='+savedSolAddr):Promise.resolve({json:async()=>({solBalance:0})} as Response),fetch('https://arb1.arbitrum.io/rpc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_getBalance',params:[address,'latest']})})])
       const [ed,sd,ad] = await Promise.all([er.json(),sr.json(),ar.json()])
       setWalletData({...ed,solBalance:sd.solBalance||0,arbBalance:ad.result?parseInt(ad.result,16)/1e18:0,monadBalance:ed.monadBalance||0,baseBalance:ed.baseBalance||0})
     } catch {}
@@ -261,14 +263,16 @@ export default function TheWall() {
       if (!modal) return
       const account = modal.getAccount()
       if (account?.isConnected && account?.address) {
-        setUser({address: account.address, type: 'external'})
+        const savedSol = typeof window!=='undefined' ? localStorage.getItem('solAddress') : null
+        setUser({address: account.address, type: 'external', solAddress: savedSol || undefined})
         fetchBalance(account.address)
         fetchEmoBalance(account.address)
         setScreen('dashboard')
       }
       modal.subscribeAccount((acc: any) => {
         if (acc?.isConnected && acc?.address) {
-          setUser({address: acc.address, type: 'external'})
+          const savedSol = typeof window!=='undefined' ? localStorage.getItem('solAddress') : null
+          setUser({address: acc.address, type: 'external', solAddress: savedSol || undefined})
           fetchBalance(acc.address)
         fetchEmoBalance(acc.address)
           setScreen('dashboard')
@@ -587,7 +591,8 @@ export default function TheWall() {
     modal.open()
     modal.subscribeAccount((account:any)=>{
       if(account.isConnected&&account.address){
-        setUser({address:account.address,type:'external'})
+        const savedSol = typeof window!=='undefined' ? localStorage.getItem('solAddress') : null
+        setUser({address:account.address,type:'external',solAddress:savedSol||undefined})
         fetchBalance(account.address)
         setScreen('dashboard')
       }
@@ -834,7 +839,20 @@ export default function TheWall() {
         {bottomTab==='settings'&&<div>
           <div style={{display:'flex',gap:6,marginBottom:16,flexWrap:'wrap'}}>{(['profile','security','history','assets','dapps']as const).map(t=><button key={t} onClick={()=>setSettingsTab(t)} style={{flex:1,padding:'9px',border:'1px solid',borderColor:settingsTab===t?'var(--cyan)':'var(--border)',borderRadius:8,background:settingsTab===t?'var(--cyan-glow)':'var(--bg2)',color:settingsTab===t?'var(--cyan)':'var(--text-muted)',...s.mono,fontSize:'0.68rem',cursor:'pointer',minWidth:60}}>{t==='profile'?'👤':t==='security'?'🔐':t==='history'?'💳':t==='assets'?'💎':'🌐'} {t}</button>)}</div>
           {settingsTab==='profile'&&<div style={{position:'relative',zIndex:10000}}>
-            <div style={{...s.card,textAlign:'center'}}><div style={{fontSize:'3rem',marginBottom:8}}>🦋</div><div style={{fontSize:'0.68rem',...s.muted,marginBottom:12}}>{user?.address?(user?.type==='smart'?'Smart Wallet · TOTP 🔢':'External Wallet'):'Not Connected'}</div><div style={{padding:'10px',background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:8,fontSize:'0.7rem',...s.mono,...s.cyan,wordBreak:'break-all'}}>{user?.address||'No wallet connected'}</div>{user?.address&&<button onClick={()=>navigator.clipboard.writeText(user.address)} style={{marginTop:8,padding:'8px 16px',background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:6,...s.cyan,...s.mono,fontSize:'0.72rem',cursor:'pointer'}}>📋 Copy Address</button>}</div>
+            <div style={{...s.card,textAlign:'center'}}><div style={{fontSize:'3rem',marginBottom:8}}>🦋</div><div style={{fontSize:'0.68rem',...s.muted,marginBottom:12}}>{user?.address?(user?.type==='smart'?'Smart Wallet · TOTP 🔢':'External Wallet'):'Not Connected'}</div><div style={{padding:'10px',background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:8,fontSize:'0.7rem',...s.mono,...s.cyan,wordBreak:'break-all'}}>{user?.address||'No wallet connected'}</div>{user?.address&&<button onClick={()=>navigator.clipboard.writeText(user.address)} style={{marginTop:8,padding:'8px 16px',background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:6,...s.cyan,...s.mono,fontSize:'0.72rem',cursor:'pointer'}}>📋 Copy Address</button>}
+
+<div style={{marginTop:16,paddingTop:16,borderTop:'1px solid var(--border)'}}>
+<div style={{fontSize:'0.68rem',...s.muted,marginBottom:8}}>🌟 Your Solana Address (for balance tracking)</div>
+{user?.solAddress?
+<div style={{padding:'10px',background:'var(--bg3)',border:'1px solid rgba(153,69,255,0.4)',borderRadius:8,fontSize:'0.7rem',...s.mono,color:'#9945ff',wordBreak:'break-all'}}>{user.solAddress}</div>
+:
+<div style={{display:'flex',gap:6}}>
+<input type="text" value={solAddrInput} onChange={e=>setSolAddrInput(e.target.value)} placeholder="Paste your Phantom/Solana address" style={{flex:1,padding:'8px 10px',background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:6,color:'var(--text)',...s.mono,fontSize:'0.7rem'}}/>
+<button onClick={()=>{if(solAddrInput.trim().length>=32){localStorage.setItem('solAddress',solAddrInput.trim());setUser(u=>u?{...u,solAddress:solAddrInput.trim()}:u);setSolAddrInput('')}}} style={{padding:'8px 14px',background:'#9945ff',border:'none',borderRadius:6,color:'#fff',...s.mono,fontSize:'0.7rem',fontWeight:700,cursor:'pointer'}}>Save</button>
+</div>
+}
+</div>
+</div>
             <div style={{...s.card,border:`1px solid ${isPremium?'rgba(0,255,136,0.3)':'var(--border)'}`,background:isPremium?'rgba(0,255,136,0.04)':'var(--bg2)'}}>
               <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:isPremium?8:12}}>
                 <div style={{display:'flex',alignItems:'center',gap:8}}>{isPremium?<span style={{display:'inline-flex',alignItems:'center',gap:4,padding:'3px 10px',borderRadius:999,background:'linear-gradient(135deg, rgba(0,255,136,0.18), rgba(0,204,102,0.10))',border:'1px solid rgba(0,255,136,0.4)',color:'#00ff88',...s.mono,fontSize:'0.7rem',fontWeight:700,letterSpacing:'0.02em',boxShadow:'0 0 8px rgba(0,255,136,0.15)'}}><span style={{fontSize:'0.7rem'}}>⭐</span>PREMIUM</span>:<span style={{fontSize:'0.82rem',...s.mono,color:'var(--text)',fontWeight:700}}>Free Plan</span>}</div>
