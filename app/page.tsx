@@ -369,26 +369,79 @@ export default function TheWall() {
     setPremiumLoading(true)
     setPremiumMsg('')
     try {
-      const res = await fetch('/api/emocoin/premium', {
+      const orderRes = await fetch('https://thewall-emc.meradivin.workers.dev/create-premium-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address: user.address })
+        body: JSON.stringify({ wallet_address: user.address })
       })
-      const data = await res.json()
-      if (res.ok && data.success) {
-        setIsPremium(true)
-        setPremiumExpiresAt(data.premiumExpiresAt)
-        if (typeof data.balance === 'number') setEmoBalance(data.balance)
-        setPremiumMsg('Premium activated! ⭐')
-      } else if (data.error === 'insufficient_balance') {
-        setPremiumMsg(`Need ${data.required} EMC, you have ${data.balance}`)
-      } else {
-        setPremiumMsg('Upgrade failed')
+      const orderData = await orderRes.json()
+      if (!orderData.success) {
+        setPremiumMsg('Order failed. Try again.')
+        setPremiumLoading(false)
+        return
       }
+
+      const loadRazorpay = () =>
+        new Promise((resolve) => {
+          if ((window as any).Razorpay) return resolve(true)
+          const script = document.createElement('script')
+          script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+          script.onload = () => resolve(true)
+          script.onerror = () => resolve(false)
+          document.body.appendChild(script)
+        })
+
+      const loaded = await loadRazorpay()
+      if (!loaded) {
+        setPremiumMsg('Could not load payment gateway.')
+        setPremiumLoading(false)
+        return
+      }
+
+      const rzp = new (window as any).Razorpay({
+        key: orderData.key_id,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        order_id: orderData.order_id,
+        name: 'TheWall',
+        description: 'Upgrade to Premium \u2014 \u20b9210/month',
+        handler: async function (response: any) {
+          try {
+            const verifyRes = await fetch('https://thewall-emc.meradivin.workers.dev/verify-premium-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                wallet_address: user.address,
+              }),
+            })
+            const verifyData = await verifyRes.json()
+            if (verifyData.success) {
+              setIsPremium(true)
+              setPremiumExpiresAt(verifyData.premiumExpiresAt)
+              setPremiumMsg('Premium activated! \u2b50')
+            } else {
+              setPremiumMsg('Payment verification failed. Contact support.')
+            }
+          } catch {
+            setPremiumMsg('Verification error. Contact support.')
+          }
+          setPremiumLoading(false)
+        },
+        modal: {
+          ondismiss: function () {
+            setPremiumLoading(false)
+          }
+        },
+        theme: { color: '#00ff88' }
+      })
+      rzp.open()
     } catch (e) {
       setPremiumMsg('Upgrade failed')
+      setPremiumLoading(false)
     }
-    setPremiumLoading(false)
   }, [user, premiumLoading])
 
   const fetchTxHistory = useCallback(async (address: string) => {
@@ -787,7 +840,7 @@ export default function TheWall() {
                 {!isPremium&&<span style={{fontSize:'0.62rem',...s.muted}}>500 EMC/mo</span>}
               </div>
               {isPremium?<div style={{fontSize:'0.68rem',color:'#00ff88',...s.mono,marginBottom:8}}>Ad-free · 6hr claim cooldown{premiumExpiresAt?` · Renews ${new Date(premiumExpiresAt).toLocaleDateString()}`:''}</div>:<div style={{fontSize:'0.68rem',...s.muted,...s.mono,marginBottom:10,lineHeight:1.5}}>Go ad-free and cut your daily claim cooldown from 24hr to 6hr.</div>}
-              {!isPremium&&<button onClick={buyPremium} disabled={premiumLoading||!user?.address} style={{width:'100%',padding:'10px',background:premiumLoading||!user?.address?'var(--bg3)':'linear-gradient(135deg,#00cc66,#00ff88)',border:'none',borderRadius:8,color:premiumLoading||!user?.address?'var(--text-muted)':'#04140b',...s.mono,fontSize:'0.8rem',fontWeight:700,cursor:premiumLoading||!user?.address?'not-allowed':'pointer'}}>{premiumLoading?'Processing...':'⭐ Upgrade to Premium — 500 EMC'}</button>}
+              {!isPremium&&<button onClick={buyPremium} disabled={premiumLoading||!user?.address} style={{width:'100%',padding:'10px',background:premiumLoading||!user?.address?'var(--bg3)':'linear-gradient(135deg,#00cc66,#00ff88)',border:'none',borderRadius:8,color:premiumLoading||!user?.address?'var(--text-muted)':'#04140b',...s.mono,fontSize:'0.8rem',fontWeight:700,cursor:premiumLoading||!user?.address?'not-allowed':'pointer'}}>{premiumLoading?'Processing...':'⭐ Upgrade to Premium — ₹210/mo'}</button>}
               {premiumMsg&&<div style={{fontSize:'0.65rem',marginTop:8,color:isPremium?'#00ff88':'#ff4466',...s.mono}}>{premiumMsg}</div>}
             </div>
 
