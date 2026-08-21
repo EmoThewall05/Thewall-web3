@@ -641,7 +641,7 @@ export default function TheWall() {
             ))}
           </div>
           <button className={styles.btnPrimary} onClick={handleConnectWallet}>Sign Up / Login</button>
-          <button className={styles.btnSecondary} onClick={handleGuestView}>View Portfolio (Guest)</button>
+          <div className={styles.btnSecondary} style={{textAlign:'center',cursor:'default',opacity:0.85}}>👑 Premium — ₹210/mo · Bank-grade security · Gasless & fast</div>
           <div className={styles.gasNote}>✅ Gas FREE · 🛡️ CodeQL + Snyk + Semgrep</div>
         </div>}
 

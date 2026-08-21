@@ -13,6 +13,9 @@ export default function WithdrawEthPage() {
   const [preview, setPreview] = useState<any>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [fromAddress, setFromAddress] = useState('');
+  const [showApproval, setShowApproval] = useState(false);
+  const [approvalTxId, setApprovalTxId] = useState<string | null>(null);
+  const [approving, setApproving] = useState(false);
   const router = useRouter();
   const { walletProvider } = useAppKitProvider('eip155');
 
@@ -71,9 +74,93 @@ export default function WithdrawEthPage() {
     }
   };
 
-  const handleConfirmSend = async () => {
+  // Step 1 after preview: create an approval record instead of signing immediately
+  const handleRequestApproval = async () => {
     setLoading(true);
-    setShowPreview(false);
+    setStatus('Creating approval request...');
+
+    try {
+      const res = await fetch('/api/auth/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'create',
+          walletAddress: fromAddress,
+          transactionType: 'withdraw_eth',
+          amount: amount,
+          token: 'ETH',
+          to: address,
+          chain: 'ETH',
+        }),
+      });
+
+      const data = await res.json();
+      if (!data.success) {
+        setStatus(`Error: ${data.error}`);
+        setLoading(false);
+        return;
+      }
+
+      setApprovalTxId(data.txId);
+      setShowPreview(false);
+      setShowApproval(true);
+      setStatus('');
+    } catch (error) {
+      setStatus('Approval request failed!');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Step 2: user explicitly approves on this same device -> then sign + broadcast
+  const handleApprove = async () => {
+    if (!approvalTxId) return;
+    setApproving(true);
+    setStatus('Approving...');
+
+    try {
+      const approveRes = await fetch('/api/auth/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'approved', txId: approvalTxId }),
+      });
+      const approveData = await approveRes.json();
+      if (!approveData.success) {
+        setStatus(`Error: ${approveData.error}`);
+        setApproving(false);
+        return;
+      }
+
+      setShowApproval(false);
+      await handleConfirmSend(approvalTxId);
+    } catch (error) {
+      setStatus('Approval failed!');
+      console.error(error);
+      setApproving(false);
+    }
+  };
+
+  const handleDenyApproval = async () => {
+    if (approvalTxId) {
+      try {
+        await fetch('/api/auth/approve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'rejected', txId: approvalTxId }),
+        });
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    setShowApproval(false);
+    setApprovalTxId(null);
+    setStatus('Transaction cancelled.');
+  };
+
+  const handleConfirmSend = async (txId: string) => {
+    setLoading(true);
+    setApproving(false);
     setStatus('Preparing transaction...');
 
     try {
@@ -119,6 +206,21 @@ export default function WithdrawEthPage() {
       setStatus('Broadcasting...');
       const receipt = await txResponse.wait();
 
+      // Mark the approval as consumed now that it has actually been broadcast
+      try {
+        await fetch('/api/auth/approve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'broadcasted',
+            txId: txId,
+            txHash: receipt?.hash || txResponse.hash,
+          }),
+        });
+      } catch (e) {
+        console.error('mark broadcasted failed (non-fatal)', e);
+      }
+
       setStatus(`വിജയിച്ചു! TX: ${receipt?.hash || txResponse.hash}`);
       alert("ETH വിത്ത്ഡ്രോവൽ സക്സസ് ആയി മച്ചാനേ!");
     } catch (error: any) {
@@ -126,6 +228,7 @@ export default function WithdrawEthPage() {
       console.error(error);
     } finally {
       setLoading(false);
+      setApprovalTxId(null);
     }
   };
 
@@ -214,10 +317,49 @@ export default function WithdrawEthPage() {
                 Cancel
               </button>
               <button
-                onClick={handleConfirmSend}
+                onClick={handleRequestApproval}
+                disabled={loading}
                 style={{flex:1,padding:'12px',borderRadius:'12px',fontWeight:'bold',border:'none',cursor:'pointer',background:'#9333ea',color:'#fff'}}
               >
                 Confirm Send
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showApproval && (
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.85)',display:'flex',alignItems:'center',justifyContent:'center',padding:'24px',zIndex:60}}>
+          <div style={{width:'100%',maxWidth:'420px',background:'#111827',padding:'24px',borderRadius:'16px',border:'2px solid #facc15'}}>
+            <div style={{fontSize:'2rem',textAlign:'center',marginBottom:'8px'}}>🔐</div>
+            <h2 style={{fontSize:'1.1rem',fontWeight:'bold',marginBottom:'16px',color:'#facc15',textAlign:'center'}}>Final Approval Required</h2>
+            <div style={{background:'#000',padding:'16px',borderRadius:'8px',marginBottom:'20px',fontSize:'0.85rem'}}>
+              <div style={{display:'flex',justifyContent:'space-between',marginBottom:'8px'}}>
+                <span style={{color:'#9ca3af'}}>Amount</span>
+                <span style={{color:'#fff',fontWeight:'bold'}}>{amount} ETH</span>
+              </div>
+              <div style={{display:'flex',justifyContent:'space-between'}}>
+                <span style={{color:'#9ca3af'}}>To</span>
+                <span style={{color:'#fff',fontSize:'0.75rem',wordBreak:'break-all'}}>{address}</span>
+              </div>
+            </div>
+            <p style={{fontSize:'0.72rem',color:'#9ca3af',textAlign:'center',marginBottom:'20px'}}>
+              Ith ninte transaction aano ennu ondu koodi ureppikkuka.
+            </p>
+            <div style={{display:'flex',gap:'12px'}}>
+              <button
+                onClick={handleDenyApproval}
+                disabled={approving}
+                style={{flex:1,padding:'12px',borderRadius:'12px',fontWeight:'bold',border:'none',cursor:'pointer',background:'#374151',color:'#fff'}}
+              >
+                Deny
+              </button>
+              <button
+                onClick={handleApprove}
+                disabled={approving}
+                style={{flex:1,padding:'12px',borderRadius:'12px',fontWeight:'bold',border:'none',cursor:'pointer',background:approving?'#374151':'#22c55e',color:'#fff'}}
+              >
+                {approving ? 'Approving...' : 'Approve'}
               </button>
             </div>
           </div>

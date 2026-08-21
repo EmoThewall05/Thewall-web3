@@ -3,6 +3,7 @@ export const runtime = 'edge'
 import { NextRequest, NextResponse } from 'next/server'
 import { getFeeTier } from '@/lib/feeTier'
 import { getUsdValue } from '@/lib/priceFeed'
+import { getSupabaseAdmin } from '@/lib/supabase'
 
 async function broadcastEthTx(signedTx: string): Promise<string> {
   const alchemyKey = process.env.ALCHEMY_API_KEY
@@ -35,7 +36,7 @@ async function broadcastSolTx(signedTx: string): Promise<string> {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { action, chain, to, amount, from, signedTx } = body
+    const { action, chain, to, amount, from, signedTx, txId } = body
     if (!action) return NextResponse.json({ error: 'Action required' }, { status: 400 })
 
     if (action === 'prepare' && chain === 'SOL') {
@@ -88,7 +89,26 @@ export async function POST(req: NextRequest) {
 
     if (action === 'broadcast') {
       if (!signedTx) throw new Error('signedTx required')
+
+      // ── Require an approved transaction_approvals record before broadcasting ──
+      if (!txId) throw new Error('txId required - transaction must be approved before broadcast')
+
+      const supabase = getSupabaseAdmin()
+      const { data: approval, error: approvalErr } = await supabase
+        .from('transaction_approvals')
+        .select('status, expires_at')
+        .eq('id', txId)
+        .single()
+
+      if (approvalErr || !approval) throw new Error('Approval record not found')
+      if (approval.status !== 'approved') throw new Error(`Transaction not approved (status: ${approval.status})`)
+      if (new Date(approval.expires_at).getTime() < Date.now()) throw new Error('Approval expired')
+
       const txHash = (chain === 'SOL') ? await broadcastSolTx(signedTx) : await broadcastEthTx(signedTx)
+
+      // Mark approval as consumed so it can't be replayed for a second broadcast
+      await supabase.from('transaction_approvals').update({ status: 'broadcasted' }).eq('id', txId)
+
       return NextResponse.json({ success: true, chain, txHash, explorerUrl: chain === 'SOL' ? `https://solscan.io/tx/${txHash}` : `https://etherscan.io/tx/${txHash}` })
     }
 

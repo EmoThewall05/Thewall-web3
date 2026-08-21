@@ -1,4 +1,66 @@
-export const runtime = 'edge'
+#!/usr/bin/env python3
+"""
+TheWall Web3 - Transaction Approval System Patch
+Run this from ~/Thewall-web3
+"""
+import os
+import re
+
+ROOT = os.getcwd()
+
+def write_file(rel_path, content):
+    full_path = os.path.join(ROOT, rel_path)
+    os.makedirs(os.path.dirname(full_path), exist_ok=True)
+    with open(full_path, 'w') as f:
+        f.write(content)
+    print(f"[OK] wrote {rel_path}")
+
+# ── 1. Fix .env.local ──
+env_path = os.path.join(ROOT, '.env.local')
+env_content = ""
+if os.path.exists(env_path):
+    with open(env_path) as f:
+        env_content = f.read()
+
+# Replace old SUPABASE_URL, add missing keys
+env_content = re.sub(
+    r'SUPABASE_URL="https://havmduragglvstlxrgag\.supabase\.co"',
+    'SUPABASE_URL="https://kwciyiwdyotebdgyjxgt.supabase.co"',
+    env_content
+)
+
+additions = []
+if 'NEXT_PUBLIC_SUPABASE_URL' not in env_content:
+    additions.append('NEXT_PUBLIC_SUPABASE_URL="https://kwciyiwdyotebdgyjxgt.supabase.co"')
+if 'NEXT_PUBLIC_SUPABASE_ANON_KEY' not in env_content:
+    additions.append('NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt3Y2l5aXdkeW90ZWJkZ3lqeGd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY5OTQ0MjUsImV4cCI6MjEwMjU3MDQyNX0.cSxsDwEz-Lfy9YLFfQ5mSK15Ne0O3vbxJBz8IABmF08"')
+if 'SUPABASE_SERVICE_ROLE_KEY' not in env_content:
+    additions.append('SUPABASE_SERVICE_ROLE_KEY="PASTE_YOUR_SERVICE_ROLE_KEY_HERE"')
+
+if additions:
+    env_content = env_content.rstrip() + '\n\n# Added by transaction approval patch\n' + '\n'.join(additions) + '\n'
+
+with open(env_path, 'w') as f:
+    f.write(env_content)
+print("[OK] patched .env.local")
+if 'PASTE_YOUR_SERVICE_ROLE_KEY_HERE' in env_content:
+    print("[ACTION NEEDED] .env.local -il SUPABASE_SERVICE_ROLE_KEY manual aayi paste cheyyanam (Supabase dashboard -> Settings -> API)")
+
+# ── 2. lib/supabase.ts ──
+write_file('lib/supabase.ts', '''import { createClient } from '@supabase/supabase-js'
+
+// Server-side admin client (service role) - use only in API routes
+export function getSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false } }
+  )
+}
+''')
+
+# ── 3. app/api/auth/approve/route.ts - Supabase-backed ──
+write_file('app/api/auth/approve/route.ts', '''export const runtime = 'edge'
 
 import { NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase'
@@ -42,16 +104,6 @@ export async function POST(request: Request) {
     }
 
     // ── Approve / reject an existing approval ──
-    if (action === 'broadcasted') {
-      if (!txId) return NextResponse.json({ error: 'txId required' }, { status: 400 })
-      const { error: bErr } = await supabase
-        .from('transaction_approvals')
-        .update({ status: 'broadcasted', responded_at: new Date().toISOString() })
-        .eq('id', txId)
-      if (bErr) return NextResponse.json({ error: bErr.message }, { status: 500 })
-      return NextResponse.json({ success: true, txId, status: 'broadcasted' })
-    }
-
     if (action === 'approved' || action === 'rejected') {
       if (!txId) return NextResponse.json({ error: 'txId required' }, { status: 400 })
 
@@ -109,3 +161,9 @@ export async function GET(request: Request) {
 
   return NextResponse.json({ txId, ...approval })
 }
+''')
+
+print("\\n[DONE] Patch applied. Ini ee steps cheyyanam:")
+print("1. .env.local -il SUPABASE_SERVICE_ROLE_KEY paste cheyyuka (already marked ACTION NEEDED)")
+print("2. app/api/send/route.ts -il approval check wire cheyyendathundu - adutha message-il varum")
+print("3. npm run build cheythu test cheyyuka")
