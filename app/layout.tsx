@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import './globals.css'
 
 import { WalletProvider } from './context/wallet'
+import Providers from './providers'
 import SWRegister from './sw-register'
 import EmowallAIChatWrapper from '@/components/EmowallAIChatWrapper'
 
@@ -27,11 +28,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <meta name="theme-color" content="#FF5500" />
       </head>
       <body className="bg-[#07080B]">
-        <WalletProvider>
-          <SWRegister />
-          {children}
-          <EmowallAIChatWrapper />
-        </WalletProvider>
+        <Providers>
+          <WalletProvider>
+            <SWRegister />
+            {children}
+            <EmowallAIChatWrapper />
+          </WalletProvider>
+        </Providers>
       </body>
     </html>
   )

@@ -1,4 +1,5 @@
 import { AlchemyAccountsUIConfig, createConfig } from '@account-kit/react'
+import { QueryClient } from '@tanstack/react-query'
 import { arbitrum, base, alchemy } from '@account-kit/infra'
 
 const uiConfig: AlchemyAccountsUIConfig = {
@@ -25,3 +26,5 @@ export const accountKitConfig = createConfig(
 )
 
 export { uiConfig }
+
+export const queryClient = new QueryClient()

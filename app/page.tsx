@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import styles from './page.module.css'
+import SmartWalletConnect from '@/components/SmartWalletConnect'
 
 interface TokenPrice  { price: number; change24h: number }
 interface Prices      { [symbol: string]: TokenPrice }
@@ -641,6 +642,7 @@ export default function TheWall() {
             ))}
           </div>
           <button className={styles.btnPrimary} onClick={handleConnectWallet}>Sign Up / Login</button>
+          <SmartWalletConnect onConnect={(address, email) => { setUser({address, type: 'smart', email}); setScreen('dashboard') }} />
           <div className={styles.btnSecondary} style={{textAlign:'center',cursor:'default',opacity:0.85}}>👑 Premium — ₹210/mo · Bank-grade security · Gasless & fast</div>
           <div className={styles.gasNote}>✅ Gas FREE · 🛡️ CodeQL + Snyk + Semgrep</div>
         </div>}
