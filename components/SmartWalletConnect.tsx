@@ -16,7 +16,13 @@ export default function SmartWalletConnect({ onConnect }: { onConnect: (address:
 
   return (
     <button
-      onClick={openAuthModal}
+      onClick={() => {
+        try {
+          openAuthModal()
+        } catch (e: any) {
+          alert('Smart Wallet Error: ' + (e?.message || String(e)))
+        }
+      }}
       style={{
         width: '100%',
         padding: '14px',
