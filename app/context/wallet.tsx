@@ -32,6 +32,11 @@ export async function initAppKit() {
     },
     themeMode: 'dark',
     themeVariables: { '--w3m-accent': '#FF5500' },
+    features: {
+      email: true,
+      socials: ['google', 'x', 'discord', 'github', 'apple'],
+      emailShowWallets: true,
+    },
   })
   return appkitModal
 }
