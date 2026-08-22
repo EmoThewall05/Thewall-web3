@@ -629,13 +629,13 @@ export default function TheWall() {
         </div>
 
         {loginStep==='home'&&<div className="fade-up-1">
-          <div style={{display:'flex',gap:6,flexWrap:'wrap',justifyContent:'center',marginBottom:14}}>
+          <div style={{display:'flex',gap:6,flexWrap:'wrap',justifyContent:'center',marginBottom:8}}>
             {[{icon:'👑',label:'PREMIUM ACCESS',color:'#ffd700'},{icon:'🛡️',label:'BANK-GRADE SECURITY',color:'#00ff88'},{icon:'⚡',label:'GASLESS & SEAMLESS',color:'#ffd700'}].map(f=>(
               <div key={f.label} style={{display:'flex',alignItems:'center',gap:4,padding:'5px 10px',border:`1px solid ${f.color}55`,borderRadius:20,background:`${f.color}11`,fontSize:'0.65rem',fontFamily:'var(--font-mono)',color:f.color,whiteSpace:'nowrap'}}><span>{f.icon}</span><span style={{fontWeight:700}}>{f.label}</span></div>
             ))}
           </div>
-          <div style={{textAlign:'center',fontSize:'0.62rem',letterSpacing:'0.15em',color:'#ffd70099',fontFamily:'var(--font-mono)',marginBottom:8}}>— SELECT CHAIN —</div>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:14}}>
+          <div style={{textAlign:'center',fontSize:'0.62rem',letterSpacing:'0.15em',color:'#ffd70099',fontFamily:'var(--font-mono)',marginBottom:6}}>— SELECT CHAIN —</div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6,marginBottom:8}}>
             {[
               {id:'birth',label:'BIRTH',sub:'Bitcoin (BTC)',icon:'₿',color:'#f7931a'},
               {id:'earth',label:'EARTH',sub:'Ethereum (ETH)',icon:'🌍',color:'#627eea'},
@@ -644,7 +644,7 @@ export default function TheWall() {
               {id:'moon',label:'MOON',sub:'Monad (MON)',icon:'🌙',color:'#836ef9'},
               {id:'base',label:'BASE',sub:'Base',icon:'🔵',color:'#0052ff'},
             ].map(c=>(
-              <div key={c.id} style={{display:'flex',alignItems:'center',gap:8,padding:'10px 12px',borderRadius:10,border:'1px solid #ffd70033',background:'#0a0a0a',position:'relative'}}>
+              <div key={c.id} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 10px',borderRadius:10,border:'1px solid #ffd70033',background:'#0a0a0a',position:'relative'}}>
                 <span style={{fontSize:'1.1rem'}}>{c.icon}</span>
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{fontSize:'0.7rem',fontWeight:700,color:'#ffd700',fontFamily:'var(--font-mono)',letterSpacing:'0.03em'}}>{c.label}</div>
@@ -654,11 +654,11 @@ export default function TheWall() {
               </div>
             ))}
           </div>
-          <button onClick={handleConnectWallet} style={{width:'100%',padding:'14px',marginBottom:10,background:'linear-gradient(135deg,#ffd700,#b8860b)',border:'none',borderRadius:10,color:'#1a1200',fontFamily:'var(--font-mono)',fontSize:'0.9rem',fontWeight:700,letterSpacing:'0.05em',cursor:'pointer',boxShadow:'0 0 20px rgba(255,215,0,0.25)'}}>SIGN UP / LOGIN</button>
-          <div style={{marginBottom:10}}>
+          <button onClick={handleConnectWallet} style={{width:'100%',padding:'12px',marginBottom:8,background:'linear-gradient(135deg,#ffd700,#b8860b)',border:'none',borderRadius:10,color:'#1a1200',fontFamily:'var(--font-mono)',fontSize:'0.9rem',fontWeight:700,letterSpacing:'0.05em',cursor:'pointer',boxShadow:'0 0 20px rgba(255,215,0,0.25)'}}>SIGN UP / LOGIN</button>
+          <div style={{marginBottom:8}}>
             <SmartWalletConnect onConnect={(address, email) => { setUser({address, type: 'smart', email}); setScreen('dashboard') }} />
           </div>
-          <div style={{padding:'14px',marginBottom:12,borderRadius:10,border:'1px solid #ffd70044',background:'rgba(255,215,0,0.03)'}}>
+          <div style={{padding:'10px',marginBottom:8,borderRadius:10,border:'1px solid #ffd70044',background:'rgba(255,215,0,0.03)'}}>
             <div style={{textAlign:'center',marginBottom:8}}>
               <span style={{fontSize:'1rem'}}>👑</span>
               <div style={{fontSize:'0.78rem',fontWeight:700,color:'#ffd700',fontFamily:'var(--font-mono)',letterSpacing:'0.04em',marginTop:2}}>PREMIUM SUBSCRIPTION</div>
@@ -670,7 +670,7 @@ export default function TheWall() {
               <div>💎<br/>ENHANCED<br/>YIELDS</div>
             </div>
           </div>
-          <div style={{padding:'12px',borderRadius:10,border:'1px solid #ffd70033',background:'rgba(0,0,0,0.3)'}}>
+          <div style={{padding:'10px',borderRadius:10,border:'1px solid #ffd70033',background:'rgba(0,0,0,0.3)'}}>
             <div style={{textAlign:'center',fontSize:'0.72rem',fontWeight:700,color:'#ffd700',fontFamily:'var(--font-mono)',marginBottom:2}}>🛡️ BANK-GRADE SECURITY</div>
             <div style={{textAlign:'center',fontSize:'0.58rem',color:'rgba(232,244,253,0.5)',marginBottom:8}}>256-BIT ENCRYPTION · MULTI-SIG PROTECTION · AUDITED SYSTEMS</div>
             <div style={{display:'flex',justifyContent:'space-around',fontSize:'0.56rem',color:'rgba(232,244,253,0.6)',fontFamily:'var(--font-mono)',textAlign:'center'}}>
