@@ -11,6 +11,11 @@ export default function SmartWalletConnect({ onConnect }: { onConnect: (address:
     if (ready && authenticated && wallets.length > 0) {
       const embeddedWallet = wallets.find(w => w.walletClientType === 'privy') || wallets[0]
       if (embeddedWallet?.address) {
+        fetch('/api/wallet/track-signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address: embeddedWallet.address }),
+        }).catch(() => {})
         onConnect(embeddedWallet.address, user?.email?.address)
       }
     }

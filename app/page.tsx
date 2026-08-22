@@ -620,6 +620,39 @@ export default function TheWall() {
     </div>
   )
 
+  
+const ChainIcon = ({ id }: { id: string }) => {
+  const s: React.CSSProperties = { width: 20, height: 20, flexShrink: 0 };
+  switch (id) {
+    case 'birth': // Bitcoin
+      return (
+        <svg style={s} viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#f7931a"/><path fill="#fff" d="M21.9 14.3c.3-2-1.2-3-3.3-3.7l.7-2.7-1.6-.4-.7 2.6c-.4-.1-.9-.2-1.3-.3l.7-2.7-1.6-.4-.7 2.7c-.4-.1-.7-.2-1-.2v-.1l-2.3-.6-.4 1.7s1.2.3 1.2.3c.7.2.8.6.8.9l-.8 3.2c0 0 .1 0 .2.1h-.2l-1.1 4.5c-.1.2-.3.5-.8.4 0 0-1.2-.3-1.2-.3l-.8 1.8 2.2.6c.4.1.8.2 1.2.3l-.7 2.8 1.6.4.7-2.7c.4.1.9.2 1.3.3l-.7 2.7 1.6.4.7-2.8c2.8.5 4.9.3 5.8-2.2.7-2-.03-3.2-1.5-3.9 1.1-.2 1.9-1 2.1-2.5zm-3.7 5.3c-.5 2-3.9.9-5 .6l.9-3.6c1.1.3 4.6.8 4.1 3zm.5-5.3c-.5 1.8-3.3.9-4.2.7l.8-3.3c.9.2 3.9.6 3.4 2.6z"/></svg>
+      );
+    case 'earth': // Ethereum
+      return (
+        <svg style={s} viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#627eea"/><path fill="#fff" fillOpacity=".8" d="M16.5 4v8.9l7.5 3.4z"/><path fill="#fff" d="M16.5 4 9 16.3l7.5-3.4z"/><path fill="#fff" fillOpacity=".8" d="M16.5 21.9v6.1l7.5-10.4z"/><path fill="#fff" d="M16.5 28v-6.1L9 17.6z"/><path fill="#fff" fillOpacity=".6" d="M16.5 20.5 24 16.3l-7.5-3.4z"/><path fill="#fff" fillOpacity=".9" d="M9 16.3l7.5 4.2v-7.6z"/></svg>
+      );
+    case 'soul': // Solana
+      return (
+        <svg style={s} viewBox="0 0 32 32"><defs><linearGradient id="solg" x1="0" y1="0" x2="32" y2="32"><stop offset="0" stopColor="#00ffa3"/><stop offset="1" stopColor="#dc1fff"/></linearGradient></defs><circle cx="16" cy="16" r="16" fill="#0a0a0a"/><path fill="url(#solg)" d="M9.3 20.1c.2-.2.5-.3.8-.3h13.4c.4 0 .6.5.3.8l-2.7 2.7c-.2.2-.5.3-.8.3H6.9c-.4 0-.6-.5-.3-.8l2.7-2.7z"/><path fill="url(#solg)" d="M9.3 8.9c.2-.2.5-.3.8-.3h13.4c.4 0 .6.5.3.8l-2.7 2.7c-.2.2-.5.3-.8.3H6.9c-.4 0-.6-.5-.3-.8l2.7-2.7z"/><path fill="url(#solg)" d="M22.7 14.5c-.2-.2-.5-.3-.8-.3H8.5c-.4 0-.6.5-.3.8l2.7 2.7c.2.2.5.3.8.3h13.4c.4 0 .6-.5.3-.8l-2.7-2.7z"/></svg>
+      );
+    case 'orbit': // Arbitrum
+      return (
+        <svg style={s} viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#213147"/><path fill="#12aaff" d="M12.5 21.5 16 14.2l3.5 7.3h2.4L16 8.5l-5.9 13z"/><path fill="#fff" d="m14.7 18.3 1.3-3 1.3 3z"/><path fill="#9dcced" d="M9.3 21.5h2l.9-2h2.1l-1.9-4.2z"/></svg>
+      );
+    case 'moon': // Monad
+      return (
+        <svg style={s} viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#200052"/><path fill="#836ef9" d="M16 7c-3.5 0-9 4-9 9s5.5 9 9 9 9-4 9-9-5.5-9-9-9zm0 15.5c-2 0-4.5-3.3-4.5-6.5S14 9.5 16 9.5s4.5 3.3 4.5 6.5-2.5 6.5-4.5 6.5z"/></svg>
+      );
+    case 'base': // Base
+      return (
+        <svg style={s} viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#0052ff"/><path fill="#fff" d="M16 24.5c4.7 0 8.5-3.8 8.5-8.5S20.7 7.5 16 7.5c-4.4 0-8.1 3.4-8.5 7.7h11.6v1.6H7.5c.4 4.3 4.1 7.7 8.5 7.7z"/></svg>
+      );
+    default:
+      return null;
+  }
+};
+
   if(screen==='login') return (
     <div className={styles.loginWrap}>
       <div className={styles.loginCard}>
@@ -637,15 +670,15 @@ export default function TheWall() {
           <div style={{textAlign:'center',fontSize:'0.62rem',letterSpacing:'0.15em',color:'#ffd70099',fontFamily:'var(--font-mono)',marginBottom:6}}>— SELECT CHAIN —</div>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6,marginBottom:8}}>
             {[
-              {id:'birth',label:'BIRTH',sub:'Bitcoin (BTC)',icon:'₿',color:'#f7931a'},
-              {id:'earth',label:'EARTH',sub:'Ethereum (ETH)',icon:'🌍',color:'#627eea'},
-              {id:'soul',label:'SOUL',sub:'Solana (SOL)',icon:'🌟',color:'#9945ff'},
-              {id:'orbit',label:'ORBIT',sub:'Arbitrum (ARB)',icon:'🪐',color:'#12aaff'},
-              {id:'moon',label:'MOON',sub:'Monad (MON)',icon:'🌙',color:'#836ef9'},
-              {id:'base',label:'BASE',sub:'Base',icon:'🔵',color:'#0052ff'},
+              {id:'birth',label:'BIRTH',sub:'Bitcoin (BTC)',color:'#f7931a'},
+              {id:'earth',label:'EARTH',sub:'Ethereum (ETH)',color:'#627eea'},
+              {id:'soul',label:'SOUL',sub:'Solana (SOL)',color:'#9945ff'},
+              {id:'orbit',label:'ORBIT',sub:'Arbitrum (ARB)',color:'#12aaff'},
+              {id:'moon',label:'MOON',sub:'Monad (MON)',color:'#836ef9'},
+              {id:'base',label:'BASE',sub:'Base',color:'#0052ff'},
             ].map(c=>(
               <div key={c.id} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 10px',borderRadius:10,border:'1px solid #ffd70033',background:'#0a0a0a',position:'relative'}}>
-                <span style={{fontSize:'1.1rem'}}>{c.icon}</span>
+                <ChainIcon id={c.id}/>
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{fontSize:'0.7rem',fontWeight:700,color:'#ffd700',fontFamily:'var(--font-mono)',letterSpacing:'0.03em'}}>{c.label}</div>
                   <div style={{fontSize:'0.58rem',color:'rgba(232,244,253,0.5)',fontFamily:'var(--font-mono)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{c.sub}</div>
@@ -832,6 +865,36 @@ export default function TheWall() {
           {swap.simStatus==='fail'&&swap.simError&&<div style={{padding:'10px',background:'rgba(255,68,102,0.08)',border:'1px solid rgba(255,68,102,0.2)',borderRadius:8,color:'#ff4466',fontSize:'0.75rem',marginTop:8}}>⚠️ {swap.simError}</div>}
           {swap.simStatus==='nowallet'&&<div style={{padding:'10px',background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:8,color:'var(--text-muted)',fontSize:'0.72rem',marginTop:8}}>Connect your wallet to verify this swap before sending it.</div>}
           <div style={{textAlign:'center',fontSize:'0.62rem',...s.muted,marginTop:10}}>UniSwap V3 · Gasless ⚡ · TheWall Universal 🦋</div>
+            <div style={{...s.card,border:`1px solid ${isPremium?'rgba(0,255,136,0.3)':'var(--border)'}`,background:isPremium?'rgba(0,255,136,0.04)':'var(--bg2)'}}>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:isPremium?8:12}}>
+                <div style={{display:'flex',alignItems:'center',gap:8}}>{isPremium?<span style={{display:'inline-flex',alignItems:'center',gap:4,padding:'3px 10px',borderRadius:999,background:'linear-gradient(135deg, rgba(0,255,136,0.18), rgba(0,204,102,0.10))',border:'1px solid rgba(0,255,136,0.4)',color:'#00ff88',...s.mono,fontSize:'0.7rem',fontWeight:700,letterSpacing:'0.02em',boxShadow:'0 0 8px rgba(0,255,136,0.15)'}}><span style={{fontSize:'0.7rem'}}>⭐</span>PREMIUM</span>:<span style={{fontSize:'0.82rem',...s.mono,color:'var(--text)',fontWeight:700}}>Free Plan</span>}</div>
+                {!isPremium&&<span style={{fontSize:'0.62rem',...s.muted}}>500 EMC/mo</span>}
+              </div>
+              {isPremium?<div style={{fontSize:'0.68rem',color:'#00ff88',...s.mono,marginBottom:8}}>Ad-free · 6hr claim cooldown{premiumExpiresAt?` · Renews ${new Date(premiumExpiresAt).toLocaleDateString()}`:''}</div>:<div style={{fontSize:'0.68rem',...s.muted,...s.mono,marginBottom:10,lineHeight:1.5}}>Go ad-free and cut your daily claim cooldown from 24hr to 6hr.</div>}
+              {!isPremium&&<button onClick={buyPremium} disabled={premiumLoading||!user?.address} style={{width:'100%',padding:'10px',background:premiumLoading||!user?.address?'var(--bg3)':'linear-gradient(135deg,#00cc66,#00ff88)',border:'none',borderRadius:8,color:premiumLoading||!user?.address?'var(--text-muted)':'#04140b',...s.mono,fontSize:'0.8rem',fontWeight:700,cursor:premiumLoading||!user?.address?'not-allowed':'pointer'}}>{premiumLoading?'Processing...':'⭐ Upgrade to Premium — ₹210/mo'}</button>}
+              {premiumMsg&&<div style={{fontSize:'0.65rem',marginTop:8,color:isPremium?'#00ff88':'#ff4466',...s.mono}}>{premiumMsg}</div>}
+            </div>
+
+            <div style={{...s.card,marginTop:12,border:'1px solid rgba(255,61,61,0.35)',background:'linear-gradient(135deg, rgba(255,61,61,0.08), rgba(255,214,0,0.05))',boxShadow:'0 0 16px rgba(255,180,0,0.08)'}}>
+              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
+                <span style={{fontSize:'1.1rem'}}>🔥</span>
+                <span style={{fontSize:'0.82rem',...s.mono,fontWeight:700,background:'linear-gradient(90deg,#ff3d3d,#ffd600)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>Buy Emo Coins</span>
+              </div>
+              <div style={{fontSize:'0.68rem',...s.muted,marginBottom:10}}>1 EMC = ₹10. Instant top-up via Razorpay.</div>
+              <div style={{display:'flex',gap:8,marginBottom:10}}>
+                <input
+                  type="number"
+                  min={10}
+                  step={10}
+                  value={emcBuyAmount}
+                  onChange={(e)=>setEmcBuyAmount(Math.max(10, parseInt(e.target.value)||0))}
+                  style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid rgba(255,214,0,0.35)',background:'var(--bg2)',color:'#ffd600',...s.mono,fontSize:'0.85rem',fontWeight:700}}
+                />
+                <div style={{display:'flex',alignItems:'center',padding:'0 12px',borderRadius:8,border:'1px solid rgba(255,61,61,0.25)',background:'var(--bg2)',...s.mono,fontSize:'0.78rem',color:'var(--text-muted)'}}>₹{emcBuyAmount*10}</div>
+              </div>
+              <button onClick={buyEmc} disabled={emcBuyLoading||!user?.address} style={{width:'100%',padding:'10px',background:emcBuyLoading||!user?.address?'var(--bg3)':'linear-gradient(135deg,#ff3d3d,#ffd600)',border:'none',borderRadius:8,color:emcBuyLoading||!user?.address?'var(--text-muted)':'#1a0a00',...s.mono,fontSize:'0.8rem',fontWeight:700,cursor:emcBuyLoading||!user?.address?'not-allowed':'pointer'}}>{emcBuyLoading?'Processing...':`🔥 Buy ${emcBuyAmount} EMC`}</button>
+              {emcBuyMsg&&<div style={{fontSize:'0.65rem',marginTop:8,color:emcBuyMsg.startsWith('✅')?'#00ff88':'#ff4466',...s.mono}}>{emcBuyMsg}</div>}
+            </div>
           </div>}
         </div>}
 
@@ -889,36 +952,6 @@ export default function TheWall() {
 }
 </div>
 </div>
-            <div style={{...s.card,border:`1px solid ${isPremium?'rgba(0,255,136,0.3)':'var(--border)'}`,background:isPremium?'rgba(0,255,136,0.04)':'var(--bg2)'}}>
-              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:isPremium?8:12}}>
-                <div style={{display:'flex',alignItems:'center',gap:8}}>{isPremium?<span style={{display:'inline-flex',alignItems:'center',gap:4,padding:'3px 10px',borderRadius:999,background:'linear-gradient(135deg, rgba(0,255,136,0.18), rgba(0,204,102,0.10))',border:'1px solid rgba(0,255,136,0.4)',color:'#00ff88',...s.mono,fontSize:'0.7rem',fontWeight:700,letterSpacing:'0.02em',boxShadow:'0 0 8px rgba(0,255,136,0.15)'}}><span style={{fontSize:'0.7rem'}}>⭐</span>PREMIUM</span>:<span style={{fontSize:'0.82rem',...s.mono,color:'var(--text)',fontWeight:700}}>Free Plan</span>}</div>
-                {!isPremium&&<span style={{fontSize:'0.62rem',...s.muted}}>500 EMC/mo</span>}
-              </div>
-              {isPremium?<div style={{fontSize:'0.68rem',color:'#00ff88',...s.mono,marginBottom:8}}>Ad-free · 6hr claim cooldown{premiumExpiresAt?` · Renews ${new Date(premiumExpiresAt).toLocaleDateString()}`:''}</div>:<div style={{fontSize:'0.68rem',...s.muted,...s.mono,marginBottom:10,lineHeight:1.5}}>Go ad-free and cut your daily claim cooldown from 24hr to 6hr.</div>}
-              {!isPremium&&<button onClick={buyPremium} disabled={premiumLoading||!user?.address} style={{width:'100%',padding:'10px',background:premiumLoading||!user?.address?'var(--bg3)':'linear-gradient(135deg,#00cc66,#00ff88)',border:'none',borderRadius:8,color:premiumLoading||!user?.address?'var(--text-muted)':'#04140b',...s.mono,fontSize:'0.8rem',fontWeight:700,cursor:premiumLoading||!user?.address?'not-allowed':'pointer'}}>{premiumLoading?'Processing...':'⭐ Upgrade to Premium — ₹210/mo'}</button>}
-              {premiumMsg&&<div style={{fontSize:'0.65rem',marginTop:8,color:isPremium?'#00ff88':'#ff4466',...s.mono}}>{premiumMsg}</div>}
-            </div>
-
-            <div style={{...s.card,marginTop:12,border:'1px solid rgba(255,61,61,0.35)',background:'linear-gradient(135deg, rgba(255,61,61,0.08), rgba(255,214,0,0.05))',boxShadow:'0 0 16px rgba(255,180,0,0.08)'}}>
-              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
-                <span style={{fontSize:'1.1rem'}}>🔥</span>
-                <span style={{fontSize:'0.82rem',...s.mono,fontWeight:700,background:'linear-gradient(90deg,#ff3d3d,#ffd600)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>Buy Emo Coins</span>
-              </div>
-              <div style={{fontSize:'0.68rem',...s.muted,marginBottom:10}}>1 EMC = ₹10. Instant top-up via Razorpay.</div>
-              <div style={{display:'flex',gap:8,marginBottom:10}}>
-                <input
-                  type="number"
-                  min={10}
-                  step={10}
-                  value={emcBuyAmount}
-                  onChange={(e)=>setEmcBuyAmount(Math.max(10, parseInt(e.target.value)||0))}
-                  style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid rgba(255,214,0,0.35)',background:'var(--bg2)',color:'#ffd600',...s.mono,fontSize:'0.85rem',fontWeight:700}}
-                />
-                <div style={{display:'flex',alignItems:'center',padding:'0 12px',borderRadius:8,border:'1px solid rgba(255,61,61,0.25)',background:'var(--bg2)',...s.mono,fontSize:'0.78rem',color:'var(--text-muted)'}}>₹{emcBuyAmount*10}</div>
-              </div>
-              <button onClick={buyEmc} disabled={emcBuyLoading||!user?.address} style={{width:'100%',padding:'10px',background:emcBuyLoading||!user?.address?'var(--bg3)':'linear-gradient(135deg,#ff3d3d,#ffd600)',border:'none',borderRadius:8,color:emcBuyLoading||!user?.address?'var(--text-muted)':'#1a0a00',...s.mono,fontSize:'0.8rem',fontWeight:700,cursor:emcBuyLoading||!user?.address?'not-allowed':'pointer'}}>{emcBuyLoading?'Processing...':`🔥 Buy ${emcBuyAmount} EMC`}</button>
-              {emcBuyMsg&&<div style={{fontSize:'0.65rem',marginTop:8,color:emcBuyMsg.startsWith('✅')?'#00ff88':'#ff4466',...s.mono}}>{emcBuyMsg}</div>}
-            </div>
             <div style={s.card}><div style={{...s.label,marginBottom:12}}>WALLET STATS</div>{[{label:'Portfolio',value:fmt(portfolioTotal)},{label:'EmoCoins',value:EMOCOIN.balance+' EMC'},{label:'Goal',value:goalPct.toFixed(4)+'%'},{label:'Active Alerts',value:alerts.filter(a=>!a.triggered).length.toString()},{label:'Address Book',value:addressBook.length.toString()}].map(stat=><div key={stat.label} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid var(--border)'}}><span style={{fontSize:'0.72rem',...s.muted}}>{stat.label}</span><span style={{fontSize:'0.72rem',...s.mono,color:'var(--text)',fontWeight:700}}>{stat.value}</span></div>)}</div>
             <div style={{...s.card,marginBottom:16}}><div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}><span style={{fontSize:'1.3rem'}}>🎁</span><div style={{...s.label}}>INVITE & EARN</div></div><div style={{fontSize:'0.75rem',color:'var(--text-muted)',...s.mono,marginBottom:10,lineHeight:1.5}}>Share your link — you get <span style={{color:'var(--cyan)'}}>+50 EMC</span>, your friend gets <span style={{color:'var(--cyan)'}}>+20 EMC</span> bonus on their first claim.</div><div style={{padding:'10px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:8,fontSize:'0.7rem',...s.mono,wordBreak:'break-all',color:'var(--text)',marginBottom:10}}>{user?.address?`https://thewall-web3.e-mobies.com/?ref=${user.address}`:'Connect wallet to get your link'}</div><button onClick={()=>{if(user?.address){navigator.clipboard.writeText(`https://thewall-web3.e-mobies.com/?ref=${user.address}`);if(navigator.share){navigator.share({title:'Join TheWall',text:'Join me on TheWall — the gasless Web3 wallet!',url:`https://thewall-web3.e-mobies.com/?ref=${user.address}`}).catch(()=>{})}}}} style={{width:'100%',padding:'10px',background:'var(--cyan-glow)',border:'1px solid var(--cyan)',borderRadius:8,color:'var(--cyan)',...s.mono,fontSize:'0.8rem',cursor:'pointer',fontWeight:700}}>🔗 Copy & Share Invite Link</button></div>
 <div style={{...s.label,marginBottom:8}}>TREASURY</div>

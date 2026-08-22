@@ -20,13 +20,15 @@
 }
 .logo {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
+  text-align: center;
+  gap: 8px;
   margin-bottom: 14px;
 }
 .hexLogo {
-  width: 96px;
-  height: 96px;
+  width: 130px;
+  height: 130px;
   object-fit: contain;
   animation: float 3s ease-in-out infinite, glowPulse 2.5s ease-in-out infinite;
   line-height: 1;
