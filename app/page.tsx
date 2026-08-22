@@ -689,15 +689,15 @@ const ChainIcon = ({ id }: { id: string }) => {
           </div>
           <div style={{border:'1px solid #ffd70044',borderRadius:14,padding:8,marginBottom:6,background:'linear-gradient(160deg, rgba(255,215,0,0.04), rgba(0,0,0,0.2))'}}>
           <button onClick={handleConnectWallet} style={{width:'100%',padding:'10px',marginBottom:6,background:'linear-gradient(135deg,#ffd700,#b8860b)',border:'none',borderRadius:10,color:'#1a1200',fontFamily:'var(--font-mono)',fontSize:'0.85rem',fontWeight:700,letterSpacing:'0.05em',cursor:'pointer',boxShadow:'0 0 20px rgba(255,215,0,0.25)'}}>SIGN UP / LOGIN</button>
-          <div style={{marginBottom:6,padding:'10px',borderRadius:10,border:'none',background:'linear-gradient(135deg,#00ff88,#00b368)',boxShadow:'0 0 20px rgba(0,255,136,0.25)'}}>
+          <div style={{marginBottom:6,padding:'4px',borderRadius:10,border:'none',background:'linear-gradient(135deg,#00ff88,#00b368)',boxShadow:'0 0 20px rgba(0,255,136,0.25)'}}>
             <SmartWalletConnect onConnect={(address, email) => { setUser({address, type: 'smart', email}); setScreen('dashboard') }} />
           </div>
           <div style={{display:'flex',gap:6,maxWidth:'94%',marginLeft:'auto',marginRight:'auto'}}>
-            <div style={{flex:1,padding:'5px 6px',borderRadius:8,border:'1px solid #ffd70044',background:'rgba(255,215,0,0.03)',textAlign:'center'}}>
+            <div style={{flex:1,padding:'3px 6px',borderRadius:8,border:'1px solid #ffd70044',background:'rgba(255,215,0,0.03)',textAlign:'center'}}>
               <div style={{fontSize:'0.6rem',fontWeight:700,color:'#ffd700',fontFamily:'var(--font-mono)'}}>👑 PREMIUM</div>
               <div style={{fontSize:'0.5rem',color:'rgba(232,244,253,0.6)',fontFamily:'var(--font-mono)',marginTop:1}}>⭐ 🛡️ 💎</div>
             </div>
-            <div style={{flex:1,padding:'5px 6px',borderRadius:8,border:'1px solid #ffd70033',background:'rgba(0,0,0,0.3)',textAlign:'center'}}>
+            <div style={{flex:1,padding:'3px 6px',borderRadius:8,border:'1px solid #ffd70033',background:'rgba(0,0,0,0.3)',textAlign:'center'}}>
               <div style={{fontSize:'0.6rem',fontWeight:700,color:'#ffd700',fontFamily:'var(--font-mono)'}}>🛡️ SECURITY</div>
               <div style={{fontSize:'0.5rem',color:'rgba(232,244,253,0.6)',fontFamily:'var(--font-mono)',marginTop:1}}>🔒 🌐 ✅</div>
             </div>

@@ -32,14 +32,14 @@ export default function SmartWalletConnect({ onConnect }: { onConnect: (address:
       }}
       style={{
         width: '100%',
-        padding: '14px',
-        borderRadius: 12,
+        padding: '10px',
+        borderRadius: 10,
         fontWeight: 700,
-        border: '1px solid #00ff8855',
-        background: '#00ff8811',
-        color: '#00ff88',
+        border: 'none',
+        background: 'transparent',
+        color: '#0a1a10',
         cursor: 'pointer',
-        marginTop: 10,
+        marginTop: 0,
         fontFamily: 'var(--font-mono)',
         fontSize: '0.82rem'
       }}
