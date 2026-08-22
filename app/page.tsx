@@ -689,13 +689,13 @@ const ChainIcon = ({ id }: { id: string }) => {
           </div>
           <div style={{border:'1px solid #ffd70044',borderRadius:14,padding:12,marginBottom:8,background:'linear-gradient(160deg, rgba(255,215,0,0.04), rgba(0,0,0,0.2))'}}>
           <button onClick={handleConnectWallet} style={{width:'100%',padding:'12px',marginBottom:8,background:'linear-gradient(135deg,#ffd700,#b8860b)',border:'none',borderRadius:10,color:'#1a1200',fontFamily:'var(--font-mono)',fontSize:'0.9rem',fontWeight:700,letterSpacing:'0.05em',cursor:'pointer',boxShadow:'0 0 20px rgba(255,215,0,0.25)'}}>SIGN UP / LOGIN</button>
-          <div style={{marginBottom:8,padding:2,borderRadius:10,border:'1px solid rgba(0,255,136,0.35)',background:'rgba(0,255,136,0.05)'}}>
+          <div style={{marginBottom:6,padding:1,borderRadius:10,border:'1px solid rgba(0,255,136,0.35)',background:'rgba(0,255,136,0.05)'}}>
             <SmartWalletConnect onConnect={(address, email) => { setUser({address, type: 'smart', email}); setScreen('dashboard') }} />
           </div>
-          <div style={{padding:'10px',marginBottom:8,borderRadius:10,border:'1px solid #ffd70044',background:'rgba(255,215,0,0.03)',maxWidth:'94%',marginLeft:'auto',marginRight:'auto'}}>
-            <div style={{textAlign:'center',marginBottom:8}}>
-              <span style={{fontSize:'1rem'}}>👑</span>
-              <div style={{fontSize:'0.78rem',fontWeight:700,color:'#ffd700',fontFamily:'var(--font-mono)',letterSpacing:'0.04em',marginTop:2}}>PREMIUM SUBSCRIPTION</div>
+          <div style={{padding:'6px 10px',marginBottom:6,borderRadius:10,border:'1px solid #ffd70044',background:'rgba(255,215,0,0.03)',maxWidth:'94%',marginLeft:'auto',marginRight:'auto'}}>
+            <div style={{textAlign:'center',marginBottom:4}}>
+              <span style={{fontSize:'0.85rem'}}>👑</span>
+              <div style={{fontSize:'0.7rem',fontWeight:700,color:'#ffd700',fontFamily:'var(--font-mono)',letterSpacing:'0.04em',marginTop:1}}>PREMIUM SUBSCRIPTION</div>
               <div style={{fontSize:'0.62rem',color:'rgba(232,244,253,0.6)',marginTop:4,lineHeight:1.4}}>Unlock exclusive perks, priority support, and advanced features.</div>
             </div>
             <div style={{display:'flex',justifyContent:'space-around',fontSize:'0.58rem',color:'rgba(232,244,253,0.7)',fontFamily:'var(--font-mono)',textAlign:'center'}}>
@@ -704,7 +704,7 @@ const ChainIcon = ({ id }: { id: string }) => {
               <div>💎<br/>ENHANCED<br/>YIELDS</div>
             </div>
           </div>
-          <div style={{padding:'10px',borderRadius:10,border:'1px solid #ffd70033',background:'rgba(0,0,0,0.3)',maxWidth:'94%',marginLeft:'auto',marginRight:'auto'}}>
+          <div style={{padding:'6px 10px',borderRadius:10,border:'1px solid #ffd70033',background:'rgba(0,0,0,0.3)',maxWidth:'94%',marginLeft:'auto',marginRight:'auto'}}>
             <div style={{textAlign:'center',fontSize:'0.72rem',fontWeight:700,color:'#ffd700',fontFamily:'var(--font-mono)',marginBottom:2}}>🛡️ BANK-GRADE SECURITY</div>
             <div style={{textAlign:'center',fontSize:'0.58rem',color:'rgba(232,244,253,0.5)',marginBottom:8}}>256-BIT ENCRYPTION · MULTI-SIG PROTECTION · AUDITED SYSTEMS</div>
             <div style={{display:'flex',justifyContent:'space-around',fontSize:'0.56rem',color:'rgba(232,244,253,0.6)',fontFamily:'var(--font-mono)',textAlign:'center'}}>
