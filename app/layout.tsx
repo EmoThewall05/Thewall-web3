@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 import './globals.css'
+import '@account-kit/react/styles.css'
 
 import { WalletProvider } from './context/wallet'
 import Providers from './providers'

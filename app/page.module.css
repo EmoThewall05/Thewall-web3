@@ -25,10 +25,15 @@
   margin-bottom: 28px;
 }
 .hexLogo {
-  font-size: 2.8rem;
-  color: var(--cyan);
-  animation: float 3s ease-in-out infinite;
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  animation: float 3s ease-in-out infinite, glowPulse 2.5s ease-in-out infinite;
   line-height: 1;
+}
+@keyframes glowPulse {
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(0,255,136,0.35)) drop-shadow(0 0 12px rgba(255,215,0,0.2)); }
+  50% { filter: drop-shadow(0 0 16px rgba(0,255,136,0.65)) drop-shadow(0 0 28px rgba(255,215,0,0.45)); }
 }
 .logoTitle {
   font-size: 1.5rem;
