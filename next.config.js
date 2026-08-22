@@ -16,6 +16,7 @@ const nextConfig = {
       '@x402/svm/exact/client': false,
       '@x402/evm': false,
       'accounts': false,
+      '@farcaster/miniapp-sdk': false,
     }
     return config
   },

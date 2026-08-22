@@ -1,12 +1,8 @@
-'use client'
+path = 'app/providers.tsx'
+new_content = '''\'use client\'
 
-import dynamic from 'next/dynamic'
+import { PrivyProvider } from '@privy-io/react-auth'
 import type { ReactNode } from 'react'
-
-const PrivyProvider = dynamic(
-  () => import('@privy-io/react-auth').then((mod) => mod.PrivyProvider),
-  { ssr: false }
-)
 
 export default function Providers({ children }: { children: ReactNode }) {
   return (
@@ -19,9 +15,7 @@ export default function Providers({ children }: { children: ReactNode }) {
           accentColor: '#00e5ff',
         },
         embeddedWallets: {
-          ethereum: {
-            createOnLogin: 'users-without-wallets',
-          },
+          createOnLogin: 'users-without-wallets',
         },
       }}
     >
@@ -29,3 +23,8 @@ export default function Providers({ children }: { children: ReactNode }) {
     </PrivyProvider>
   )
 }
+'''
+
+with open(path, 'w') as f:
+    f.write(new_content)
+print('[OK] providers.tsx rewritten for Privy')

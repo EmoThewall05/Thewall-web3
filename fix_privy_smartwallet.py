@@ -1,4 +1,5 @@
-'use client'
+path = 'components/SmartWalletConnect.tsx'
+new_content = '''\'use client\'
 
 import { useEffect } from 'react'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
@@ -43,3 +44,8 @@ export default function SmartWalletConnect({ onConnect }: { onConnect: (address:
     </button>
   )
 }
+'''
+
+with open(path, 'w') as f:
+    f.write(new_content)
+print('[OK] SmartWalletConnect.tsx rewritten for Privy')

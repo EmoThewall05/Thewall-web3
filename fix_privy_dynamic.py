@@ -1,4 +1,5 @@
-'use client'
+path = 'app/providers.tsx'
+new_content = '''\'use client\'
 
 import dynamic from 'next/dynamic'
 import type { ReactNode } from 'react'
@@ -29,3 +30,8 @@ export default function Providers({ children }: { children: ReactNode }) {
     </PrivyProvider>
   )
 }
+'''
+
+with open(path, 'w') as f:
+    f.write(new_content)
+print('[OK] providers.tsx updated for client-only rendering')
