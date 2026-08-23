@@ -89,6 +89,10 @@ export default function TheWall() {
   const [browseLeadersOpen, setBrowseLeadersOpen] = useState(false)
   const [leadersList, setLeadersList] = useState<any[]>([])
   const [leadersLoading, setLeadersLoading] = useState(false)
+  const [followTarget, setFollowTarget] = useState<any>(null)
+  const [followAllocation, setFollowAllocation] = useState(10)
+  const [followLoading, setFollowLoading] = useState(false)
+  const [followStatus, setFollowStatus] = useState('')
   const [emoClaiming, setEmoClaiming] = useState(false)
   const [emoClaimMsg, setEmoClaimMsg] = useState('')
   const [emoNextClaimAt, setEmoNextClaimAt] = useState<number|null>(null)
@@ -372,6 +376,35 @@ export default function TheWall() {
     }
     setLeadersLoading(false)
   }, [])
+
+  const followLeader = useCallback(async () => {
+    if (!user?.address || !followTarget || followLoading) return
+    setFollowLoading(true)
+    setFollowStatus('')
+    try {
+      const r = await fetch('/api/copytrade/follow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          follower_address: user.address,
+          leader_address: followTarget.wallet_address,
+          allocation_pct: followAllocation,
+        }),
+      })
+      const d = await r.json()
+      if (d.error) {
+        setFollowStatus('❌ ' + d.error)
+      } else if (d.already_following) {
+        setFollowStatus('🦋 You are already following this leader!')
+      } else {
+        setFollowStatus('✅ Now following! Allocation: ' + followAllocation + '%')
+        fetchLeaders()
+      }
+    } catch {
+      setFollowStatus('❌ Something went wrong. Try again.')
+    }
+    setFollowLoading(false)
+  }, [user, followTarget, followAllocation, followLoading, fetchLeaders])
 
   const sendCopyTradeMessage = useCallback(async () => {
     const text = copyTradeInput.trim()
@@ -1112,13 +1145,30 @@ const ChainIcon = ({ id }: { id: string }) => {
                     <div style={{fontSize:'0.78rem',...s.mono,color:'var(--text)',fontWeight:700}}>{ld.display_name || (ld.wallet_address.slice(0,6)+'...'+ld.wallet_address.slice(-4))}</div>
                     <span style={{fontSize:'0.9rem'}}>🦋</span>
                   </div>
-                  <div style={{display:'flex',gap:12,fontSize:'0.65rem',...s.muted}}>
+                  <div style={{display:'flex',gap:12,fontSize:'0.65rem',...s.muted,marginBottom:8}}>
                     <span>Trust: {ld.trust_score}</span>
                     <span>Win: {ld.win_rate}%</span>
                     <span>Followers: {ld.total_followers}</span>
                   </div>
+                  <button onClick={()=>{setFollowTarget(ld);setFollowAllocation(10);setFollowStatus('')}} style={{width:'100%',padding:'8px',background:'var(--cyan-glow)',border:'1px solid var(--cyan)',borderRadius:8,...s.cyan,...s.mono,fontSize:'0.72rem',cursor:'pointer',fontWeight:700}}>🦋 Follow</button>
                 </div>
               ))}
+            </div>
+          </div>}
+
+          {followTarget&&<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.9)',zIndex:100000,display:'flex',alignItems:'center',justifyContent:'center',padding:16}} onClick={()=>setFollowTarget(null)}>
+            <div style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:16,padding:20,maxWidth:340,width:'100%'}} onClick={e=>e.stopPropagation()}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
+                <div style={{fontSize:'0.9rem',...s.mono,color:'var(--text)',fontWeight:700}}>🦋 Follow {followTarget.display_name || (followTarget.wallet_address.slice(0,6)+'...'+followTarget.wallet_address.slice(-4))}</div>
+                <button onClick={()=>setFollowTarget(null)} style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:6,color:'var(--text-muted)',width:28,height:28,cursor:'pointer',fontSize:'1rem'}}>x</button>
+              </div>
+              <div style={{fontSize:'0.7rem',...s.muted,marginBottom:12}}>Choose what % of your trades should mirror this leader's activity.</div>
+              <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}>
+                <input type="range" min={1} max={100} value={followAllocation} onChange={e=>setFollowAllocation(Number(e.target.value))} style={{flex:1}}/>
+                <div style={{fontSize:'0.85rem',...s.mono,...s.cyan,fontWeight:700,minWidth:44,textAlign:'right'}}>{followAllocation}%</div>
+              </div>
+              {followStatus&&<div style={{fontSize:'0.72rem',...s.mono,marginBottom:10,color:'var(--text)'}}>{followStatus}</div>}
+              <button onClick={followLeader} disabled={followLoading} style={{width:'100%',padding:'12px',background:'var(--cyan)',border:'none',borderRadius:10,color:'#000',fontWeight:700,...s.mono,fontSize:'0.78rem',cursor:'pointer',opacity:followLoading?0.6:1}}>{followLoading?'Following...':'Confirm & Follow'}</button>
             </div>
           </div>}
 
