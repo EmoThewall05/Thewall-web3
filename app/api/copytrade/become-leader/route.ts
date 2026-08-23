@@ -3,11 +3,12 @@ import { getSupabaseAdmin } from '@/lib/supabase'
 
 export async function POST(req: Request) {
   try {
-    const { wallet_address, display_name } = await req.json()
+    const { wallet_address: raw_address, display_name } = await req.json()
 
-    if (!wallet_address) {
+    if (!raw_address) {
       return NextResponse.json({ error: 'wallet_address required' }, { status: 400 })
     }
+    const wallet_address = raw_address.toLowerCase()
 
     const supabase = getSupabaseAdmin()
 
