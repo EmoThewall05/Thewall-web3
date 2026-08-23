@@ -22,6 +22,9 @@ export default function Providers({ children }: { children: ReactNode }) {
           ethereum: {
             createOnLogin: 'users-without-wallets',
           },
+          solana: {
+            createOnLogin: 'users-without-wallets',
+          },
         },
       }}
     >
