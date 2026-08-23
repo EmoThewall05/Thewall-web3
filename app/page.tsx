@@ -82,6 +82,13 @@ export default function TheWall() {
   const [copyTradeChatLog, setCopyTradeChatLog] = useState<{role:string;content:string}[]>([])
   const [copyTradeInput, setCopyTradeInput] = useState('')
   const [copyTradeChatLoading, setCopyTradeChatLoading] = useState(false)
+  const [becomeLeaderOpen, setBecomeLeaderOpen] = useState(false)
+  const [becomeLeaderName, setBecomeLeaderName] = useState('')
+  const [becomeLeaderLoading, setBecomeLeaderLoading] = useState(false)
+  const [becomeLeaderStatus, setBecomeLeaderStatus] = useState('')
+  const [browseLeadersOpen, setBrowseLeadersOpen] = useState(false)
+  const [leadersList, setLeadersList] = useState<any[]>([])
+  const [leadersLoading, setLeadersLoading] = useState(false)
   const [emoClaiming, setEmoClaiming] = useState(false)
   const [emoClaimMsg, setEmoClaimMsg] = useState('')
   const [emoNextClaimAt, setEmoNextClaimAt] = useState<number|null>(null)
@@ -328,6 +335,42 @@ export default function TheWall() {
     setNewsLoading(true)
     try { const r=await fetch('/api/news'); const d=await r.json(); setNews(d.news||[]) } catch { setNews([]) }
     setNewsLoading(false)
+  }, [])
+
+  const becomeLeader = useCallback(async () => {
+    if (!user?.address || becomeLeaderLoading) return
+    setBecomeLeaderLoading(true)
+    setBecomeLeaderStatus('')
+    try {
+      const r = await fetch('/api/copytrade/become-leader', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ wallet_address: user.address, display_name: becomeLeaderName.trim() || null }),
+      })
+      const d = await r.json()
+      if (d.error) {
+        setBecomeLeaderStatus('❌ ' + d.error)
+      } else if (d.already_leader) {
+        setBecomeLeaderStatus('👑 You are already a Leader!')
+      } else {
+        setBecomeLeaderStatus('✅ You are now a Copy Trading Leader!')
+      }
+    } catch {
+      setBecomeLeaderStatus('❌ Something went wrong. Try again.')
+    }
+    setBecomeLeaderLoading(false)
+  }, [user, becomeLeaderName, becomeLeaderLoading])
+
+  const fetchLeaders = useCallback(async () => {
+    setLeadersLoading(true)
+    try {
+      const r = await fetch('/api/copytrade/leaders')
+      const d = await r.json()
+      setLeadersList(d.leaders || [])
+    } catch {
+      setLeadersList([])
+    }
+    setLeadersLoading(false)
   }, [])
 
   const sendCopyTradeMessage = useCallback(async () => {
@@ -1021,8 +1064,8 @@ const ChainIcon = ({ id }: { id: string }) => {
           </div>
 
           <div style={{display:'flex',gap:8,marginBottom:16}}>
-            <button style={{flex:1,padding:'12px',background:'linear-gradient(135deg,#ffd700,#b8860b)',border:'none',borderRadius:10,color:'#1a1200',fontWeight:700,...s.mono,fontSize:'0.78rem',cursor:'pointer'}}>👑 Become a Leader</button>
-            <button style={{flex:1,padding:'12px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:10,color:'var(--text)',fontWeight:700,...s.mono,fontSize:'0.78rem',cursor:'pointer'}}>🔍 Browse Leaders</button>
+            <button onClick={()=>{setBecomeLeaderStatus('');setBecomeLeaderOpen(true)}} style={{flex:1,padding:'12px',background:'linear-gradient(135deg,#ffd700,#b8860b)',border:'none',borderRadius:10,color:'#1a1200',fontWeight:700,...s.mono,fontSize:'0.78rem',cursor:'pointer'}}>👑 Become a Leader</button>
+            <button onClick={()=>{setBrowseLeadersOpen(true);fetchLeaders()}} style={{flex:1,padding:'12px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:10,color:'var(--text)',fontWeight:700,...s.mono,fontSize:'0.78rem',cursor:'pointer'}}>🔍 Browse Leaders</button>
           </div>
 
           <div style={{border:'1px solid var(--border)',borderRadius:12,background:'var(--bg2)',padding:12,marginBottom:16}}>
@@ -1041,6 +1084,43 @@ const ChainIcon = ({ id }: { id: string }) => {
               <button onClick={sendCopyTradeMessage} disabled={copyTradeChatLoading} style={{padding:'8px 14px',borderRadius:8,border:'none',background:'var(--cyan)',color:'#000',fontWeight:700,cursor:'pointer',fontSize:'0.74rem'}}>→</button>
             </div>
           </div>
+
+          {becomeLeaderOpen&&<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.85)',zIndex:99999,display:'flex',alignItems:'center',justifyContent:'center',padding:16}} onClick={()=>setBecomeLeaderOpen(false)}>
+            <div style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:16,padding:20,maxWidth:340,width:'100%'}} onClick={e=>e.stopPropagation()}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
+                <div style={{fontSize:'0.9rem',...s.mono,color:'var(--text)',fontWeight:700}}>👑 Become a Leader</div>
+                <button onClick={()=>setBecomeLeaderOpen(false)} style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:6,color:'var(--text-muted)',width:28,height:28,cursor:'pointer',fontSize:'1rem'}}>x</button>
+              </div>
+              <div style={{fontSize:'0.7rem',...s.muted,marginBottom:12}}>Your wallet's trades will become visible to followers. You'll earn EMC as your Trust Score 🦋 grows.</div>
+              <input value={becomeLeaderName} onChange={e=>setBecomeLeaderName(e.target.value)} placeholder="Display name (optional)" style={{width:'100%',padding:'10px',borderRadius:8,border:'1px solid var(--border)',background:'var(--bg)',color:'var(--text)',fontSize:'0.78rem',...s.mono,marginBottom:12,boxSizing:'border-box'}}/>
+              {becomeLeaderStatus&&<div style={{fontSize:'0.72rem',...s.mono,marginBottom:10,color:'var(--text)'}}>{becomeLeaderStatus}</div>}
+              <button onClick={becomeLeader} disabled={becomeLeaderLoading} style={{width:'100%',padding:'12px',background:'linear-gradient(135deg,#ffd700,#b8860b)',border:'none',borderRadius:10,color:'#1a1200',fontWeight:700,...s.mono,fontSize:'0.78rem',cursor:'pointer',opacity:becomeLeaderLoading?0.6:1}}>{becomeLeaderLoading?'Joining...':'Confirm & Become a Leader'}</button>
+            </div>
+          </div>}
+
+          {browseLeadersOpen&&<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.85)',zIndex:99999,display:'flex',alignItems:'center',justifyContent:'center',padding:16}} onClick={()=>setBrowseLeadersOpen(false)}>
+            <div style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:16,padding:20,maxWidth:360,width:'100%',maxHeight:'75vh',overflowY:'auto'}} onClick={e=>e.stopPropagation()}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
+                <div style={{fontSize:'0.9rem',...s.mono,color:'var(--text)',fontWeight:700}}>🔍 Browse Leaders</div>
+                <button onClick={()=>setBrowseLeadersOpen(false)} style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:6,color:'var(--text-muted)',width:28,height:28,cursor:'pointer',fontSize:'1rem'}}>x</button>
+              </div>
+              {leadersLoading&&<div style={{display:'flex',justifyContent:'center',padding:24}}><div className={styles.spinner}/></div>}
+              {!leadersLoading&&leadersList.length===0&&<div style={{textAlign:'center',padding:24,fontSize:'0.75rem',...s.muted}}>No leaders yet — be the first! 🦋</div>}
+              {leadersList.map((ld,i)=>(
+                <div key={i} style={{...s.card,padding:12,marginBottom:8}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
+                    <div style={{fontSize:'0.78rem',...s.mono,color:'var(--text)',fontWeight:700}}>{ld.display_name || (ld.wallet_address.slice(0,6)+'...'+ld.wallet_address.slice(-4))}</div>
+                    <span style={{fontSize:'0.9rem'}}>🦋</span>
+                  </div>
+                  <div style={{display:'flex',gap:12,fontSize:'0.65rem',...s.muted}}>
+                    <span>Trust: {ld.trust_score}</span>
+                    <span>Win: {ld.win_rate}%</span>
+                    <span>Followers: {ld.total_followers}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>}
 
           <div style={{textAlign:'center',fontSize:'0.68rem',...s.muted,padding:'20px 0'}}>No leaders yet — be the first! 🦋</div>
         </div>}
