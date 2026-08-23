@@ -2,8 +2,8 @@
   "name": "thewall",
   "version": "3.0.0",
   "private": true,
-  "description": "TheWall \u2014 Web3 Wallet \u00b7 6 Chains \u00b7 Gasless \u00b7 No Seed Phrase",
-  "author": "Thewin K K (Dwin 05) \u2014 India\u2192 Dubai",
+  "description": "TheWall — Web3 Wallet · 6 Chains · Gasless · No Seed Phrase",
+  "author": "Thewin K K (Dwin 05) — India→ Dubai",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -22,6 +22,7 @@
     "@reown/appkit-adapter-ethers": "^1.8.19",
     "@simplewebauthn/browser": "^13.3.0",
     "@simplewebauthn/server": "^13.3.2",
+    "@solana-program/memo": "^0.13.0",
     "@solana/web3.js": "^1.98.4",
     "@stripe/stripe-js": "^9.14.0",
     "@supabase/supabase-js": "^2.112.3",

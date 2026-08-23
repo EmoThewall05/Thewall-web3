@@ -2,24 +2,28 @@
 
 import { useEffect } from 'react'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
+import { useStandardWallets } from '@privy-io/react-auth/solana'
 
-export default function SmartWalletConnect({ onConnect }: { onConnect: (address: string, email?: string) => void }) {
+export default function SmartWalletConnect({ onConnect }: { onConnect: (address: string, email?: string, solanaAddress?: string) => void }) {
   const { ready, authenticated, user, login } = usePrivy()
   const { wallets } = useWallets()
+  const { wallets: solanaWallets } = useStandardWallets()
 
   useEffect(() => {
     if (ready && authenticated && wallets.length > 0) {
       const embeddedWallet = wallets.find(w => w.walletClientType === 'privy') || wallets[0]
+      const solanaWallet = solanaWallets[0]
+      const solanaAddress = solanaWallet?.accounts?.[0]?.address
       if (embeddedWallet?.address) {
         fetch('/api/wallet/track-signup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ address: embeddedWallet.address }),
         }).catch(() => {})
-        onConnect(embeddedWallet.address, user?.email?.address)
+        onConnect(embeddedWallet.address, user?.email?.address, solanaAddress)
       }
     }
-  }, [ready, authenticated, wallets, user])
+  }, [ready, authenticated, wallets, solanaWallets, user])
 
   return (
     <button
