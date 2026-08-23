@@ -44,6 +44,11 @@ export async function GET() {
       prices[symbol] = priceData
     }
 
+    // BASE uses ETH price (native gas token on Base chain)
+    if (prices.ETH) {
+      prices.BASE = prices.ETH
+    }
+
     return NextResponse.json({ prices })
   } catch {
     // Return placeholders on error
