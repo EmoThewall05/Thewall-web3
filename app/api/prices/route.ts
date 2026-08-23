@@ -10,11 +10,10 @@ const COINGECKO_IDS: Record<string, string> = {
   SOL:  'solana',
   BTC:  'bitcoin',
   ARB:  'arbitrum',
+  MON:  'monad',
 }
 
-// MON (Monad) — mainnet not launched yet, using placeholder
 const PLACEHOLDER_PRICES: Record<string, { price: number; change24h: number }> = {
-  MON: { price: 0.00, change24h: 0 },
   EMC: { price: 0.01, change24h: 0 },
 }
 
