@@ -39,7 +39,7 @@ const CHAIN_DOTS  = [{id:'earth',label:'🌍',c:'#627eea'},{id:'soul',label:'�
 const DAPP_LIST   = [{name:'Uniswap',url:'https://app.uniswap.org',icon:'🦄'},{name:'OpenSea',url:'https://opensea.io',icon:'🌊'},{name:'Aave',url:'https://app.aave.com',icon:'👻'},{name:'1inch',url:'https://app.1inch.io',icon:'🦅'},{name:'Compound',url:'https://app.compound.finance',icon:'🏦'},{name:'Raydium',url:'https://raydium.io',icon:'⚡'}]
 const IFRAME_BLOCKED = ['uniswap.org','opensea.io']
 
-type BottomTab = 'home'|'trade'|'markets'|'settings'
+type BottomTab = 'home'|'trade'|'markets'|'copytrade'|'settings'
 
 function TotpQr({ email }: { email: string }) {
   const [qr, setQr] = useState('')
@@ -79,6 +79,9 @@ export default function TheWall() {
   const [prices, setPrices]         = useState<Prices>({})
   const [walletData, setWalletData] = useState<WalletData|null>(null)
   const [emoBalance, setEmoBalance] = useState(0)
+  const [copyTradeChatLog, setCopyTradeChatLog] = useState<{role:string;content:string}[]>([])
+  const [copyTradeInput, setCopyTradeInput] = useState('')
+  const [copyTradeChatLoading, setCopyTradeChatLoading] = useState(false)
   const [emoClaiming, setEmoClaiming] = useState(false)
   const [emoClaimMsg, setEmoClaimMsg] = useState('')
   const [emoNextClaimAt, setEmoNextClaimAt] = useState<number|null>(null)
@@ -326,6 +329,27 @@ export default function TheWall() {
     try { const r=await fetch('/api/news'); const d=await r.json(); setNews(d.news||[]) } catch { setNews([]) }
     setNewsLoading(false)
   }, [])
+
+  const sendCopyTradeMessage = useCallback(async () => {
+    const text = copyTradeInput.trim()
+    if (!text || copyTradeChatLoading) return
+    const newLog = [...copyTradeChatLog, { role: 'user', content: text }]
+    setCopyTradeChatLog(newLog)
+    setCopyTradeInput('')
+    setCopyTradeChatLoading(true)
+    try {
+      const res = await fetch('https://thewall-copytrading.meradivin.workers.dev', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, history: newLog }),
+      })
+      const data = await res.json()
+      setCopyTradeChatLog(prev => [...prev, { role: 'assistant', content: data.reply || "\ud83e\udd8b I'm here \u2014 ask me anything about copy trading!" }])
+    } catch {
+      setCopyTradeChatLog(prev => [...prev, { role: 'assistant', content: '\ud83e\udd8b My wings are resting for a moment. Please try again!' }])
+    }
+    setCopyTradeChatLoading(false)
+  }, [copyTradeInput, copyTradeChatLog, copyTradeChatLoading])
 
   const fetchEmoBalance = useCallback(async (address: string) => {
     try {
@@ -989,10 +1013,41 @@ const ChainIcon = ({ id }: { id: string }) => {
             <div style={{fontSize:'0.62rem',...s.muted,marginTop:8}}>⚠️ Only visit trusted DApps</div>
           </div>}
         </div>}
+
+        {bottomTab==='copytrade'&&<div>
+          <div style={{textAlign:'center',marginBottom:16}}>
+            <div style={{fontSize:'1.4rem',fontWeight:700,color:'var(--text)',...s.mono}}>👥 Copy Trading</div>
+            <div style={{fontSize:'0.7rem',...s.muted,marginTop:4}}>Follow top traders or become a Leader</div>
+          </div>
+
+          <div style={{display:'flex',gap:8,marginBottom:16}}>
+            <button style={{flex:1,padding:'12px',background:'linear-gradient(135deg,#ffd700,#b8860b)',border:'none',borderRadius:10,color:'#1a1200',fontWeight:700,...s.mono,fontSize:'0.78rem',cursor:'pointer'}}>👑 Become a Leader</button>
+            <button style={{flex:1,padding:'12px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:10,color:'var(--text)',fontWeight:700,...s.mono,fontSize:'0.78rem',cursor:'pointer'}}>🔍 Browse Leaders</button>
+          </div>
+
+          <div style={{border:'1px solid var(--border)',borderRadius:12,background:'var(--bg2)',padding:12,marginBottom:16}}>
+            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
+              <span style={{fontSize:'1.1rem'}}>🦋</span>
+              <span style={{fontSize:'0.78rem',fontWeight:700,color:'var(--text)',...s.mono}}>Copy Trading Assistant</span>
+            </div>
+            <div id="copytrade-chat-log" style={{maxHeight:220,overflowY:'auto',marginBottom:10,display:'flex',flexDirection:'column',gap:8}}>
+              {copyTradeChatLog.map((m,i)=>(
+                <div key={i} style={{alignSelf:m.role==='user'?'flex-end':'flex-start',maxWidth:'85%',padding:'8px 12px',borderRadius:10,background:m.role==='user'?'var(--cyan-glow)':'var(--bg3)',color:'var(--text)',fontSize:'0.74rem',...s.mono}}>{m.content}</div>
+              ))}
+              {copyTradeChatLoading&&<div style={{alignSelf:'flex-start',fontSize:'0.72rem',...s.muted}}>🦋 thinking...</div>}
+            </div>
+            <div style={{display:'flex',gap:6}}>
+              <input value={copyTradeInput} onChange={e=>setCopyTradeInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&sendCopyTradeMessage()} placeholder="Ask about copy trading..." style={{flex:1,padding:'8px 10px',borderRadius:8,border:'1px solid var(--border)',background:'var(--bg)',color:'var(--text)',fontSize:'0.74rem',...s.mono}}/>
+              <button onClick={sendCopyTradeMessage} disabled={copyTradeChatLoading} style={{padding:'8px 14px',borderRadius:8,border:'none',background:'var(--cyan)',color:'#000',fontWeight:700,cursor:'pointer',fontSize:'0.74rem'}}>→</button>
+            </div>
+          </div>
+
+          <div style={{textAlign:'center',fontSize:'0.68rem',...s.muted,padding:'20px 0'}}>No leaders yet — be the first! 🦋</div>
+        </div>}
       </main>
 
       <nav style={{position:'fixed',bottom:0,left:0,right:0,background:'var(--bg2)',borderTop:'1px solid var(--border)',display:'flex',zIndex:100,paddingBottom:'env(safe-area-inset-bottom)'}}>
-        {([{id:'home',icon:'🏠',label:'Home'},{id:'trade',icon:'💱',label:'Trade'},{id:'markets',icon:'📊',label:'Markets'},{id:'settings',icon:'⚙️',label:'Settings'}] as {id:BottomTab;icon:string;label:string}[]).map(tab=>(
+        {([{id:'home',icon:'🏠',label:'Home'},{id:'trade',icon:'💱',label:'Trade'},{id:'markets',icon:'📊',label:'Markets'},{id:'copytrade',icon:'👥',label:'Copy'},{id:'settings',icon:'⚙️',label:'Settings'}] as {id:BottomTab;icon:string;label:string}[]).map(tab=>(
           <button key={tab.id} onClick={()=>setBottomTab(tab.id)} style={{flex:1,padding:'12px 0 10px',background:'transparent',border:'none',cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:4,borderTop:bottomTab===tab.id?'2px solid var(--cyan)':'2px solid transparent'}}>
             <span style={{fontSize:'1.2rem'}}>{tab.icon}</span>
             <span style={{fontSize:'0.58rem',...s.mono,letterSpacing:'0.06em',color:bottomTab===tab.id?'var(--cyan)':'var(--text-muted)',fontWeight:bottomTab===tab.id?700:400}}>{tab.label}</span>
