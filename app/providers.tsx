@@ -26,6 +26,12 @@ export default function Providers({ children }: { children: ReactNode }) {
             createOnLogin: 'users-without-wallets',
           },
         },
+        solanaClusters: [
+          {
+            name: 'mainnet-beta',
+            rpcUrl: `https://solana-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_SOLANA_KEY}`,
+          },
+        ],
       }}
     >
       {children}
