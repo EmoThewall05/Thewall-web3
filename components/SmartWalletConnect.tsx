@@ -2,14 +2,18 @@
 
 import { useEffect } from 'react'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
-import { useStandardWallets } from '@privy-io/react-auth/solana'
+import { useStandardWallets, useCreateWallet } from '@privy-io/react-auth/solana'
 
 export default function SmartWalletConnect({ onConnect }: { onConnect: (address: string, email?: string, solanaAddress?: string) => void }) {
   const { ready, authenticated, user, login } = usePrivy()
   const { wallets } = useWallets()
   const { wallets: solanaWallets } = useStandardWallets()
+  const { createWallet: createSolanaWallet } = useCreateWallet()
 
   useEffect(() => {
+    if (ready && authenticated && wallets.length > 0 && solanaWallets.length === 0) {
+      createSolanaWallet().catch(() => {})
+    }
     if (ready && authenticated && wallets.length > 0) {
       const embeddedWallet = wallets.find(w => w.walletClientType === 'privy') || wallets[0]
       const solanaWallet = solanaWallets[0]
