@@ -714,7 +714,12 @@ export default function TheWall() {
         if(d.success){setSendSuccess(`✅ ${sendAmount} ${sendChain} → ${sendTo.slice(0,8)}... · FREE ⚡`);setSendAmount('');setSendTo('')}
         else setSendError(d.error||'Send failed')
       }
-    } catch (e: any) { setSendError(e?.message || 'Network error.') }
+    } catch (e: any) {
+      console.error('SEND_ERROR_FULL:', e)
+      console.error('SEND_ERROR_STRING:', String(e))
+      console.error('SEND_ERROR_JSON:', JSON.stringify(e, Object.getOwnPropertyNames(e || {})))
+      setSendError(e?.message || e?.toString() || 'Network error.')
+    }
     setSendLoading(false)
   }
 
