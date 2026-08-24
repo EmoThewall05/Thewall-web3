@@ -677,7 +677,7 @@ export default function TheWall() {
     try {
       if(sendChain==='SOL'){
         const solWallet = solanaConnectedWallets?.[0]
-        const fromAddr = solWallet?.accounts?.[0]?.address || user?.solAddress || ''
+        const fromAddr = solWallet?.address || user?.solAddress || ''
         if(!solWallet || !fromAddr){ setSendError('Solana wallet not connected'); setSendLoading(false); return }
 
         const prep = await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'prepare',chain:'SOL',to:sendTo,amount:sendAmount,from:fromAddr})})
