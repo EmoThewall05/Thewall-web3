@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         success: true, action: 'prepare', chain: 'SOL',
         tx: { from, to, lamports, blockhash },
-        fee: { lamports: feeLamports, amount: (feeLamports / 1e9).toFixed(8), treasury: '0x36F0C4Ce3ed7DbfeF2037b6275BFB3096B5e699F', feePercent, isPremium, note: 'Send this as a second transaction after the main transfer confirms' },
+        fee: { lamports: feeLamports, amount: (feeLamports / 1e9).toFixed(8), treasury: 'HkQNve2SA7jwvrRUrAty4EnpYo4VHzPb1pBVq2FdGTQo', feePercent, isPremium, note: 'Send this as a second transaction after the main transfer confirms' },
       })
     }
 
