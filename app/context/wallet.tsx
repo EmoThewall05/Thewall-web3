@@ -14,11 +14,10 @@ export async function initAppKit() {
   const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 
                     process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || ''
   if (!projectId) { console.error('No WC ProjectId!'); return null }
-  const mainnetChains = Object.keys(allNetworks)
-    .filter(k => k !== 'AVAILABLE_NAMESPACES' && typeof (allNetworks as any)[k] === 'object' && (allNetworks as any)[k] !== null && !TEST_PATTERN.test(k) && !TEST_PATTERN.test((allNetworks as any)[k]?.name || ''))
+  const supportedKeys = ['mainnet', 'arbitrum', 'base', 'monad']
+  const networks = supportedKeys
     .map(k => (allNetworks as any)[k])
-    .filter((net: any) => !net.chainNamespace || net.chainNamespace === 'eip155')
-  const networks = mainnetChains.length > 0 ? mainnetChains : [allNetworks.mainnet, allNetworks.arbitrum]
+    .filter((net: any) => net && (!net.chainNamespace || net.chainNamespace === 'eip155'))
   const ethersAdapter = new EthersAdapter()
   appkitModal = createAppKit({
     adapters: [ethersAdapter] as any[],
