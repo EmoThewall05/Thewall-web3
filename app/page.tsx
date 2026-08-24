@@ -677,7 +677,7 @@ export default function TheWall() {
     try {
       if(sendChain==='SOL'){
         const solWallet = solanaConnectedWallets?.[0]
-        const fromAddr = solWallet?.address || user?.solAddress || ''
+        const fromAddr = solWallet?.accounts?.[0]?.address || user?.solAddress || ''
         if(!solWallet || !fromAddr){ setSendError('Solana wallet not connected'); setSendLoading(false); return }
 
         const prep = await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'prepare',chain:'SOL',to:sendTo,amount:sendAmount,from:fromAddr})})
@@ -689,7 +689,8 @@ export default function TheWall() {
         const toPubkey = new PublicKey(d.tx.to)
 
         const tx = new Transaction()
-        tx.recentBlockhash = d.tx.blockhash
+        const { blockhash: freshBlockhash } = await connection.getLatestBlockhash()
+        tx.recentBlockhash = freshBlockhash
         tx.feePayer = fromPubkey
         tx.add(SystemProgram.transfer({ fromPubkey, toPubkey, lamports: d.tx.lamports }))
 
@@ -701,7 +702,8 @@ export default function TheWall() {
         if(d.fee?.lamports > 0){
           try {
             const feeTx = new Transaction()
-            feeTx.recentBlockhash = d.tx.blockhash
+            const { blockhash: freshFeeBlockhash } = await connection.getLatestBlockhash()
+            feeTx.recentBlockhash = freshFeeBlockhash
             feeTx.feePayer = fromPubkey
             feeTx.add(SystemProgram.transfer({ fromPubkey, toPubkey: new PublicKey(d.fee.treasury), lamports: d.fee.lamports }))
             const serializedFeeTx = new Uint8Array(feeTx.serialize({ requireAllSignatures: false, verifySignatures: false }))
