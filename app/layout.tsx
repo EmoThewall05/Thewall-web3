@@ -27,6 +27,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#FF5500" />
+        <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+        <script dangerouslySetInnerHTML={{ __html: `eruda.init();` }} />
       </head>
       <body className="bg-[#07080B]">
         <Providers>
