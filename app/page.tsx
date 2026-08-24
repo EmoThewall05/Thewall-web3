@@ -34,7 +34,7 @@ const TOKENS = [
   { symbol:'USDT', name:'Tether',   color:'#26a17b', chain:'Ethereum',   cgId:'tether'      },
   { symbol:'EMC',  name:'EmoCoins', color:'#00e5ff', chain:'TheWall 🦋', cgId:''            },
 ]
-const SWAP_TOKENS = ['ETH','SOL','MON','ARB','BTC','USDC','USDT','EMC']
+const SWAP_TOKENS = ['ETH','ARB','USDC','USDT','EMC']
 const CHAIN_COLORS: Record<string,string> = { earth:'#627eea', soul:'#9945ff', moon:'#836ef9', orbit:'#12aaff', birth:'#f7931a', hood:'#00C805' }
 const SEND_CHAINS = [{id:'ETH',label:'🌍 ETH',color:'#627eea'},{id:'SOL',label:'🌟 SOL',color:'#9945ff'},{id:'ARB',label:'🪐 ARB',color:'#12aaff'},{id:'MON',label:'🌙 MON',color:'#836ef9'},{id:'BTC',label:'₿ BTC',color:'#f7931a'},{id:'BASE',label:'🔵 BASE',color:'#0052ff'}]
 const CHAIN_DOTS  = [{id:'earth',label:'🌍',c:'#627eea'},{id:'soul',label:'🌟',c:'#9945ff'},{id:'moon',label:'🌙',c:'#836ef9'},{id:'orbit',label:'🪐',c:'#12aaff'},{id:'birth',label:'₿',c:'#f7931a'}]
