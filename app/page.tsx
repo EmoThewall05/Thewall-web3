@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import styles from './page.module.css'
 import SmartWalletConnect from '@/components/SmartWalletConnect'
 import { Connection, PublicKey, Transaction, SystemProgram } from '@solana/web3.js'
-import { useStandardWallets, useSignAndSendTransaction } from '@privy-io/react-auth/solana'
+import { useStandardWallets, useSignAndSendTransaction, useWallets as useSolanaWallets } from '@privy-io/react-auth/solana'
 
 interface TokenPrice  { price: number; change24h: number }
 interface Prices      { [symbol: string]: TokenPrice }
@@ -79,6 +79,7 @@ export default function TheWall() {
   const [error, setError]           = useState('')
   const [user, setUser]             = useState<UserWallet|null>(null)
   const { wallets: solanaWallets } = useStandardWallets()
+  const { wallets: solanaConnectedWallets } = useSolanaWallets()
   const { signAndSendTransaction } = useSignAndSendTransaction()
   const [prices, setPrices]         = useState<Prices>({})
   const [walletData, setWalletData] = useState<WalletData|null>(null)
@@ -675,8 +676,8 @@ export default function TheWall() {
     setSendLoading(true);setSendError('');setSendSuccess('')
     try {
       if(sendChain==='SOL'){
-        const solWallet = solanaWallets?.[0]
-        const fromAddr = solWallet?.accounts?.[0]?.address || user?.solAddress || ''
+        const solWallet = solanaConnectedWallets?.[0]
+        const fromAddr = solWallet?.address || user?.solAddress || ''
         if(!solWallet || !fromAddr){ setSendError('Solana wallet not connected'); setSendLoading(false); return }
 
         const prep = await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'prepare',chain:'SOL',to:sendTo,amount:sendAmount,from:fromAddr})})
@@ -693,7 +694,7 @@ export default function TheWall() {
         tx.add(SystemProgram.transfer({ fromPubkey, toPubkey, lamports: d.tx.lamports }))
 
         const serializedTx = new Uint8Array(tx.serialize({ requireAllSignatures: false, verifySignatures: false }))
-        await signAndSendTransaction({ transaction: serializedTx, wallet: solWallet as any, chain: 'solana:mainnet' as any, options: { sponsor: true } as any })
+        await signAndSendTransaction({ transaction: serializedTx, wallet: solWallet, chain: 'solana:mainnet' as any, options: { sponsor: true } as any })
         setSendSuccess(`✅ ${sendAmount} SOL → ${sendTo.slice(0,8)}... · FREE ⚡`)
         setSendAmount(''); setSendTo('')
 
@@ -704,7 +705,7 @@ export default function TheWall() {
             feeTx.feePayer = fromPubkey
             feeTx.add(SystemProgram.transfer({ fromPubkey, toPubkey: new PublicKey(d.fee.treasury), lamports: d.fee.lamports }))
             const serializedFeeTx = new Uint8Array(feeTx.serialize({ requireAllSignatures: false, verifySignatures: false }))
-            await signAndSendTransaction({ transaction: serializedFeeTx, wallet: solWallet as any, chain: 'solana:mainnet' as any, options: { sponsor: true } as any })
+            await signAndSendTransaction({ transaction: serializedFeeTx, wallet: solWallet, chain: 'solana:mainnet' as any, options: { sponsor: true } as any })
           } catch {}
         }
       } else {
