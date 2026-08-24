@@ -693,7 +693,7 @@ export default function TheWall() {
         tx.add(SystemProgram.transfer({ fromPubkey, toPubkey, lamports: d.tx.lamports }))
 
         const serializedTx = new Uint8Array(tx.serialize({ requireAllSignatures: false, verifySignatures: false }))
-        await signAndSendTransaction({ transaction: serializedTx, wallet: solWallet as any, chain: 'solana:mainnet' as any })
+        await signAndSendTransaction({ transaction: serializedTx, wallet: solWallet as any, chain: 'solana:mainnet' as any, options: { sponsor: true } as any })
         setSendSuccess(`✅ ${sendAmount} SOL → ${sendTo.slice(0,8)}... · FREE ⚡`)
         setSendAmount(''); setSendTo('')
 
@@ -704,7 +704,7 @@ export default function TheWall() {
             feeTx.feePayer = fromPubkey
             feeTx.add(SystemProgram.transfer({ fromPubkey, toPubkey: new PublicKey(d.fee.treasury), lamports: d.fee.lamports }))
             const serializedFeeTx = new Uint8Array(feeTx.serialize({ requireAllSignatures: false, verifySignatures: false }))
-            await signAndSendTransaction({ transaction: serializedFeeTx, wallet: solWallet as any, chain: 'solana:mainnet' as any })
+            await signAndSendTransaction({ transaction: serializedFeeTx, wallet: solWallet as any, chain: 'solana:mainnet' as any, options: { sponsor: true } as any })
           } catch {}
         }
       } else {
