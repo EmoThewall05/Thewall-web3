@@ -938,9 +938,9 @@ const ChainIcon = ({ id }: { id: string }) => {
             
             <button
   onClick={() => { import('./context/wallet').then(m => { m.initAppKit().then((kit:any) => kit?.open()) }) }}
-  style={{width:'100%',padding:'14px',background:'linear-gradient(135deg,#FF5500,#ff8844)',border:'none',borderRadius:10,color:'#fff',fontFamily:'monospace',fontSize:'0.9rem',fontWeight:700,cursor:'pointer',marginBottom:4}}
+  style={{width:'100%',padding:'14px',background: user?.address ? 'var(--bg2)' : 'linear-gradient(135deg,#FF5500,#ff8844)',border: user?.address ? '1px solid var(--border)' : 'none',borderRadius:10,color: user?.address ? 'var(--cyan)' : '#fff',fontFamily:'monospace',fontSize:'0.9rem',fontWeight:700,cursor:'pointer',marginBottom:4}}
 >
-  🔗 Connect Wallet
+  {user?.address ? `🔗 ${user.address.slice(0,6)}...${user.address.slice(-4)} · Tap to Manage` : '🔗 Connect Wallet'}
 </button>
           </div>
           <div style={{display:'flex',gap:6,marginBottom:16}}>
