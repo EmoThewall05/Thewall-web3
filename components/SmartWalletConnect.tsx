@@ -13,12 +13,13 @@ export default function SmartWalletConnect({ onConnect }: { onConnect: (address:
   useEffect(() => {
     if (ready && authenticated && wallets.length > 0 && solanaWallets.length === 0) {
       createSolanaWallet().catch(() => {})
+      return
     }
-    if (ready && authenticated && wallets.length > 0) {
+    if (ready && authenticated && wallets.length > 0 && solanaWallets.length > 0) {
       const embeddedWallet = wallets.find(w => w.walletClientType === 'privy') || wallets[0]
       const solanaWallet = solanaWallets[0]
       const solanaAddress = solanaWallet?.accounts?.[0]?.address
-      if (embeddedWallet?.address) {
+      if (embeddedWallet?.address && solanaAddress) {
         fetch('/api/wallet/track-signup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
