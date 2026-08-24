@@ -33,10 +33,33 @@ async function broadcastSolTx(signedTx: string): Promise<string> {
   return data.result
 }
 
+// Requests Alchemy Gas Manager to sponsor fee + set feePayer on an unsigned Solana tx.
+// Returns a base64 serialized tx that already contains the fee-payer signature.
+async function requestSolFeePayer(serializedTxBase64: string): Promise<string> {
+  const solanaKey = process.env.THEWALL_SOUL_KEY
+  const policyId = process.env.NEXT_PUBLIC_SOLANA_GAS_POLICY_ID
+  const rpcUrl = `https://solana-mainnet.g.alchemy.com/v2/${solanaKey}`
+  const res = await fetch(rpcUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'alchemy_requestFeePayer',
+      params: [{ policyId, serializedTransaction: serializedTxBase64 }],
+    }),
+  })
+  const data = await res.json()
+  if (data.error) throw new Error(data.error.message || 'Fee payer sponsorship failed')
+  const sponsoredTx = data.result?.serializedTransaction
+  if (!sponsoredTx) throw new Error('No sponsored transaction returned')
+  return sponsoredTx
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { action, chain, to, amount, from, signedTx, txId } = body
+    const { action, chain, to, amount, from, signedTx, txId, serializedTransaction } = body
     if (!action) return NextResponse.json({ error: 'Action required' }, { status: 400 })
 
     if (action === 'prepare' && chain === 'SOL') {
@@ -54,6 +77,13 @@ export async function POST(req: NextRequest) {
         tx: { from, to, lamports, blockhash },
         fee: { lamports: feeLamports, amount: (feeLamports / 1e9).toFixed(8), treasury: 'HkQNve2SA7jwvrRUrAty4EnpYo4VHzPb1pBVq2FdGTQo', feePercent, isPremium, note: 'Send this as a second transaction after the main transfer confirms' },
       })
+    }
+
+    // Sponsor: sets feePayer + adds Gas Manager's fee-payer signature to an unsigned Solana tx.
+    if (action === 'sponsor' && chain === 'SOL') {
+      if (!serializedTransaction) throw new Error('serializedTransaction required')
+      const sponsoredTx = await requestSolFeePayer(serializedTransaction)
+      return NextResponse.json({ success: true, serializedTransaction: sponsoredTx })
     }
 
     if (action === 'prepare' && chain === 'ETH') {
@@ -89,10 +119,8 @@ export async function POST(req: NextRequest) {
 
     if (action === 'broadcast') {
       if (!signedTx) throw new Error('signedTx required')
-
       // ── Require an approved transaction_approvals record before broadcasting ──
       if (!txId) throw new Error('txId required - transaction must be approved before broadcast')
-
       const supabase = getSupabaseAdmin()
       const { data: approval, error: approvalErr } = await supabase
         .from('transaction_approvals')

@@ -694,8 +694,12 @@ export default function TheWall() {
         tx.feePayer = fromPubkey
         tx.add(SystemProgram.transfer({ fromPubkey, toPubkey, lamports: d.tx.lamports }))
 
-        const serializedTx = new Uint8Array(tx.serialize({ requireAllSignatures: false, verifySignatures: false }))
-        await signAndSendTransaction({ transaction: serializedTx, wallet: solWallet, chain: 'solana:mainnet' as any, options: { sponsor: true } as any })
+        const unsignedTxB64 = Buffer.from(tx.serialize({ requireAllSignatures: false, verifySignatures: false })).toString('base64')
+        const sponsorRes = await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'sponsor',chain:'SOL',serializedTransaction:unsignedTxB64})})
+        const sponsorData = await sponsorRes.json()
+        if(!sponsorData.success){ setSendError(sponsorData.error||'Gas sponsorship failed'); setSendLoading(false); return }
+        const sponsoredTxBytes = new Uint8Array(Buffer.from(sponsorData.serializedTransaction, 'base64'))
+        await signAndSendTransaction({ transaction: sponsoredTxBytes, wallet: solWallet, chain: 'solana:mainnet' as any })
         setSendSuccess(`✅ ${sendAmount} SOL → ${sendTo.slice(0,8)}... · FREE ⚡`)
         setSendAmount(''); setSendTo('')
 
@@ -706,8 +710,13 @@ export default function TheWall() {
             feeTx.recentBlockhash = freshFeeBlockhash
             feeTx.feePayer = fromPubkey
             feeTx.add(SystemProgram.transfer({ fromPubkey, toPubkey: new PublicKey(d.fee.treasury), lamports: d.fee.lamports }))
-            const serializedFeeTx = new Uint8Array(feeTx.serialize({ requireAllSignatures: false, verifySignatures: false }))
-            await signAndSendTransaction({ transaction: serializedFeeTx, wallet: solWallet, chain: 'solana:mainnet' as any, options: { sponsor: true } as any })
+            const unsignedFeeTxB64 = Buffer.from(feeTx.serialize({ requireAllSignatures: false, verifySignatures: false })).toString('base64')
+            const feeSponsorRes = await fetch('/api/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'sponsor',chain:'SOL',serializedTransaction:unsignedFeeTxB64})})
+            const feeSponsorData = await feeSponsorRes.json()
+            if(feeSponsorData.success){
+              const sponsoredFeeTxBytes = new Uint8Array(Buffer.from(feeSponsorData.serializedTransaction, 'base64'))
+              await signAndSendTransaction({ transaction: sponsoredFeeTxBytes, wallet: solWallet, chain: 'solana:mainnet' as any })
+            }
           } catch {}
         }
       } else {
