@@ -25,8 +25,8 @@ async function simulateEthTx(from: string, to: string, amount: string) {
 }
 
 async function broadcastSolTx(signedTx: string): Promise<string> {
-  const heliusKey = process.env.NEXT_PUBLIC_HELIUS_KEY
-  const rpcUrl = `https://mainnet.helius-rpc.com/?api-key=${heliusKey}`
+  const alchemyKey = process.env.NEXT_PUBLIC_ALCHEMY_API_KEY
+  const rpcUrl = `https://solana-mainnet.g.alchemy.com/v2/${alchemyKey}`
   const res = await fetch(rpcUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'sendTransaction', params: [signedTx, { encoding: 'base64', skipPreflight: true }] }) })
   const data = await res.json()
   if (data.error) throw new Error(data.error.message)
@@ -40,8 +40,8 @@ export async function POST(req: NextRequest) {
     if (!action) return NextResponse.json({ error: 'Action required' }, { status: 400 })
 
     if (action === 'prepare' && chain === 'SOL') {
-      const heliusKey = process.env.NEXT_PUBLIC_HELIUS_KEY
-      const rpcUrl = `https://mainnet.helius-rpc.com/?api-key=${heliusKey}`
+      const alchemyKey = process.env.NEXT_PUBLIC_ALCHEMY_API_KEY
+      const rpcUrl = `https://solana-mainnet.g.alchemy.com/v2/${alchemyKey}`
       const blockhashRes = await fetch(rpcUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'getLatestBlockhash', params: [{ commitment: 'finalized' }] }) })
       const blockhashData = await blockhashRes.json()
       const blockhash = blockhashData.result?.value?.blockhash

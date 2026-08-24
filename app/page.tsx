@@ -683,7 +683,7 @@ export default function TheWall() {
         const d = await prep.json()
         if(!d.success){ setSendError(d.error||'Prepare failed'); setSendLoading(false); return }
 
-        const connection = new Connection(`https://mainnet.helius-rpc.com/?api-key=${process.env.NEXT_PUBLIC_HELIUS_KEY}`)
+        const connection = new Connection(`https://solana-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_API_KEY}`)
         const fromPubkey = new PublicKey(d.tx.from)
         const toPubkey = new PublicKey(d.tx.to)
 
