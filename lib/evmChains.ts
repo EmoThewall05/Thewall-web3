@@ -40,6 +40,14 @@ export const EVM_CHAINS: EvmChain[] = [
   { id: 'HYPERLIQUID',label: 'Hyperliquid',   symbol: 'HYPE',  color: '#4dd6c0', chainId: 999,       alchemyNetwork: 'hyperliquid-mainnet',emoji: '🌊' },
   { id: 'PLASMA',     label: 'Plasma',        symbol: 'XPL',   color: '#00e08f', chainId: 9745,      alchemyNetwork: 'plasma-mainnet',     emoji: '🌈' },
   { id: 'EDGE',       label: 'Edge',          symbol: 'EDGE',  color: '#00c853', chainId: 4207,      alchemyNetwork: 'edge-mainnet' /* verify: matched via LayerEdge/EDGEN — confirm same as Alchemy's Edge */,       emoji: '🌠' },
+  { id: 'MYTHOS',     label: 'Mythos',        symbol: 'MYTH',  color: '#ff2222', chainId: 42018,     alchemyNetwork: 'mythos-mainnet',    emoji: '🎮' },
+  { id: 'SCROLL',     label: 'Scroll',        symbol: 'ETH',   color: '#ffeeda', chainId: 534352,    alchemyNetwork: 'scroll-mainnet',    emoji: '📜' },
+  { id: 'SONIC',      label: 'Sonic',         symbol: 'S',     color: '#fe9a4d', chainId: 146,       alchemyNetwork: 'sonic-mainnet',     emoji: '💨' },
+  { id: 'SEI',        label: 'Sei',           symbol: 'SEI',   color: '#8b1e3f', chainId: 1329,      alchemyNetwork: 'sei-mainnet',       emoji: '🌊' },
+  { id: 'ABSTRACT',   label: 'Abstract',      symbol: 'ETH',   color: '#00ff7f', chainId: 2741,      alchemyNetwork: 'abstract-mainnet',  emoji: '🎨' },
+  { id: 'CROSSFI',    label: 'CrossFi',       symbol: 'XFI',   color: '#2b5cff', chainId: 4158,      alchemyNetwork: 'crossfi-mainnet',   emoji: '💱' },
+  { id: 'METIS',      label: 'Metis',         symbol: 'METIS', color: '#00d4c8', chainId: 1088,      alchemyNetwork: 'metis-mainnet',     emoji: '🗿' },
+  { id: 'STABLE',     label: 'Stable',        symbol: 'USDT0', color: '#00b386', chainId: 988,       alchemyNetwork: 'stable-mainnet',    emoji: '⚓' },
 ]
 
 export function getChain(id: string): EvmChain | undefined {
