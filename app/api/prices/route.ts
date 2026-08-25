@@ -2,6 +2,7 @@ export const runtime = 'edge'
 
 import { NextResponse } from 'next/server'
 
+// Chains priced directly via CoinGecko (chain id -> CoinGecko id)
 const COINGECKO_IDS: Record<string, string> = {
   ETH:  'ethereum',
   BNB:  'binancecoin',
@@ -11,7 +12,28 @@ const COINGECKO_IDS: Record<string, string> = {
   BTC:  'bitcoin',
   ARB:  'arbitrum',
   MON:  'monad',
+  MATIC: 'polygon-ecosystem-token',
+  CELO:  'celo',
+  CRONOS: 'crypto-com-chain',
+  BERA:   'berachain-bera',
+  APE:    'apecoin',
+  FRAX:   'frax-ether',
+  XLAYER: 'okb',
+  HYPERLIQUID: 'hyperliquid',
+  ANIME: 'anime',
+  GENSYN: 'gensyn',
+  DATA: 'story-2', // rebranded from Story(IP) to Data Network(DATA)
+  PLASMA: 'plasma',
 }
+
+// Chains that share another chain's native-token price (gas token = ETH/BNB etc.)
+const DERIVED_FROM: Record<string, string> = {
+  BASE: 'ETH', OP: 'ETH', ZORA: 'ETH', SONEIUM: 'ETH',
+  INK: 'ETH', BOBA: 'ETH', UNICHAIN: 'ETH', SHAPE: 'ETH', MEGAETH: 'ETH',
+  OPBNB: 'BNB',
+}
+
+// EDGE — CoinGecko id not confirmed (chain identity uncertain, see lib/evmChains.ts). Left out to avoid showing a wrong price.
 
 const PLACEHOLDER_PRICES: Record<string, { price: number; change24h: number }> = {
   EMC: { price: 0.01, change24h: 0 },
@@ -28,7 +50,6 @@ export async function GET() {
 
     const prices: Record<string, { price: number; change24h: number }> = {}
 
-    // CoinGecko prices
     for (const [symbol, geckoId] of Object.entries(COINGECKO_IDS)) {
       if (data[geckoId]) {
         prices[symbol] = {
@@ -38,19 +59,17 @@ export async function GET() {
       }
     }
 
-    // Placeholder prices (MON, EMC)
     for (const [symbol, priceData] of Object.entries(PLACEHOLDER_PRICES)) {
       prices[symbol] = priceData
     }
 
-    // BASE uses ETH price (native gas token on Base chain)
-    if (prices.ETH) {
-      prices.BASE = prices.ETH
+    // Derived chains — reuse their native gas token's price
+    for (const [chainId, sourceSymbol] of Object.entries(DERIVED_FROM)) {
+      if (prices[sourceSymbol]) prices[chainId] = prices[sourceSymbol]
     }
 
     return NextResponse.json({ prices })
   } catch {
-    // Return placeholders on error
     return NextResponse.json({
       prices: {
         ...PLACEHOLDER_PRICES,

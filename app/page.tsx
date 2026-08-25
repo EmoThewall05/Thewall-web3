@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { EVM_CHAINS } from '@/lib/evmChains'
 import styles from './page.module.css'
 import SmartWalletConnect from '@/components/SmartWalletConnect'
 import { Connection, PublicKey, Transaction, SystemProgram } from '@solana/web3.js'
@@ -36,7 +37,7 @@ const TOKENS = [
 ]
 const SWAP_TOKENS = ['ETH','ARB','USDC','USDT','EMC']
 const CHAIN_COLORS: Record<string,string> = { earth:'#627eea', soul:'#9945ff', moon:'#836ef9', orbit:'#12aaff', birth:'#f7931a', hood:'#00C805' }
-const SEND_CHAINS = [{id:'ETH',label:'🌍 ETH',color:'#627eea'},{id:'SOL',label:'🌟 SOL',color:'#9945ff'},{id:'ARB',label:'🪐 ARB',color:'#12aaff'},{id:'MON',label:'🌙 MON',color:'#836ef9'},{id:'BTC',label:'₿ BTC',color:'#f7931a'},{id:'BASE',label:'🔵 BASE',color:'#0052ff'}]
+const SEND_CHAINS = [{id:'SOL',label:'🌟 SOL',color:'#9945ff'},{id:'BTC',label:'₿ BTC',color:'#f7931a'},...EVM_CHAINS.map(c=>({id:c.id,label:`${c.emoji} ${c.id}`,color:c.color}))]
 const CHAIN_DOTS  = [{id:'earth',label:'🌍',c:'#627eea'},{id:'soul',label:'🌟',c:'#9945ff'},{id:'moon',label:'🌙',c:'#836ef9'},{id:'orbit',label:'🪐',c:'#12aaff'},{id:'birth',label:'₿',c:'#f7931a'}]
 const DAPP_LIST   = [{name:'Uniswap',url:'https://app.uniswap.org',icon:'🦄'},{name:'OpenSea',url:'https://opensea.io',icon:'🌊'},{name:'Aave',url:'https://app.aave.com',icon:'👻'},{name:'1inch',url:'https://app.1inch.io',icon:'🦅'},{name:'Compound',url:'https://app.compound.finance',icon:'🏦'},{name:'Raydium',url:'https://raydium.io',icon:'⚡'}]
 const IFRAME_BLOCKED = ['uniswap.org','opensea.io']
@@ -195,7 +196,7 @@ export default function TheWall() {
   const [searchHistory, setSearchHistory] = useState<string[]>([])
   const [sendOpen, setSendOpen]       = useState(false)
   const [sendTab, setSendTab]         = useState<'send'|'receive'>('send')
-  const [sendChain, setSendChain]     = useState<'ETH'|'SOL'|'ARB'|'MON'|'BTC'>('ETH')
+  const [sendChain, setSendChain]     = useState<string>('ETH')
   const [sendTo, setSendTo]           = useState('')
   const [solAddrInput, setSolAddrInput] = useState('')
   const [sendAmount, setSendAmount]   = useState('')
@@ -884,7 +885,7 @@ const ChainIcon = ({ id }: { id: string }) => {
         <div className={styles.searchHeader}><span className={styles.searchTitle}>{sendTab==='send'?'📤 Send':'📥 Receive'}</span><button className={styles.searchClose} onClick={()=>{setSendOpen(false);setSendError('');setSendSuccess('')}}>✕</button></div>
         <div style={{display:'flex',gap:8,marginBottom:16}}>{(['send','receive']as const).map(t=><button key={t} onClick={()=>setSendTab(t)} style={{flex:1,padding:'10px',border:'1px solid',borderColor:sendTab===t?'var(--cyan)':'var(--border)',borderRadius:8,background:sendTab===t?'var(--cyan-glow)':'transparent',color:sendTab===t?'var(--cyan)':'var(--text-muted)',...s.mono,fontSize:'0.8rem',cursor:'pointer'}}>{t==='send'?'📤 Send':'📥 Receive'}</button>)}</div>
         {sendTab==='send'&&<div>
-          <div style={{marginBottom:12}}><div style={s.label}>SELECT CHAIN</div><div style={{display:'flex',gap:6,flexWrap:'wrap'}}>{SEND_CHAINS.map(c=><button key={c.id} onClick={()=>setSendChain(c.id as typeof sendChain)} style={{padding:'8px 12px',border:'1px solid',borderColor:sendChain===c.id?c.color:'var(--border)',borderRadius:8,background:sendChain===c.id?`${c.color}15`:'var(--bg3)',color:sendChain===c.id?c.color:'var(--text-muted)',...s.mono,fontSize:'0.75rem',fontWeight:700,cursor:'pointer'}}>{c.label}</button>)}</div></div>
+          <div style={{marginBottom:12}}><div style={s.label}>SELECT CHAIN</div><div style={{display:'flex',gap:8,flexWrap:'wrap',padding:'10px 4px',maxHeight:190,overflowY:'auto'}}>{SEND_CHAINS.map(c=><button key={c.id} onClick={()=>setSendChain(c.id)} title={c.id} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:4,width:58,padding:'8px 4px',border:'1px solid',borderColor:sendChain===c.id?c.color:'var(--border)',borderRadius:14,background:sendChain===c.id?`radial-gradient(circle at 50% 30%, ${c.color}33, var(--bg3))`:'var(--bg3)',boxShadow:sendChain===c.id?`0 0 14px ${c.color}66, inset 0 0 8px ${c.color}22`:'none',cursor:'pointer',transition:'all 0.2s'}}><span style={{fontSize:'1.15rem',lineHeight:1}}>{c.label.split(' ')[0]}</span><span style={{fontSize:'0.55rem',fontWeight:700,color:sendChain===c.id?c.color:'var(--text-muted)',...s.mono,letterSpacing:'0.02em'}}>{c.id}</span></button>)}</div></div>
           <div style={{marginBottom:12}}><div style={s.label}>TO ADDRESS</div><input className={styles.searchInput} placeholder={sendChain==='SOL'?'SOL...':sendChain==='BTC'?'BTC...':'0x...'} value={sendTo} onChange={e=>setSendTo(e.target.value)}/></div>
           <div style={{marginBottom:16}}><div style={s.label}>AMOUNT</div><div style={{position:'relative'}}><input className={styles.searchInput} placeholder="0.00" type="number" value={sendAmount} onChange={e=>setSendAmount(e.target.value)} style={{width:'100%',paddingRight:60}}/><span style={{position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',fontSize:'0.75rem',color:SEND_CHAINS.find(c=>c.id===sendChain)?.color,...s.mono,fontWeight:700}}>{sendChain}</span></div>{sendAmount&&prices[sendChain]&&<div style={{fontSize:'0.68rem',...s.muted,marginTop:4}}>≈ ${(parseFloat(sendAmount||'0')*(prices[sendChain]?.price||0)).toFixed(2)} · FREE ⚡</div>}</div>
 
