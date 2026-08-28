@@ -1,6 +1,6 @@
 {
   "packageId": "com.emobies.thewall",
-  "host": "thewall.e-mobies.com",
+  "host": "thewall-web3.e-mobies.com",
   "name": "TheWall",
   "launcherName": "TheWall",
   "display": "standalone",
@@ -9,7 +9,7 @@
   "backgroundColor": "#07080B",
   "enableNotifications": true,
   "startUrl": "/",
-  "iconUrl": "https://thewall.e-mobies.com/icon-512.png",
+  "iconUrl": "https://thewall-web3.e-mobies.com/icon-512.png",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
     "path": "./android.keystore",
@@ -19,6 +19,6 @@
   "appVersionCode": 1,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
-  "webManifestUrl": "https://thewall.e-mobies.com/manifest.json",
+  "webManifestUrl": "https://thewall-web3.e-mobies.com/manifest.json",
   "fallbackType": "customtabs"
 }

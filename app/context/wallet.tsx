@@ -26,7 +26,7 @@ export async function initAppKit() {
     metadata: {
       name: 'TheWall',
       description: 'Gasless Web3 Wallet • Emowall AI 2.0',
-      url: 'https://thewall.e-mobies.com',
+      url: 'https://thewall-web3.e-mobies.com',
       icons: ['https://thewall.e-mobies.com/icon-512.png'],
     },
     themeMode: 'dark',
