@@ -1,7 +1,7 @@
 {
   "name": "TheWall Web3 Wallet",
   "short_name": "TheWall",
-  "description": "5-Chain Gasless Web3 Wallet • No Seed Phrase • Emowall AI Guardian",
+  "description": "37-Chain Gasless Web3 Wallet • No Seed Phrase • Emowall AI Guardian",
   "id": "com.emobies.thewall",
   "start_url": "/",
   "scope": "/",
@@ -44,7 +44,7 @@
       "sizes": "390x844",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "TheWall Login — 5-Chain Web3 Wallet"
+      "label": "TheWall Login — 37-Chain Web3 Wallet"
     },
     {
       "src": "/screenshot2.png",

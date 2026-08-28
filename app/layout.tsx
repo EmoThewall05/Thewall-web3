@@ -10,7 +10,7 @@ import EmowallAIChatWrapper from '@/components/EmowallAIChatWrapper'
 
 export const metadata: Metadata = {
   title: '⬡ THE WALL',
-  description: '5-Chain Gasless Web3 Wallet — No Seed Phrase • Emowall AI Guardian',
+  description: '37-Chain Gasless Web3 Wallet — No Seed Phrase • Emowall AI Guardian',
   manifest: '/manifest.json',
   themeColor: '#FF5500',
   appleWebApp: {
