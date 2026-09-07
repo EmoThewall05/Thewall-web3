@@ -1,8 +1,8 @@
 [{
-  "relation": ["delegate_permission/common.handle_all_urls"],
-  "target": {
-    "namespace": "android_app",
-    "package_name": "com.e_mobies.thewall_web3.twa",
-    "sha256_cert_fingerprints": ["FA:10:BA:1F:0E:45:42:5C:86:60:34:EB:56:C1:4A:A5:C7:1D:14:6E:51:3A:DB:AA:1E:23:EC:F9:9C:C2:05:6D"]
-  }
-}]
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.e_mobies.thewall_web3.twa",
+        "sha256_cert_fingerprints": ["B0:43:F2:D2:F9:4D:03:5F:81:9F:CE:93:44:01:F1:B1:99:93:48:59:8E:CA:C0:48:2F:8E:73:12:E8:AA:36:FD"]
+      }
+    }]
