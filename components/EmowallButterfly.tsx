@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
+import { useAppKitAccount } from '@reown/appkit/react'
 
 type BfState = 'idle' | 'chat' | 'alert' | 'held'
 
@@ -70,6 +71,7 @@ async function getOrCreateEmoKey(): Promise<string> {
 }
 
 export default function EmowallButterfly() {
+  const { isConnected } = useAppKitAccount()
   const bfRef   = useRef<HTMLDivElement>(null)
   const chatRef = useRef<HTMLDivElement>(null)
   const raf     = useRef<number>(0)
@@ -210,6 +212,11 @@ export default function EmowallButterfly() {
 
   async function sendMsg() {
     const val=input.trim(); if (!val) return
+    if (!isConnected) {
+      setInput('')
+      setMsgs(p=>[...p,{role:'user',text:val},{role:'ai',text:'🦋 Please connect your wallet first — tap Sign Up / Login to chat with me!'}])
+      return
+    }
     setInput('')
     setMsgs(p=>[...p,{role:'user',text:val}])
     setMsgs(p=>[...p,{role:'ai',text:'🦋 thinking...'}])
