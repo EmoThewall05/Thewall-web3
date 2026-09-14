@@ -51,27 +51,28 @@ async function broadcastSolTx(signedTx: string): Promise<string> {
   return data.result
 }
 
-// Requests Alchemy Gas Manager to sponsor fee + set feePayer on an unsigned Solana tx.
-// Returns a base64 serialized tx that already contains the fee-payer signature.
+// Self-hosted fee-payer relayer (replaces deprecated Alchemy Gas Manager,
+// which went enterprise-only). Sets our funded relayer wallet as feePayer
+// on the unsigned tx and co-signs it, so the user never needs SOL for fees.
+// Uses the Kora-style co-signing pattern: user still signs their own
+// instructions; only the fee-payer signature is added here.
 async function requestSolFeePayer(serializedTxBase64: string): Promise<string> {
+  const { Connection, Transaction, Keypair, PublicKey } = await import('@solana/web3.js')
+  const relayerSecret = process.env.SOLANA_RELAYER_SECRET_KEY
+  if (!relayerSecret) throw new Error('Relayer not configured')
+  const relayerKeypair = Keypair.fromSecretKey(Buffer.from(relayerSecret, 'base64'))
+
+  const tx = Transaction.from(Buffer.from(serializedTxBase64, 'base64'))
+  tx.feePayer = relayerKeypair.publicKey
+
   const solanaKey = process.env.THEWALL_SOUL_KEY
-  const policyId = process.env.NEXT_PUBLIC_SOLANA_GAS_POLICY_ID
-  const rpcUrl = `https://solana-mainnet.g.alchemy.com/v2/${solanaKey}`
-  const res = await fetch(rpcUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      jsonrpc: '2.0',
-      id: 1,
-      method: 'alchemy_requestFeePayer',
-      params: [{ policyId, serializedTransaction: serializedTxBase64 }],
-    }),
-  })
-  const data = await res.json()
-  if (data.error) throw new Error(data.error.message || 'Fee payer sponsorship failed')
-  const sponsoredTx = data.result?.serializedTransaction
-  if (!sponsoredTx) throw new Error('No sponsored transaction returned')
-  return sponsoredTx
+  const connection = new Connection(`https://solana-mainnet.g.alchemy.com/v2/${solanaKey}`, 'confirmed')
+  const { blockhash } = await connection.getLatestBlockhash('finalized')
+  tx.recentBlockhash = blockhash
+
+  tx.partialSign(relayerKeypair)
+
+  return Buffer.from(tx.serialize({ requireAllSignatures: false, verifySignatures: false })).toString('base64')
 }
 
 export async function POST(req: NextRequest) {
