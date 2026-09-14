@@ -44,7 +44,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false)
   useEffect(() => { 
     setMounted(true)
-    initAppKit().then(m => { if(m) console.log('AppKit ready!') })
+    // AppKit now initializes lazily on-demand at click sites,
+    // instead of eagerly here, to stop random WalletConnect popups
+    // firing on every page load for users who never asked to connect.
   }, [])
   if (!mounted) return <>{children}</>
   return <>{children}</>
