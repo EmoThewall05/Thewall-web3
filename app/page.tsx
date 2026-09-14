@@ -6,6 +6,7 @@ import SmartWalletConnect from '@/components/SmartWalletConnect'
 import { Connection, PublicKey, Transaction, SystemProgram } from '@solana/web3.js'
 import { useStandardWallets, useSignAndSendTransaction, useWallets as useSolanaWallets } from '@privy-io/react-auth/solana'
 import { usePrivy } from '@privy-io/react-auth'
+import { useAppKitAccount, useAppKitConnections } from '@reown/appkit/react'
 
 interface TokenPrice  { price: number; change24h: number }
 interface Prices      { [symbol: string]: TokenPrice }
@@ -75,6 +76,9 @@ function TotpQr({ email }: { email: string }) {
 
 export default function TheWall() {
   const { logout: privyLogout } = usePrivy()
+  const { isConnected: extWalletConnected, address: extWalletAddress } = useAppKitAccount()
+  const { connections: extWalletConnections } = useAppKitConnections()
+  const extWalletName = extWalletConnections?.find(c => c.accounts?.some(a => a.address?.toLowerCase() === extWalletAddress?.toLowerCase()))?.name
   const [screen, setScreen]         = useState<'login'|'dashboard'>('login')
   const [loginStep, setLoginStep]   = useState<'home'|'email'|'choose2fa'|'totp'|'creating'>('home')
   const [email, setEmail]           = useState('')
@@ -960,9 +964,9 @@ const ChainIcon = ({ id }: { id: string }) => {
             
             <button
   onClick={() => { import('./context/wallet').then(m => { m.initAppKit().then((kit:any) => kit?.open()) }) }}
-  style={{width:'100%',padding:'14px',background: user?.address ? 'var(--bg2)' : 'linear-gradient(135deg,#FF5500,#ff8844)',border: user?.address ? '1px solid var(--border)' : 'none',borderRadius:10,color: user?.address ? 'var(--cyan)' : '#fff',fontFamily:'monospace',fontSize:'0.9rem',fontWeight:700,cursor:'pointer',marginBottom:4}}
+  style={{width:'100%',padding:'14px',background: extWalletConnected ? 'var(--bg2)' : 'linear-gradient(135deg,#FF5500,#ff8844)',border: extWalletConnected ? '1px solid var(--border)' : 'none',borderRadius:10,color: extWalletConnected ? 'var(--cyan)' : '#fff',fontFamily:'monospace',fontSize:'0.9rem',fontWeight:700,cursor:'pointer',marginBottom:4}}
 >
-  {user?.address ? `🔗 ${user.address.slice(0,6)}...${user.address.slice(-4)} · Tap to Manage` : '🔗 Connect Wallet'}
+  {extWalletConnected ? `🔗 ${extWalletName || 'Wallet'} · Tap to Manage` : '🔗 Connect Wallet'}
 </button>
           </div>
           <div style={{display:'flex',gap:6,marginBottom:16}}>
