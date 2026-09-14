@@ -5,6 +5,7 @@ import styles from './page.module.css'
 import SmartWalletConnect from '@/components/SmartWalletConnect'
 import { Connection, PublicKey, Transaction, SystemProgram } from '@solana/web3.js'
 import { useStandardWallets, useSignAndSendTransaction, useWallets as useSolanaWallets } from '@privy-io/react-auth/solana'
+import { usePrivy } from '@privy-io/react-auth'
 
 interface TokenPrice  { price: number; change24h: number }
 interface Prices      { [symbol: string]: TokenPrice }
@@ -73,6 +74,7 @@ function TotpQr({ email }: { email: string }) {
 }
 
 export default function TheWall() {
+  const { logout: privyLogout } = usePrivy()
   const [screen, setScreen]         = useState<'login'|'dashboard'>('login')
   const [loginStep, setLoginStep]   = useState<'home'|'email'|'choose2fa'|'totp'|'creating'>('home')
   const [email, setEmail]           = useState('')
@@ -871,7 +873,7 @@ const ChainIcon = ({ id }: { id: string }) => {
     <div className={styles.dashWrap} style={{paddingBottom:70}}>
       <header className={styles.header+' fade-up'}>
         <div className={styles.headerLeft}><span className={styles.hexSmall}>⬡</span><span className={styles.headerTitle}>THE WALL</span></div>
-        <div className={styles.headerRight}><button className={styles.searchIconBtn} onClick={()=>setSearchOpen(true)}>🔍</button><button className={styles.refreshBtn} onClick={handleRefresh} disabled={refreshing}><span style={{display:'inline-block',animation:refreshing?'spin 0.8s linear infinite':'none'}}>↻</span></button><button className={styles.logoutBtn} onClick={async()=>{const {appkitModal}=await import('@/app/context/wallet');if(appkitModal)await appkitModal.disconnect();setUser(null);setWalletData(null);setScreen('login')}}>⏻</button></div>
+        <div className={styles.headerRight}><button className={styles.searchIconBtn} onClick={()=>setSearchOpen(true)}>🔍</button><button className={styles.refreshBtn} onClick={handleRefresh} disabled={refreshing}><span style={{display:'inline-block',animation:refreshing?'spin 0.8s linear infinite':'none'}}>↻</span></button><button className={styles.logoutBtn} onClick={async()=>{try{const {appkitModal}=await import('@/app/context/wallet');if(appkitModal)await appkitModal.disconnect()}catch{};try{await privyLogout()}catch{};setUser(null);setWalletData(null);setScreen('login')}}>⏻</button></div>
       </header>
 
       {searchOpen&&<div className={styles.searchOverlay} onClick={()=>setSearchOpen(false)}><div className={styles.searchModal} onClick={e=>e.stopPropagation()}>
