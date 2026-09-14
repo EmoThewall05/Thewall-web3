@@ -817,7 +817,7 @@ const ChainIcon = ({ id }: { id: string }) => {
       <div className={styles.loginCard}>
         <div className={styles.logo+' fade-up'}>
           <img src="/butterfly.jpg" className={styles.hexLogo} alt="The Wall"/>
-          <div><div className={styles.logoTitle}>THE WALL</div><div className={styles.logoSub}>Web3 · IND → DXB · 6 Chains</div></div>
+          <div><div className={styles.logoTitle}>THE WALL</div><div className={styles.logoSub}>Web3 · IND → DXB · 37 Chains</div></div>
         </div>
 
         {loginStep==='home'&&<div className="fade-up-1">
