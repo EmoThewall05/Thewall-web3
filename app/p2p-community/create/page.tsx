@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppKitAccount } from '@reown/appkit/react';
-import { supabase } from '@/lib/supabase';
+import { getSupabaseBrowser } from '@/lib/supabase';
 
 export default function CreateP2PCommunityPage() {
   const router = useRouter();
@@ -30,6 +30,7 @@ export default function CreateP2PCommunityPage() {
 
     setLoading(true);
     try {
+      const supabase = getSupabaseBrowser();
       const { data, error: rpcError } = await supabase.rpc('create_p2p_community', {
         p_owner_wallet_address: address,
         p_name: name.trim(),
