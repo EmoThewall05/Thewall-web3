@@ -11,3 +11,18 @@ export function getSupabaseAdmin() {
   }
   return createClient(url, key, { auth: { persistSession: false } })
 }
+
+// Browser-safe client (anon key) - use in client components ('use client')
+let _browserClient: ReturnType<typeof createClient> | null = null
+export function getSupabaseBrowser() {
+  if (_browserClient) return _browserClient
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!url || !key) {
+    throw new Error(
+      `Missing Supabase env vars: ${!url ? 'NEXT_PUBLIC_SUPABASE_URL ' : ''}${!key ? 'NEXT_PUBLIC_SUPABASE_ANON_KEY' : ''}`.trim()
+    )
+  }
+  _browserClient = createClient(url, key, { auth: { persistSession: false } })
+  return _browserClient
+}

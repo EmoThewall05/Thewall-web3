@@ -7,6 +7,7 @@ import { Connection, PublicKey, Transaction, SystemProgram } from '@solana/web3.
 import { useStandardWallets, useSignAndSendTransaction, useWallets as useSolanaWallets } from '@privy-io/react-auth/solana'
 import { usePrivy } from '@privy-io/react-auth'
 import { useAppKitAccount, useAppKitConnections } from '@reown/appkit/react'
+import { useRouter } from 'next/navigation'
 
 interface TokenPrice  { price: number; change24h: number }
 interface Prices      { [symbol: string]: TokenPrice }
@@ -195,6 +196,7 @@ export default function TheWall() {
   const [premiumLoading, setPremiumLoading] = useState(false)
   const [premiumMsg, setPremiumMsg] = useState('')
   const [bottomTab, setBottomTab]   = useState<BottomTab>('home')
+  const router = useRouter()
   const [refreshing, setRefreshing] = useState(false)
   const [searchOpen, setSearchOpen]     = useState(false)
   const [searchQuery, setSearchQuery]   = useState('')
@@ -1242,8 +1244,8 @@ const ChainIcon = ({ id }: { id: string }) => {
       </main>
 
       <nav style={{position:'fixed',bottom:0,left:0,right:0,background:'var(--bg2)',borderTop:'1px solid var(--border)',display:'flex',zIndex:100,paddingBottom:'env(safe-area-inset-bottom)'}}>
-        {([{id:'home',icon:'🏠',label:'Home'},{id:'trade',icon:'💱',label:'Trade'},{id:'markets',icon:'📊',label:'Markets'},{id:'copytrade',icon:'👥',label:'Copy'},{id:'settings',icon:'⚙️',label:'Settings'}] as {id:BottomTab;icon:string;label:string}[]).map(tab=>(
-          <button key={tab.id} onClick={()=>setBottomTab(tab.id)} style={{flex:1,padding:'12px 0 10px',background:'transparent',border:'none',cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:4,borderTop:bottomTab===tab.id?'2px solid var(--cyan)':'2px solid transparent'}}>
+        {([{id:'home',icon:'🏠',label:'Home'},{id:'trade',icon:'💱',label:'Trade'},{id:'community',icon:'🦋',label:'Community'},{id:'markets',icon:'📊',label:'Markets'},{id:'copytrade',icon:'👥',label:'Copy'},{id:'settings',icon:'⚙️',label:'Settings'}] as {id:string;icon:string;label:string}[]).map(tab=>(
+          <button key={tab.id} onClick={()=>tab.id==='community'?router.push('/p2p-community'):setBottomTab(tab.id as BottomTab)} style={{flex:1,padding:'12px 0 10px',background:'transparent',border:'none',cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:4,borderTop:bottomTab===tab.id?'2px solid var(--cyan)':'2px solid transparent'}}>
             <span style={{fontSize:'1.2rem'}}>{tab.icon}</span>
             <span style={{fontSize:'0.58rem',...s.mono,letterSpacing:'0.06em',color:bottomTab===tab.id?'var(--cyan)':'var(--text-muted)',fontWeight:bottomTab===tab.id?700:400}}>{tab.label}</span>
           </button>
