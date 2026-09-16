@@ -31,7 +31,7 @@ export default function CreateP2PCommunityPage() {
     setLoading(true);
     try {
       const supabase = getSupabaseBrowser();
-      const { data, error: rpcError } = await supabase.rpc('create_p2p_community', {
+      const { data, error: rpcError } = await (supabase.rpc as any)('create_p2p_community', {
         p_owner_wallet_address: address,
         p_name: name.trim(),
         p_description: description.trim() || null,
