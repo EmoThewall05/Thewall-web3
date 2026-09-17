@@ -86,8 +86,8 @@ export default function TheWall() {
   const [totpCode, setTotpCode]     = useState('')
   const [error, setError]           = useState('')
   const [user, setUser]             = useState<UserWallet|null>(null)
-  const solanaWallets = []; // TEMP: disabled useStandardWallets to debug 'No namespace found'
-  const solanaConnectedWallets = []; // TEMP debug
+  const solanaWallets: any[] = []; // TEMP: disabled useStandardWallets to debug 'No namespace found'
+  const solanaConnectedWallets: any[] = []; // TEMP debug
   const signAndSendTransaction = async () => {}; // TEMP debug
   const [prices, setPrices]         = useState<Prices>({})
   const [walletData, setWalletData] = useState<WalletData|null>(null)
