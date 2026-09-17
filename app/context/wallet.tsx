@@ -18,6 +18,8 @@ export async function initAppKit() {
   const networks = supportedKeys
     .map(k => (allNetworks as any)[k])
     .filter((net: any) => net && (!net.chainNamespace || net.chainNamespace === 'eip155'))
+    .map((net: any) => ({ ...net, chainNamespace: 'eip155' }))
+    .map((net: any) => ({ ...net, chainNamespace: 'eip155' }))
   const ethersAdapter = new EthersAdapter()
   appkitModal = createAppKit({
     adapters: [ethersAdapter] as any[],

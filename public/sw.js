@@ -1,7 +1,6 @@
-const CACHE = 'thewall-v2.1';
+const CACHE = 'thewall-v2.2';
 
 const SHELL = [
-  '/',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
