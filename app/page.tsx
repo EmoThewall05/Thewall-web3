@@ -86,7 +86,7 @@ export default function TheWall() {
   const [totpCode, setTotpCode]     = useState('')
   const [error, setError]           = useState('')
   const [user, setUser]             = useState<UserWallet|null>(null)
-  const { wallets: solanaWallets } = useStandardWallets()
+  const solanaWallets = []; // TEMP: disabled useStandardWallets to debug 'No namespace found'
   const { wallets: solanaConnectedWallets } = useSolanaWallets()
   const { signAndSendTransaction } = useSignAndSendTransaction()
   const [prices, setPrices]         = useState<Prices>({})
