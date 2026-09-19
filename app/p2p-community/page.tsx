@@ -31,7 +31,7 @@ export default function P2PCommunityPage() {
       if (rpcError) throw rpcError;
       setCommunities(data || []);
     } catch (err: any) {
-      setError(err.message || 'Communities load ചെയ്യാൻ പറ്റിയില്ല');
+      setError(err.message || 'Failed to load communities');
     } finally {
       setLoading(false);
     }
@@ -80,7 +80,7 @@ export default function P2PCommunityPage() {
         <h1 style={{ fontSize: '1.3rem', fontWeight: 700, color: '#00e5ff', textShadow: '0 0 10px rgba(0,229,255,0.4)', margin: 0 }}>
           P2P Community
         </h1>
-        <p style={{ color: '#9ca3af', fontSize: '0.72rem', marginTop: 4, marginBottom: 16 }}>Trusted communities-ൽ trade ചെയ്യൂ</p>
+        <p style={{ color: '#9ca3af', fontSize: '0.72rem', marginTop: 4, marginBottom: 16 }}>Trade in trusted communities</p>
 
         <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
           <div style={{ flex: 1, borderRadius: 10, padding: 10, textAlign: 'center', background: 'rgba(0,229,255,0.06)', border: '1px solid rgba(0,229,255,0.2)' }}>
@@ -102,7 +102,7 @@ export default function P2PCommunityPage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Community search ചെയ്യൂ..."
+            placeholder="Search communities..."
             style={{ flex: 1, borderRadius: 8, padding: '10px 12px', color: '#fff', fontSize: '0.85rem', outline: 'none', background: '#0d0d14', border: '1px solid rgba(0,229,255,0.25)', minWidth: 0 }}
           />
           <button type="submit" style={{ borderRadius: 8, padding: '0 16px', fontSize: '0.85rem', background: '#0d0d14', border: '1px solid rgba(0,229,255,0.25)', color: '#00e5ff' }}>
@@ -116,8 +116,8 @@ export default function P2PCommunityPage() {
         {!loading && !error && communities.length === 0 && (
           <div style={{ textAlign: 'center', padding: '64px 0', color: '#6b7280' }}>
             <p style={{ marginBottom: 4, fontSize: '1.5rem' }}>🦋</p>
-            <p style={{ marginBottom: 4 }}>ഒരു community-യും കണ്ടില്ല</p>
-            <p style={{ fontSize: '0.85rem' }}>ആദ്യത്തെ community നീ create ചെയ്യൂ!</p>
+            <p style={{ marginBottom: 4 }}>No communities found</p>
+            <p style={{ fontSize: '0.85rem' }}>Create the first community!</p>
           </div>
         )}
 

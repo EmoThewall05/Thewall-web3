@@ -40,7 +40,7 @@ export default function CommunityDetailPage({
         const found = (data || []).find((c: Community) => c.id === id);
         setCommunity(found || null);
       } catch (err: any) {
-        setError(err.message || 'Community load ചെയ്യാൻ പറ്റിയില്ല');
+        setError(err.message || 'Failed to load community');
       } finally {
         setLoading(false);
       }
@@ -53,7 +53,7 @@ export default function CommunityDetailPage({
     setMessage(null);
 
     if (!isConnected || !address) {
-      setError('Wallet connect ചെയ്യൂ ആദ്യം');
+      setError('Connect your wallet first');
       return;
     }
 
@@ -65,26 +65,31 @@ export default function CommunityDetailPage({
         p_wallet_address: address,
       });
       if (rpcError) throw rpcError;
-      setMessage('🦋 Join request send ചെയ്തു! Owner approve ചെയ്യുന്നത് വരെ കാത്തിരിക്കൂ.');
+      setMessage('🦋 Join request sent! Waiting for owner approval.');
     } catch (err: any) {
-      setError(err.message || 'Join request send ചെയ്യാൻ പറ്റിയില്ല');
+      setError(err.message || 'Failed to send join request');
     } finally {
       setJoining(false);
     }
   };
 
+  const pageStyle: React.CSSProperties = {
+    minHeight: '100vh', background: '#000', color: '#fff', padding: 16,
+    fontFamily: 'var(--font-mono, monospace)', boxSizing: 'border-box',
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-black text-white p-4">
-        <p className="text-gray-500 text-sm">Loading...</p>
+      <div style={pageStyle}>
+        <p style={{ color: '#6b7280', fontSize: '0.85rem' }}>Loading...</p>
       </div>
     );
   }
 
   if (!community) {
     return (
-      <div className="min-h-screen bg-black text-white p-4">
-        <p className="text-gray-400">Community കണ്ടില്ല 🦋</p>
+      <div style={pageStyle}>
+        <p style={{ color: '#9ca3af' }}>Community not found 🦋</p>
       </div>
     );
   }
@@ -93,44 +98,51 @@ export default function CommunityDetailPage({
     addr.length > 10 ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : addr;
 
   return (
-    <div className="min-h-screen bg-black text-white p-4">
-      <h1 className="text-2xl font-bold mb-1">🦋 {community.name}</h1>
-      <span
-        className={`inline-block text-xs px-2 py-0.5 rounded-full mb-4 ${
-          community.status === 'open'
-            ? 'bg-green-900 text-green-400'
-            : 'bg-gray-800 text-gray-400'
-        }`}
-      >
-        {community.status}
+    <div style={pageStyle}>
+      <h1 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: 6, color: '#00e5ff', textShadow: '0 0 10px rgba(0,229,255,0.4)' }}>
+        🦋 {community.name}
+      </h1>
+      <span style={{
+        display: 'inline-block', fontSize: '0.65rem', padding: '3px 10px', borderRadius: 999, marginBottom: 16, fontWeight: 700,
+        ...(community.status === 'open'
+          ? { background: 'rgba(34,197,94,0.15)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.3)' }
+          : { background: 'rgba(107,114,128,0.15)', color: '#9ca3af', border: '1px solid rgba(107,114,128,0.3)' }),
+      }}>
+        {community.status.toUpperCase()}
       </span>
 
       {community.description && (
-        <p className="text-gray-300 text-sm mb-4">{community.description}</p>
+        <p style={{ color: '#d1d5db', fontSize: '0.85rem', marginBottom: 16 }}>{community.description}</p>
       )}
 
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 mb-4 space-y-2 text-sm">
-        <div className="flex justify-between">
-          <span className="text-gray-500">Owner</span>
-          <span className="text-white">{shortAddress(community.owner_wallet_address)}</span>
+      <div style={{
+        background: '#0d0d14', border: '1px solid rgba(0,229,255,0.2)', borderRadius: 12,
+        padding: 16, marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 8, fontSize: '0.85rem',
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <span style={{ color: '#6b7280' }}>Owner</span>
+          <span style={{ color: '#fff' }}>{shortAddress(community.owner_wallet_address)}</span>
         </div>
-        <div className="flex justify-between">
-          <span className="text-gray-500">Members</span>
-          <span className="text-white">
-            {community.member_count}/{community.max_members}
-          </span>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <span style={{ color: '#6b7280' }}>Members</span>
+          <span style={{ color: '#a855f7' }}>{community.member_count}/{community.max_members}</span>
         </div>
       </div>
 
-      {message && <p className="text-green-400 text-sm mb-3">{message}</p>}
-      {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
+      {message && <p style={{ color: '#4ade80', fontSize: '0.85rem', marginBottom: 12 }}>{message}</p>}
+      {error && <p style={{ color: '#f87171', fontSize: '0.85rem', marginBottom: 12 }}>{error}</p>}
 
       <button
         onClick={handleJoin}
         disabled={joining || community.status !== 'open' || !!message}
-        className="w-full bg-gradient-to-r from-purple-500 to-blue-500 text-white font-semibold py-3 rounded-lg disabled:opacity-50"
+        style={{
+          width: '100%', color: '#000', fontWeight: 700, padding: '13px 0', borderRadius: 8, border: 'none',
+          fontSize: '0.9rem', cursor: (joining || community.status !== 'open' || !!message) ? 'not-allowed' : 'pointer',
+          opacity: (joining || community.status !== 'open' || !!message) ? 0.5 : 1,
+          background: 'linear-gradient(90deg, #00e5ff, #a855f7)', boxShadow: '0 0 15px rgba(0,229,255,0.3)',
+        }}
       >
-        {joining ? 'Sending...' : message ? 'Request Sent' : 'Join Request അയക്കൂ'}
+        {joining ? 'Sending...' : message ? 'Request Sent' : 'Send Join Request'}
       </button>
     </div>
   );

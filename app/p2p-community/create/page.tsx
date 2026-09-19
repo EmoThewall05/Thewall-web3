@@ -19,12 +19,12 @@ export default function CreateP2PCommunityPage() {
     setError(null);
 
     if (!isConnected || !address) {
-      setError('Wallet connect ചെയ്യൂ ആദ്യം');
+      setError('Connect your wallet first');
       return;
     }
 
     if (name.trim().length < 3) {
-      setError('Community name കുറഞ്ഞത് 3 characters വേണം');
+      setError('Community name must be at least 3 characters');
       return;
     }
 
@@ -42,7 +42,7 @@ export default function CreateP2PCommunityPage() {
 
       router.push(`/p2p-community/${data}`);
     } catch (err: any) {
-      setError(err.message || 'Community create ചെയ്യാൻ പറ്റിയില്ല');
+      setError(err.message || 'Failed to create community');
     } finally {
       setLoading(false);
     }
@@ -58,7 +58,7 @@ export default function CreateP2PCommunityPage() {
       <h1 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: 4, color: '#00e5ff', textShadow: '0 0 10px rgba(0,229,255,0.4)' }}>
         🦋 Community Studio
       </h1>
-      <p style={{ color: '#9ca3af', fontSize: '0.75rem', marginBottom: 20 }}>നിന്റെ P2P community ഉണ്ടാക്കൂ</p>
+      <p style={{ color: '#9ca3af', fontSize: '0.75rem', marginBottom: 20 }}>Set up your P2P community</p>
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 420 }}>
         <div>
@@ -67,7 +67,7 @@ export default function CreateP2PCommunityPage() {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="ഉദാ: Dubai Traders Circle"
+            placeholder="e.g. Dubai Traders Circle"
             style={inputStyle}
             maxLength={50}
           />
@@ -78,7 +78,7 @@ export default function CreateP2PCommunityPage() {
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="നിന്റെ community-യെക്കുറിച്ച് explain ചെയ്യൂ..."
+            placeholder="Describe your community..."
             style={{ ...inputStyle, height: 96, resize: 'vertical', fontFamily: 'inherit' }}
             maxLength={500}
           />
@@ -88,7 +88,7 @@ export default function CreateP2PCommunityPage() {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           background: '#0d0d14', border: '1px solid rgba(0,229,255,0.25)', borderRadius: 8, padding: '10px 12px',
         }}>
-          <span style={{ fontSize: '0.8rem', color: '#d1d5db' }}>Public (search-ൽ കാണിക്കണോ)</span>
+          <span style={{ fontSize: '0.8rem', color: '#d1d5db' }}>Public (show in search)</span>
           <button
             type="button"
             onClick={() => setIsPublic(!isPublic)}
@@ -108,7 +108,7 @@ export default function CreateP2PCommunityPage() {
           background: 'rgba(168,85,247,0.06)', border: '1px solid rgba(168,85,247,0.2)', borderRadius: 8,
           padding: '10px 12px', fontSize: '0.68rem', color: '#9ca3af',
         }}>
-          🦋 Community 10-25 members size-ൽ ആയിരിക്കും. Owner ആയി തുടരാൻ KYC verification പിന്നീട് വേണ്ടി വരും.
+          🦋 Communities have 10-25 members. Owners will need KYC verification later.
         </div>
 
         {error && <p style={{ color: '#f87171', fontSize: '0.8rem', margin: 0 }}>{error}</p>}
@@ -122,7 +122,7 @@ export default function CreateP2PCommunityPage() {
             background: 'linear-gradient(90deg, #00e5ff, #a855f7)', boxShadow: '0 0 15px rgba(0,229,255,0.3)',
           }}
         >
-          {loading ? 'Creating...' : 'Community Create ചെയ്യൂ'}
+          {loading ? 'Creating...' : 'Create Community'}
         </button>
       </form>
     </div>
