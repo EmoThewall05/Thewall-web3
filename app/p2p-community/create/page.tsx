@@ -48,60 +48,79 @@ export default function CreateP2PCommunityPage() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-black text-white p-4">
-      <h1 className="text-2xl font-bold mb-1">🦋 Community Studio</h1>
-      <p className="text-gray-400 text-sm mb-6">നിന്റെ P2P community ഉണ്ടാക്കൂ</p>
+  const inputStyle: React.CSSProperties = {
+    width: '100%', boxSizing: 'border-box', background: '#0d0d14', border: '1px solid rgba(0,229,255,0.25)',
+    borderRadius: 8, padding: '10px 12px', color: '#fff', fontSize: '0.85rem', outline: 'none',
+  };
 
-      <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
+  return (
+    <div style={{ minHeight: '100vh', background: '#000', color: '#fff', padding: 16, fontFamily: 'var(--font-mono, monospace)', boxSizing: 'border-box' }}>
+      <h1 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: 4, color: '#00e5ff', textShadow: '0 0 10px rgba(0,229,255,0.4)' }}>
+        🦋 Community Studio
+      </h1>
+      <p style={{ color: '#9ca3af', fontSize: '0.75rem', marginBottom: 20 }}>നിന്റെ P2P community ഉണ്ടാക്കൂ</p>
+
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 420 }}>
         <div>
-          <label className="block text-sm text-gray-300 mb-1">Community Name</label>
+          <label style={{ display: 'block', fontSize: '0.8rem', color: '#d1d5db', marginBottom: 4 }}>Community Name</label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="ഉദാ: Dubai Traders Circle"
-            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white"
+            style={inputStyle}
             maxLength={50}
           />
         </div>
 
         <div>
-          <label className="block text-sm text-gray-300 mb-1">Description</label>
+          <label style={{ display: 'block', fontSize: '0.8rem', color: '#d1d5db', marginBottom: 4 }}>Description</label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="നിന്റെ community-യെക്കുറിച്ച് explain ചെയ്യൂ..."
-            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white h-24"
+            style={{ ...inputStyle, height: 96, resize: 'vertical', fontFamily: 'inherit' }}
             maxLength={500}
           />
         </div>
 
-        <div className="flex items-center justify-between bg-gray-900 border border-gray-700 rounded-lg px-3 py-2">
-          <span className="text-sm text-gray-300">Public (search-ൽ കാണിക്കണോ)</span>
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          background: '#0d0d14', border: '1px solid rgba(0,229,255,0.25)', borderRadius: 8, padding: '10px 12px',
+        }}>
+          <span style={{ fontSize: '0.8rem', color: '#d1d5db' }}>Public (search-ൽ കാണിക്കണോ)</span>
           <button
             type="button"
             onClick={() => setIsPublic(!isPublic)}
-            className={`w-12 h-6 rounded-full transition ${isPublic ? 'bg-blue-500' : 'bg-gray-600'}`}
+            style={{
+              width: 44, height: 24, borderRadius: 999, border: 'none', position: 'relative', cursor: 'pointer',
+              background: isPublic ? '#00e5ff' : '#4b5563', transition: 'background 0.2s',
+            }}
           >
-            <div
-              className={`w-5 h-5 bg-white rounded-full transition transform ${
-                isPublic ? 'translate-x-6' : 'translate-x-1'
-              }`}
-            />
+            <div style={{
+              width: 18, height: 18, background: '#fff', borderRadius: '50%', position: 'absolute', top: 3,
+              left: isPublic ? 23 : 3, transition: 'left 0.2s',
+            }} />
           </button>
         </div>
 
-        <div className="bg-gray-900/50 border border-gray-800 rounded-lg px-3 py-2 text-xs text-gray-500">
+        <div style={{
+          background: 'rgba(168,85,247,0.06)', border: '1px solid rgba(168,85,247,0.2)', borderRadius: 8,
+          padding: '10px 12px', fontSize: '0.68rem', color: '#9ca3af',
+        }}>
           🦋 Community 10-25 members size-ൽ ആയിരിക്കും. Owner ആയി തുടരാൻ KYC verification പിന്നീട് വേണ്ടി വരും.
         </div>
 
-        {error && <p className="text-red-400 text-sm">{error}</p>}
+        {error && <p style={{ color: '#f87171', fontSize: '0.8rem', margin: 0 }}>{error}</p>}
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-gradient-to-r from-purple-500 to-blue-500 text-white font-semibold py-3 rounded-lg disabled:opacity-50"
+          style={{
+            width: '100%', color: '#000', fontWeight: 700, padding: '13px 0', borderRadius: 8, border: 'none',
+            fontSize: '0.9rem', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.5 : 1,
+            background: 'linear-gradient(90deg, #00e5ff, #a855f7)', boxShadow: '0 0 15px rgba(0,229,255,0.3)',
+          }}
         >
           {loading ? 'Creating...' : 'Community Create ചെയ്യൂ'}
         </button>
