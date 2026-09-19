@@ -78,7 +78,7 @@ function TotpQr({ email }: { email: string }) {
 export default function TheWall() {
   const { logout: privyLogout } = usePrivy()
   const extWalletConnected = false, extWalletAddress = undefined; // TEMP debug
-  const extWalletConnections: any[] = []; // TEMP debug
+  const extWalletConnections: {accounts?: {address?: string}[]}[] = []; // TEMP debug
   const extWalletName = extWalletConnections?.find(c => c.accounts?.some(a => a.address?.toLowerCase() === extWalletAddress?.toLowerCase()))?.name
   const [screen, setScreen]         = useState<'login'|'dashboard'>('login')
   const [loginStep, setLoginStep]   = useState<'home'|'email'|'choose2fa'|'totp'|'creating'>('home')
