@@ -1251,6 +1251,8 @@ const ChainIcon = ({ id }: { id: string }) => {
           </button>
         ))}
       </nav>
+
+      <PeguardChatWidget />
     </div>
   )
 }
