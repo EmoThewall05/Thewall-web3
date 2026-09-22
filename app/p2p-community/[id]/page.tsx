@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use as usePromise } from 'react';
 import { useAppKitAccount } from '@reown/appkit/react';
+import Link from 'next/link';
 import PeguardChatWidget from '@/components/PeguardChatWidget';
 import { getSupabaseBrowser } from '@/lib/supabase';
 
@@ -129,6 +130,19 @@ export default function CommunityDetailPage({
           <span style={{ color: '#a855f7' }}>{community.member_count}/{community.max_members}</span>
         </div>
       </div>
+
+      {isConnected && address && address.toLowerCase() === community.owner_wallet_address.toLowerCase() && (
+        <Link
+          href={`/p2p-community/${community.id}/manage`}
+          style={{
+            display: 'block', textAlign: 'center', width: '100%', color: '#a855f7', fontWeight: 700,
+            padding: '11px 0', borderRadius: 8, border: '1px solid rgba(168,85,247,0.4)',
+            fontSize: '0.85rem', marginBottom: 16, textDecoration: 'none',
+          }}
+        >
+          🦋 Manage Community
+        </Link>
+      )}
 
       {message && <p style={{ color: '#4ade80', fontSize: '0.85rem', marginBottom: 12 }}>{message}</p>}
       {error && <p style={{ color: '#f87171', fontSize: '0.85rem', marginBottom: 12 }}>{error}</p>}
