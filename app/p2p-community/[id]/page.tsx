@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use as usePromise } from 'react';
 import { useAppKitAccount } from '@reown/appkit/react';
+import PeguardChatWidget from '@/components/PeguardChatWidget';
 import { getSupabaseBrowser } from '@/lib/supabase';
 
 type Community = {
@@ -144,6 +145,7 @@ export default function CommunityDetailPage({
       >
         {joining ? 'Sending...' : message ? 'Request Sent' : 'Send Join Request'}
       </button>
+      <PeguardChatWidget />
     </div>
   );
 }

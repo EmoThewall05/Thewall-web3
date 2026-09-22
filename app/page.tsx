@@ -8,7 +8,6 @@ import { useStandardWallets, useSignAndSendTransaction, useWallets as useSolanaW
 import { usePrivy } from '@privy-io/react-auth'
 import { useAppKitAccount, useAppKitConnections } from '@reown/appkit/react'
 import { useRouter } from 'next/navigation'
-import PeguardChatWidget from '@/components/PeguardChatWidget'
 
 interface TokenPrice  { price: number; change24h: number }
 interface Prices      { [symbol: string]: TokenPrice }
@@ -1252,8 +1251,6 @@ const ChainIcon = ({ id }: { id: string }) => {
           </button>
         ))}
       </nav>
-
-      <PeguardChatWidget />
     </div>
   )
 }

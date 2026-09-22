@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import PeguardChatWidget from '@/components/PeguardChatWidget';
 import { getSupabaseBrowser } from '@/lib/supabase';
 
 type Community = {
@@ -149,6 +150,7 @@ export default function P2PCommunityPage() {
           ))}
         </div>
       </div>
+      <PeguardChatWidget />
     </div>
   );
 }
