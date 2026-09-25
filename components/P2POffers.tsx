@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppKitAccount } from '@reown/appkit/react';
 import { getSupabaseBrowser } from '@/lib/supabase';
@@ -14,6 +14,37 @@ interface Offer {
   payment_method: string;
   created_at: string;
 }
+
+const card: CSSProperties = {
+  background: 'var(--bg2)',
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--radius)',
+  padding: '16px',
+};
+
+const input: CSSProperties = {
+  width: '100%',
+  padding: '12px',
+  borderRadius: 'var(--radius)',
+  background: 'var(--bg3)',
+  border: '1px solid var(--border)',
+  color: 'var(--text)',
+  fontFamily: 'var(--font-mono)',
+  fontSize: '14px',
+  outline: 'none',
+};
+
+const primaryBtn: CSSProperties = {
+  width: '100%',
+  padding: '13px',
+  borderRadius: 'var(--radius)',
+  background: 'var(--cyan)',
+  color: '#00131c',
+  fontFamily: 'var(--font-mono)',
+  fontWeight: 700,
+  border: 'none',
+  cursor: 'pointer',
+};
 
 export default function P2POffers({ communityId }: { communityId: string }) {
   const { address } = useAppKitAccount();
@@ -91,99 +122,145 @@ export default function P2POffers({ communityId }: { communityId: string }) {
   };
 
   return (
-    <div className="text-white">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold">🦋 Open Offers</h3>
+    <div style={{ marginTop: '20px', fontFamily: 'var(--font-mono)', color: 'var(--text)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+        <h3 style={{ fontSize: '17px', color: 'var(--cyan)', margin: 0 }}>🦋 Open Offers</h3>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="px-4 py-2 rounded-full bg-purple-600 hover:bg-purple-700 text-sm font-semibold"
+          style={{
+            padding: '8px 16px',
+            borderRadius: '20px',
+            background: showForm ? 'transparent' : 'var(--cyan-glow)',
+            border: '1px solid var(--border-bright)',
+            color: 'var(--cyan)',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '13px',
+            fontWeight: 700,
+            cursor: 'pointer',
+          }}
         >
           {showForm ? 'Cancel' : '+ Create Offer'}
         </button>
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-900/40 border border-red-700 text-red-300 text-sm">
+        <div style={{ ...card, borderColor: 'var(--red)', color: 'var(--red)', marginBottom: '14px', fontSize: '13px' }}>
           {error}
         </div>
       )}
 
       {showForm && (
-        <div className="mb-6 p-4 rounded-xl bg-zinc-900 border border-zinc-700 space-y-3">
-          <div className="flex gap-2">
+        <div style={{ ...card, marginBottom: '18px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ display: 'flex', gap: '8px' }}>
             <button
               onClick={() => setOfferType('sell')}
-              className={`flex-1 py-2 rounded-lg text-sm font-semibold ${offerType === 'sell' ? 'bg-emerald-600' : 'bg-zinc-800'}`}
+              style={{
+                flex: 1,
+                padding: '10px',
+                borderRadius: 'var(--radius)',
+                background: offerType === 'sell' ? 'rgba(0,255,136,0.15)' : 'var(--bg3)',
+                border: offerType === 'sell' ? '1px solid var(--green)' : '1px solid var(--border)',
+                color: offerType === 'sell' ? 'var(--green)' : 'var(--text-dim)',
+                fontFamily: 'var(--font-mono)',
+                fontWeight: 700,
+                fontSize: '14px',
+                cursor: 'pointer',
+              }}
             >
               Sell
             </button>
             <button
               onClick={() => setOfferType('buy')}
-              className={`flex-1 py-2 rounded-lg text-sm font-semibold ${offerType === 'buy' ? 'bg-blue-600' : 'bg-zinc-800'}`}
+              style={{
+                flex: 1,
+                padding: '10px',
+                borderRadius: 'var(--radius)',
+                background: offerType === 'buy' ? 'var(--cyan-glow)' : 'var(--bg3)',
+                border: offerType === 'buy' ? '1px solid var(--cyan)' : '1px solid var(--border)',
+                color: offerType === 'buy' ? 'var(--cyan)' : 'var(--text-dim)',
+                fontFamily: 'var(--font-mono)',
+                fontWeight: 700,
+                fontSize: '14px',
+                cursor: 'pointer',
+              }}
             >
               Buy
             </button>
           </div>
+
           <input
             type="number"
             placeholder="Amount (EMC)"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="w-full p-3 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm"
+            style={input}
           />
           <input
             type="number"
             placeholder="Price per unit (₹)"
             value={pricePerUnit}
             onChange={(e) => setPricePerUnit(e.target.value)}
-            className="w-full p-3 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm"
+            style={input}
           />
           <input
             type="text"
             placeholder="Payment method (e.g. UPI, Bank Transfer)"
             value={paymentMethod}
             onChange={(e) => setPaymentMethod(e.target.value)}
-            className="w-full p-3 rounded-lg bg-zinc-800 border border-zinc-700 text-white text-sm"
+            style={input}
           />
-          <button
-            onClick={handleCreateOffer}
-            disabled={submitting}
-            className="w-full py-3 rounded-lg bg-purple-600 hover:bg-purple-700 font-semibold disabled:opacity-50"
-          >
+          <button onClick={handleCreateOffer} disabled={submitting} style={{ ...primaryBtn, opacity: submitting ? 0.5 : 1 }}>
             {submitting ? 'Creating...' : 'Post Offer'}
           </button>
         </div>
       )}
 
       {loading ? (
-        <p className="text-zinc-400 text-sm">Loading offers...</p>
+        <p style={{ color: 'var(--text-dim)', fontSize: '13px' }}>Loading offers...</p>
       ) : offers.length === 0 ? (
-        <p className="text-zinc-400 text-sm">No open offers yet. Be the first!</p>
+        <p style={{ color: 'var(--text-dim)', fontSize: '13px' }}>No open offers yet. Be the first!</p>
       ) : (
-        <div className="space-y-3">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {offers.map((offer) => (
-            <div
-              key={offer.id}
-              className="p-4 rounded-xl bg-zinc-900 border border-zinc-700 flex items-center justify-between"
-            >
+            <div key={offer.id} style={{ ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
                 <span
-                  className={`inline-block px-2 py-0.5 rounded text-xs font-bold mr-2 ${offer.offer_type === 'sell' ? 'bg-emerald-700' : 'bg-blue-700'}`}
+                  style={{
+                    display: 'inline-block',
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    marginBottom: '6px',
+                    background: offer.offer_type === 'sell' ? 'rgba(0,255,136,0.15)' : 'var(--cyan-glow)',
+                    color: offer.offer_type === 'sell' ? 'var(--green)' : 'var(--cyan)',
+                  }}
                 >
                   {offer.offer_type.toUpperCase()}
                 </span>
-                <div className="text-sm mt-1">
+                <div style={{ fontSize: '14px' }}>
                   {offer.amount} EMC @ ₹{offer.price_per_unit}/unit
                 </div>
-                <div className="text-xs text-zinc-400">{offer.payment_method}</div>
-                <div className="text-xs text-zinc-500">
+                <div style={{ fontSize: '12px', color: 'var(--text-dim)' }}>{offer.payment_method}</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                   {offer.creator_wallet_address.slice(0, 6)}...{offer.creator_wallet_address.slice(-4)}
                 </div>
               </div>
               <button
                 onClick={() => handleAccept(offer.id)}
                 disabled={busyId === offer.id}
-                className="px-4 py-2 rounded-full bg-orange-500 hover:bg-orange-600 text-sm font-semibold disabled:opacity-50"
+                style={{
+                  padding: '9px 18px',
+                  borderRadius: '20px',
+                  background: 'var(--gold)',
+                  color: '#1a1300',
+                  border: 'none',
+                  fontFamily: 'var(--font-mono)',
+                  fontWeight: 700,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  opacity: busyId === offer.id ? 0.5 : 1,
+                }}
               >
                 {busyId === offer.id ? '...' : 'Accept'}
               </button>
