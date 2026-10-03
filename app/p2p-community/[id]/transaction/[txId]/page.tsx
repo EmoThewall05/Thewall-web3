@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useAppKitAccount } from '@reown/appkit/react';
 import { getSupabaseBrowser } from '@/lib/supabase';
@@ -16,6 +16,7 @@ export default function TransactionPage() {
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const verifyTriggered = useRef(false);
 
   const loadTx = useCallback(async () => {
     const { data, error } = await supabase
@@ -32,6 +33,21 @@ export default function TransactionPage() {
     const interval = setInterval(loadTx, 5000);
     return () => clearInterval(interval);
   }, [loadTx]);
+
+  // Auto-trigger worker verification once both proofs are in (status flips to 'verifying')
+  useEffect(() => {
+    if (tx?.status === 'verifying' && !verifyTriggered.current) {
+      verifyTriggered.current = true;
+      fetch('/api/p2p-verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transaction_id: tx.id }),
+      }).catch(() => {
+        // Silent fail — next poll will still show status; could retry later
+        verifyTriggered.current = false;
+      });
+    }
+  }, [tx?.status, tx?.id]);
 
   const isBuyer = tx && address === tx.buyer_wallet_address;
   const isSeller = tx && address === tx.seller_wallet_address;
@@ -74,65 +90,65 @@ export default function TransactionPage() {
     loadTx();
   };
 
-  if (loading) return <div className="p-6 text-white">Loading transaction...</div>;
-  if (!tx) return <div className="p-6 text-white">Transaction not found.</div>;
+  if (loading) return <div style={{ padding: '24px', color: '#e8f4fd' }}>Loading transaction...</div>;
+  if (!tx) return <div style={{ padding: '24px', color: '#e8f4fd' }}>Transaction not found.</div>;
 
   const statusColor: Record<string, string> = {
-    pending: 'text-yellow-400',
-    verifying: 'text-blue-400',
-    awaiting_owner: 'text-purple-400',
-    approved: 'text-emerald-400',
-    rejected: 'text-red-400',
+    pending: '#ffd700',
+    verifying: '#00b3f7',
+    awaiting_owner: '#a855f7',
+    approved: '#00ff88',
+    rejected: '#ff4466',
   };
 
   return (
-    <div className="p-4 max-w-lg mx-auto text-white">
-      <h2 className="text-xl font-bold mb-1">🦋 Transaction</h2>
-      <p className="text-xs text-zinc-500 mb-4">{tx.id}</p>
+    <div style={{ padding: '16px', maxWidth: '480px', margin: '0 auto', color: '#e8f4fd', fontFamily: 'var(--font-mono, monospace)' }}>
+      <h2 style={{ fontSize: '20px', marginBottom: '4px' }}>🦋 Transaction</h2>
+      <p style={{ fontSize: '11px', color: 'rgba(232,244,253,0.4)', marginBottom: '16px' }}>{tx.id}</p>
 
-      <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-700 mb-4">
-        <div className="flex justify-between text-sm mb-1">
-          <span className="text-zinc-400">Status</span>
-          <span className={`font-bold ${statusColor[tx.status] || ''}`}>
+      <div style={{ padding: '16px', borderRadius: '8px', background: '#070d14', border: '1px solid rgba(0,179,247,0.12)', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginBottom: '6px' }}>
+          <span style={{ color: 'rgba(232,244,253,0.5)' }}>Status</span>
+          <span style={{ fontWeight: 700, color: statusColor[tx.status] || '#e8f4fd' }}>
             {tx.status.replace('_', ' ').toUpperCase()}
           </span>
         </div>
-        <div className="flex justify-between text-sm mb-1">
-          <span className="text-zinc-400">Amount</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginBottom: '6px' }}>
+          <span style={{ color: 'rgba(232,244,253,0.5)' }}>Amount</span>
           <span>{tx.amount} EMC</span>
         </div>
-        <div className="flex justify-between text-sm">
-          <span className="text-zinc-400">Your role</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+          <span style={{ color: 'rgba(232,244,253,0.5)' }}>Your role</span>
           <span>{isBuyer ? 'Buyer' : isSeller ? 'Seller' : 'Observer'}</span>
         </div>
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-900/40 border border-red-700 text-red-300 text-sm">
+        <div style={{ marginBottom: '16px', padding: '12px', borderRadius: '8px', background: 'rgba(255,68,102,0.1)', border: '1px solid #ff4466', color: '#ff4466', fontSize: '13px' }}>
           {error}
         </div>
       )}
 
       {(isBuyer || isSeller) && tx.status === 'pending' && !myProof && (
-        <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-700 space-y-3">
-          <h3 className="font-semibold text-sm">Submit your proof</h3>
+        <div style={{ padding: '16px', borderRadius: '8px', background: '#070d14', border: '1px solid rgba(0,179,247,0.12)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <h3 style={{ fontSize: '14px', fontWeight: 700 }}>Submit your proof</h3>
           <textarea
             placeholder="Describe your payment (UTR / txn ref / notes)"
             value={proofText}
             onChange={(e) => setProofText(e.target.value)}
-            className="w-full p-3 rounded-lg bg-zinc-800 border border-zinc-700 text-sm"
             rows={3}
+            style={{ width: '100%', padding: '12px', borderRadius: '8px', background: '#0c1520', border: '1px solid rgba(0,179,247,0.12)', color: '#e8f4fd', fontFamily: 'inherit', fontSize: '14px' }}
           />
           <input
             type="file"
             accept="image/*"
             onChange={(e) => setProofFile(e.target.files?.[0] || null)}
-            className="w-full text-sm text-zinc-400"
+            style={{ fontSize: '13px', color: 'rgba(232,244,253,0.5)' }}
           />
           <button
             onClick={handleSubmitProof}
             disabled={submitting}
-            className="w-full py-3 rounded-lg bg-purple-600 hover:bg-purple-700 font-semibold disabled:opacity-50"
+            style={{ width: '100%', padding: '13px', borderRadius: '8px', background: '#00b3f7', color: '#00131c', fontWeight: 700, border: 'none', fontFamily: 'inherit', fontSize: '14px', cursor: 'pointer', opacity: submitting ? 0.5 : 1 }}
           >
             {submitting ? 'Submitting...' : 'Submit Proof'}
           </button>
@@ -140,25 +156,25 @@ export default function TransactionPage() {
       )}
 
       {(isBuyer || isSeller) && myProof && tx.status === 'pending' && (
-        <p className="text-sm text-zinc-400">
+        <p style={{ fontSize: '14px', color: 'rgba(232,244,253,0.5)' }}>
           ✅ Your proof submitted. Waiting for the other party to submit theirs.
         </p>
       )}
 
       {tx.status === 'verifying' && (
-        <p className="text-sm text-blue-300">🔍 Verification in progress — please wait.</p>
+        <p style={{ fontSize: '14px', color: '#00b3f7' }}>🔍 Verification in progress — please wait.</p>
       )}
 
       {tx.status === 'awaiting_owner' && (
-        <p className="text-sm text-purple-300">⏳ Waiting for community owner's final decision.</p>
+        <p style={{ fontSize: '14px', color: '#a855f7' }}>⏳ Waiting for community owner's final decision.</p>
       )}
 
       {tx.status === 'approved' && (
-        <p className="text-sm text-emerald-300">✅ Transaction approved and completed.</p>
+        <p style={{ fontSize: '14px', color: '#00ff88' }}>✅ Transaction approved and completed.</p>
       )}
 
       {tx.status === 'rejected' && (
-        <p className="text-sm text-red-300">❌ Transaction was rejected.</p>
+        <p style={{ fontSize: '14px', color: '#ff4466' }}>❌ Transaction was rejected.</p>
       )}
     </div>
   );
