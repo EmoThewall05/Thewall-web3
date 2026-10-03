@@ -139,7 +139,12 @@ export default function CreateP2PCommunityPage() {
 
       router.push(`/p2p-community/${data}`);
     } catch (err: any) {
-      setError(err.message || 'Failed to create community');
+      const msg = err.message || 'Failed to create community';
+      if (msg.includes('KYC verification required')) {
+        router.push('/p2p-community/kyc');
+        return;
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }
