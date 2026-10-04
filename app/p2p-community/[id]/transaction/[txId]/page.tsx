@@ -115,7 +115,7 @@ export default function TransactionPage() {
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginBottom: '6px' }}>
           <span style={{ color: 'rgba(232,244,253,0.5)' }}>Amount</span>
-          <span>{tx.amount} EMC</span>
+          <span>{tx.amount} {tx.currency}</span>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
           <span style={{ color: 'rgba(232,244,253,0.5)' }}>Your role</span>

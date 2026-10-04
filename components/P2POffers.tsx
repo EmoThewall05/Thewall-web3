@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, CSSProperties } from 'react';
+import { useState, useEffect, useCallback, useMemo, CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppKitAccount } from '@reown/appkit/react';
 import { getSupabaseBrowser } from '@/lib/supabase';
@@ -12,8 +12,16 @@ interface Offer {
   amount: number;
   price_per_unit: number;
   payment_method: string;
+  currency: string;
   created_at: string;
 }
+
+const CURRENCIES = [
+  'EMC', 'BTC', 'ETH', 'SOL', 'ARB', 'MONAD', 'BASE', 'OP', 'MATIC', 'BNB', 'opBNB',
+  'ZORA', 'CELO', 'CRO', 'BERA', 'APE', 'SONEIUM', 'FRAX', 'INK', 'BOBA', 'XLAYER',
+  'UNI-CHAIN', 'SHAPE', 'ANIME', 'MEGAETH', 'GENSYN', 'STORY', 'HYPE', 'PLASMA',
+  'EDGE', 'MYTHOS', 'SCROLL', 'SONIC', 'SEI', 'ABSTRACT', 'XFI', 'METIS', 'STABLE',
+];
 
 const card: CSSProperties = {
   background: 'var(--bg2)',
@@ -58,10 +66,18 @@ export default function P2POffers({ communityId }: { communityId: string }) {
   const [error, setError] = useState('');
 
   const [offerType, setOfferType] = useState<'buy' | 'sell'>('sell');
+  const [currency, setCurrency] = useState('EMC');
+  const [currencySearch, setCurrencySearch] = useState('');
+  const [currencyOpen, setCurrencyOpen] = useState(false);
   const [amount, setAmount] = useState('');
   const [pricePerUnit, setPricePerUnit] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  const filteredCurrencies = useMemo(
+    () => CURRENCIES.filter((c) => c.toLowerCase().includes(currencySearch.toLowerCase())),
+    [currencySearch]
+  );
 
   const loadOffers = useCallback(async () => {
     setLoading(true);
@@ -89,6 +105,7 @@ export default function P2POffers({ communityId }: { communityId: string }) {
       p_amount: parseFloat(amount),
       p_price_per_unit: parseFloat(pricePerUnit),
       p_payment_method: paymentMethod,
+      p_currency: currency,
     });
     setSubmitting(false);
 
@@ -188,9 +205,67 @@ export default function P2POffers({ communityId }: { communityId: string }) {
             </button>
           </div>
 
+          {/* Currency selector */}
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={() => setCurrencyOpen(!currencyOpen)}
+              style={{ ...input, display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+            >
+              <span>{currency}</span>
+              <span>{currencyOpen ? '▲' : '▼'}</span>
+            </button>
+            {currencyOpen && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  marginTop: '4px',
+                  background: 'var(--bg3)',
+                  border: '1px solid var(--border-bright)',
+                  borderRadius: 'var(--radius)',
+                  maxHeight: '220px',
+                  overflowY: 'auto',
+                  zIndex: 10,
+                }}
+              >
+                <input
+                  autoFocus
+                  placeholder="Search currency..."
+                  value={currencySearch}
+                  onChange={(e) => setCurrencySearch(e.target.value)}
+                  style={{ ...input, border: 'none', borderBottom: '1px solid var(--border)', borderRadius: 0 }}
+                />
+                {filteredCurrencies.map((c) => (
+                  <div
+                    key={c}
+                    onClick={() => {
+                      setCurrency(c);
+                      setCurrencyOpen(false);
+                      setCurrencySearch('');
+                    }}
+                    style={{
+                      padding: '10px 12px',
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                      color: c === currency ? 'var(--cyan)' : 'var(--text)',
+                      background: c === currency ? 'var(--cyan-glow)' : 'transparent',
+                    }}
+                  >
+                    {c}
+                  </div>
+                ))}
+                {filteredCurrencies.length === 0 && (
+                  <div style={{ padding: '10px 12px', fontSize: '13px', color: 'var(--text-dim)' }}>No match</div>
+                )}
+              </div>
+            )}
+          </div>
+
           <input
             type="number"
-            placeholder="Amount (EMC)"
+            placeholder={`Amount (${currency})`}
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             style={input}
@@ -239,7 +314,7 @@ export default function P2POffers({ communityId }: { communityId: string }) {
                   {offer.offer_type.toUpperCase()}
                 </span>
                 <div style={{ fontSize: '14px' }}>
-                  {offer.amount} EMC @ ₹{offer.price_per_unit}/unit
+                  {offer.amount} {offer.currency} @ ₹{offer.price_per_unit}/unit
                 </div>
                 <div style={{ fontSize: '12px', color: 'var(--text-dim)' }}>{offer.payment_method}</div>
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>

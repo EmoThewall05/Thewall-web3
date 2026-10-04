@@ -180,7 +180,7 @@ export default function ManageCommunityPage({
             background: '#0d0d14', border: '1px solid rgba(168,85,247,0.25)', borderRadius: 12, padding: 14,
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#9ca3af', marginBottom: 8 }}>
-              <span>{tx.amount} EMC</span>
+              <span>{tx.amount} {tx.currency}</span>
               <span style={{
                 fontWeight: 700,
                 color: tx.status === 'verifying' ? '#00b3f7' : '#a855f7',
