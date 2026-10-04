@@ -5,6 +5,7 @@ import { useAppKitAccount } from '@reown/appkit/react';
 import Link from 'next/link';
 import PeguardChatWidget from '@/components/PeguardChatWidget';
 import P2POffers from '@/components/P2POffers';
+import P2PMembers from '@/components/P2PMembers';
 import { getSupabaseBrowser } from '@/lib/supabase';
 
 type Community = {
@@ -131,6 +132,8 @@ export default function CommunityDetailPage({
           <span style={{ color: '#a855f7' }}>{community.member_count}/{community.max_members}</span>
         </div>
       </div>
+
+      <P2PMembers communityId={community.id} ownerWalletAddress={community.owner_wallet_address} />
 
       {isConnected && address && address.toLowerCase() === community.owner_wallet_address.toLowerCase() && (
         <Link
