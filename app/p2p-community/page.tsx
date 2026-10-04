@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useAppKitAccount } from '@reown/appkit/react';
 import PeguardChatWidget from '@/components/PeguardChatWidget';
 import { getSupabaseBrowser } from '@/lib/supabase';
 
@@ -16,10 +17,13 @@ type Community = {
 };
 
 export default function P2PCommunityPage() {
+  const { address } = useAppKitAccount();
   const [communities, setCommunities] = useState<Community[]>([]);
+  const [myCommunityIds, setMyCommunityIds] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<'all' | 'mine'>('all');
 
   const fetchCommunities = useCallback(async (query: string) => {
     setLoading(true);
@@ -42,6 +46,24 @@ export default function P2PCommunityPage() {
     fetchCommunities('');
   }, [fetchCommunities]);
 
+  useEffect(() => {
+    const loadMyCommunities = async () => {
+      if (!address) {
+        setMyCommunityIds(new Set());
+        return;
+      }
+      const supabase = getSupabaseBrowser();
+      const { data, error } = await supabase
+        .from('p2p_community_members')
+        .select('community_id')
+        .eq('wallet_address', address);
+      if (!error && data) {
+        setMyCommunityIds(new Set(data.map((d: any) => d.community_id)));
+      }
+    };
+    loadMyCommunities();
+  }, [address]);
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     fetchCommunities(search);
@@ -49,6 +71,10 @@ export default function P2PCommunityPage() {
 
   const shortAddress = (addr: string) =>
     addr.length > 10 ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : addr;
+
+  const visibleCommunities = filter === 'mine'
+    ? communities.filter((c) => myCommunityIds.has(c.id))
+    : communities;
 
   const totalMembers = communities.reduce((sum, c) => sum + c.member_count, 0);
   const openCount = communities.filter((c) => c.status === 'open').length;
@@ -98,6 +124,33 @@ export default function P2PCommunityPage() {
           </div>
         </div>
 
+        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+          <button
+            onClick={() => setFilter('all')}
+            style={{
+              flex: 1, padding: '9px 0', borderRadius: 8, fontSize: '0.8rem', fontWeight: 700,
+              background: filter === 'all' ? 'rgba(0,229,255,0.12)' : '#0d0d14',
+              border: filter === 'all' ? '1px solid #00e5ff' : '1px solid rgba(0,229,255,0.15)',
+              color: filter === 'all' ? '#00e5ff' : '#6b7280',
+              cursor: 'pointer',
+            }}
+          >
+            All
+          </button>
+          <button
+            onClick={() => setFilter('mine')}
+            style={{
+              flex: 1, padding: '9px 0', borderRadius: 8, fontSize: '0.8rem', fontWeight: 700,
+              background: filter === 'mine' ? 'rgba(168,85,247,0.12)' : '#0d0d14',
+              border: filter === 'mine' ? '1px solid #a855f7' : '1px solid rgba(0,229,255,0.15)',
+              color: filter === 'mine' ? '#a855f7' : '#6b7280',
+              cursor: 'pointer',
+            }}
+          >
+            Mine
+          </button>
+        </div>
+
         <form onSubmit={handleSearchSubmit} style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
           <input
             type="text"
@@ -114,16 +167,18 @@ export default function P2PCommunityPage() {
         {loading && <p style={{ color: '#6b7280', fontSize: '0.85rem', textAlign: 'center', padding: '32px 0' }}>Loading...</p>}
         {error && <p style={{ color: '#f87171', fontSize: '0.85rem' }}>{error}</p>}
 
-        {!loading && !error && communities.length === 0 && (
+        {!loading && !error && visibleCommunities.length === 0 && (
           <div style={{ textAlign: 'center', padding: '64px 0', color: '#6b7280' }}>
             <p style={{ marginBottom: 4, fontSize: '1.5rem' }}>🦋</p>
-            <p style={{ marginBottom: 4 }}>No communities found</p>
-            <p style={{ fontSize: '0.85rem' }}>Create the first community!</p>
+            <p style={{ marginBottom: 4 }}>
+              {filter === 'mine' ? "You haven't joined or created any communities yet" : 'No communities found'}
+            </p>
+            {filter === 'all' && <p style={{ fontSize: '0.85rem' }}>Create the first community!</p>}
           </div>
         )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {communities.map((c) => (
+          {visibleCommunities.map((c) => (
             <Link key={c.id} href={`/p2p-community/${c.id}`} style={{
               display: 'block', borderRadius: 12, padding: 16, textDecoration: 'none',
               background: '#0d0d14', border: '1px solid rgba(0,229,255,0.15)',
