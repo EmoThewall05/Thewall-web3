@@ -17,6 +17,7 @@ type Transaction = {
   buyer_wallet_address: string;
   seller_wallet_address: string;
   amount: number;
+  currency: string;
   status: string;
   buyer_proof: string | null;
   seller_proof: string | null;
