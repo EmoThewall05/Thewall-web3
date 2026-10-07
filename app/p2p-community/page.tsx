@@ -96,7 +96,7 @@ export default function P2PCommunityPage() {
           }}>
             🦋
           </div>
-          <Link href="/p2p-community/create" style={{
+          <Link href="/p2p-community/kyc" style={{
             display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 8, fontSize: '0.85rem', fontWeight: 700,
             background: 'linear-gradient(90deg, #00e5ff, #a855f7)', color: '#000', boxShadow: '0 0 15px rgba(0,229,255,0.4)', textDecoration: 'none',
           }}>
