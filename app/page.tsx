@@ -86,6 +86,8 @@ export default function TheWall() {
   const [totpCode, setTotpCode]     = useState('')
   const [error, setError]           = useState('')
   const [user, setUser]             = useState<UserWallet|null>(null)
+  const userRef = useRef(user)
+  useEffect(() => { userRef.current = user }, [user])
   const solanaWallets: any[] = []; // TEMP: disabled useStandardWallets to debug 'No namespace found'
   const solanaConnectedWallets: any[] = []; // TEMP debug
   const signAndSendTransaction = async (..._args: any[]) => {}; // TEMP debug
@@ -300,6 +302,7 @@ export default function TheWall() {
       }
       modal.subscribeAccount((acc: any) => {
         if (acc?.isConnected && acc?.address) {
+        if (userRef.current?.type === 'smart') return
           const savedSol = typeof window!=='undefined' ? localStorage.getItem('solAddress') : null
           setUser({address: acc.address, type: 'external', solAddress: savedSol || undefined})
           fetchBalance(acc.address)
@@ -757,6 +760,7 @@ export default function TheWall() {
     modal.open()
     modal.subscribeAccount((account:any)=>{
       if(account.isConnected&&account.address){
+        if(userRef.current?.type==='smart')return
         const savedSol = typeof window!=='undefined' ? localStorage.getItem('solAddress') : null
         setUser({address:account.address,type:'external',solAddress:savedSol||undefined})
         fetchBalance(account.address)
