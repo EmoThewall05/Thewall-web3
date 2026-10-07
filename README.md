@@ -72,6 +72,11 @@ Built entirely on phone using **Termux + Acode**
 | ❄️ Freeze | Emergency PIN wallet lock |
 | 🔗 Connect | WalletConnect 530+ wallets |
 | 🎨 Redesigned Login | New login screen — chain preview grid, Sign Up/Login, Smart Wallet create in one view |
+| 👥 P2P Communities | KYC-gated community creation (Create → KYC → Create Community) |
+| ✉️ Email OTP | Email OTP verification for P2P members |
+| 🔎 Community Discovery | All / Mine toggle with live stats (Communities, Members, Open) |
+| 💱 Multi-currency Offers | Post and browse P2P offers in multiple currencies |
+| ✅ Owner Approval | Community owner can approve or reject members/offers |
 
 ---
 
@@ -181,6 +186,16 @@ Lower swap/send fees (0.3% vs 1.0% standard)
 Higher EmoCoin claim limits (50 EMC/6hr vs 10 EMC/24hr)
 First 5 free transactions/month (≤ $100 USD)
 Priority perks across the Dwin Universe
+👥 P2P Communities
+Peer-to-peer trading inside owner-run communities:
+Create → KYC → Create Community — creation is KYC-gated
+Email OTP verification with auto-trigger verification
+Community discovery with All / Mine toggle
+Members list per community
+Multi-currency offers
+Owner approve / reject
+Live stats: Communities, Members, Open
+
 👥 Copy Trading
 Follow top traders or become a Leader:
 Mirror trades from top-performing wallets automatically
@@ -269,6 +284,10 @@ POST /api/referral/apply
 
 POST /api/ai/chat
 GET  /api/ai/alerts
+
+/api/p2p-chat
+/api/p2p-send-otp      ← email OTP
+/api/p2p-verify        ← OTP verification
 
 🎯 Roadmap
 [ ] Mobile app (Flutter)
