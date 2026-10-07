@@ -881,7 +881,7 @@ const ChainIcon = ({ id }: { id: string }) => {
     <div className={styles.dashWrap} style={{paddingBottom:70}}>
       <header className={styles.header+' fade-up'}>
         <div className={styles.headerLeft}><span className={styles.hexSmall}>⬡</span><span className={styles.headerTitle}>THE WALL</span></div>
-        <div className={styles.headerRight}><button className={styles.searchIconBtn} onClick={()=>setSearchOpen(true)}>🔍</button><button className={styles.refreshBtn} onClick={handleRefresh} disabled={refreshing}><span style={{display:'inline-block',animation:refreshing?'spin 0.8s linear infinite':'none'}}>↻</span></button><button className={styles.logoutBtn} onClick={async()=>{try{const {appkitModal}=await import('@/app/context/wallet');if(appkitModal)await appkitModal.disconnect()}catch{};try{await privyLogout()}catch{};setUser(null);setWalletData(null);setScreen('login')}}>⏻</button></div>
+        <div className={styles.headerRight}><button className={styles.searchIconBtn} onClick={()=>setSearchOpen(true)}>🔍</button><button className={styles.refreshBtn} onClick={handleRefresh} disabled={refreshing}><span style={{display:'inline-block',animation:refreshing?'spin 0.8s linear infinite':'none'}}>↻</span></button><button className={styles.logoutBtn} onClick={async()=>{try{const {appkitModal}=await import('@/app/context/wallet');if(appkitModal)await appkitModal.disconnect()}catch{};try{await privyLogout()}catch{};setUser(null);setWalletData(null);setScreen('login')}}><span className={styles.logoutIcon}>⏻</span>Logout</button></div>
       </header>
 
       {searchOpen&&<div className={styles.searchOverlay} onClick={()=>setSearchOpen(false)}><div className={styles.searchModal} onClick={e=>e.stopPropagation()}>
