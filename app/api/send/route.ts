@@ -51,6 +51,36 @@ async function broadcastSolTx(signedTx: string): Promise<string> {
   return data.result
 }
 
+// Only plain System transfers may be sponsored. The relayer must appear
+// only as fee payer (never inside an instruction) and nobody except the
+// user may sign, so a client cannot make the relayer sign away its funds.
+const SPONSOR_ALLOWED_PROGRAMS = new Set(['11111111111111111111111111111111'])
+
+function assertSponsorable(tx: any, relayer: any) {
+  const relayerStr = relayer.toBase58()
+  if (!tx.instructions.length || tx.instructions.length > 2) throw new Error('Transaction not sponsorable')
+  const signers = new Set<string>()
+  for (const ix of tx.instructions) {
+    if (!SPONSOR_ALLOWED_PROGRAMS.has(ix.programId.toBase58())) throw new Error('Transaction not sponsorable')
+    if (ix.data.length !== 12 || ix.data.readUInt32LE(0) !== 2) throw new Error('Transaction not sponsorable')
+    for (const k of ix.keys) {
+      if (k.pubkey.toBase58() === relayerStr) throw new Error('Transaction not sponsorable')
+      if (k.isSigner) signers.add(k.pubkey.toBase58())
+    }
+  }
+  if (signers.size > 1) throw new Error('Transaction not sponsorable')
+}
+
+// Best-effort limiter (in-memory, per server instance).
+const sponsorHits = new Map<string, number[]>()
+function sponsorRateLimited(ip: string) {
+  const now = Date.now()
+  const hits = (sponsorHits.get(ip) || []).filter(t => now - t < 60000)
+  hits.push(now)
+  sponsorHits.set(ip, hits)
+  return hits.length > 10
+}
+
 // Self-hosted fee-payer relayer (replaces deprecated Alchemy Gas Manager,
 // which went enterprise-only). Sets our funded relayer wallet as feePayer
 // on the unsigned tx and co-signs it, so the user never needs SOL for fees.
@@ -63,6 +93,7 @@ async function requestSolFeePayer(serializedTxBase64: string): Promise<string> {
   const relayerKeypair = Keypair.fromSecretKey(Buffer.from(relayerSecret, 'base64'))
 
   const tx = Transaction.from(Buffer.from(serializedTxBase64, 'base64'))
+  assertSponsorable(tx, relayerKeypair.publicKey)
   tx.feePayer = relayerKeypair.publicKey
 
   const solanaKey = process.env.THEWALL_SOUL_KEY
@@ -101,6 +132,8 @@ export async function POST(req: NextRequest) {
     // Sponsor: sets feePayer + adds Gas Manager's fee-payer signature to an unsigned Solana tx.
     if (action === 'sponsor' && chain === 'SOL') {
       if (!serializedTransaction) throw new Error('serializedTransaction required')
+      const clientIp = (req.headers.get('x-forwarded-for') || 'unknown').split(',')[0].trim()
+      if (sponsorRateLimited(clientIp)) return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
       const sponsoredTx = await requestSolFeePayer(serializedTransaction)
       return NextResponse.json({ success: true, serializedTransaction: sponsoredTx })
     }
