@@ -229,7 +229,8 @@ export default function TheWall() {
   const [alertSymbol, setAlertSymbol] = useState('ETH')
   const [alertPrice, setAlertPrice]   = useState('')
   const [alertCondition, setAlertCondition] = useState<'above'|'below'>('above')
-  const [marketsTab, setMarketsTab]   = useState<'charts'|'news'|'alerts'>('charts')
+  const [marketsTab, setMarketsTab]   = useState<'charts'|'news'|'alerts'|'stocks'>('charts')
+  const [stocks, setStocks] = useState<Record<string,{price:number;change24h:number}>>({})
   const [settingsTab, setSettingsTab] = useState<'profile'|'security'|'history'|'assets'|'dapps'>('profile')
   const [txHistory, setTxHistory]     = useState<TxItem[]>([])
   const [txLoading, setTxLoading]     = useState(false)
@@ -622,6 +623,7 @@ export default function TheWall() {
   useEffect(()=>{fetchPrices();const i=setInterval(fetchPrices,60_000);return()=>clearInterval(i)},[fetchPrices])
   useEffect(()=>{if(bottomTab==='markets'&&marketsTab==='charts')fetchChart(chartToken,chartDays)},[bottomTab,marketsTab,chartToken,chartDays,fetchChart])
   useEffect(()=>{if(bottomTab==='markets'&&marketsTab==='news'&&!news.length)fetchNews()},[bottomTab,marketsTab,fetchNews,news.length])
+  useEffect(()=>{if(bottomTab==='markets'&&marketsTab==='stocks'){fetch('/api/stocks').then(r=>r.json()).then(d=>{if(d?.stocks)setStocks(d.stocks)}).catch(()=>{})}},[bottomTab,marketsTab])
   useEffect(()=>{if(bottomTab==='settings'&&settingsTab==='history'&&user?.address&&!txHistory.length)fetchTxHistory(user.address)},[bottomTab,settingsTab,user,txHistory.length,fetchTxHistory])
   useEffect(()=>{if(bottomTab==='settings'&&settingsTab==='assets'&&user?.address&&!tokenBalances.length)fetchTokenBalances(user.address)},[bottomTab,settingsTab,user,tokenBalances.length,fetchTokenBalances])
   useEffect(()=>{if(bottomTab==='settings'&&settingsTab==='assets'&&user?.address&&!nfts.length)fetchNfts(user.address)},[bottomTab,settingsTab,user,nfts.length,fetchNfts])
@@ -1061,7 +1063,7 @@ const ChainIcon = ({ id }: { id: string }) => {
         </div>}
 
         {bottomTab==='markets'&&<div>
-          <div style={{display:'flex',gap:8,marginBottom:16}}>{(['charts','news','alerts']as const).map(t=><button key={t} onClick={()=>setMarketsTab(t)} style={{flex:1,padding:'10px',border:'1px solid',borderColor:marketsTab===t?'var(--cyan)':'var(--border)',borderRadius:8,background:marketsTab===t?'var(--cyan-glow)':'var(--bg2)',color:marketsTab===t?'var(--cyan)':'var(--text-muted)',...s.mono,fontSize:'0.72rem',cursor:'pointer'}}>{t==='charts'?'📊 Charts':t==='news'?'📰 News':'🔔 Alerts'}</button>)}</div>
+          <div style={{display:'flex',gap:8,marginBottom:16}}>{(['charts','news','alerts',...(process.env.NEXT_PUBLIC_STOCKS_ENABLED==='true'?['stocks']:[])]as ('charts'|'news'|'alerts'|'stocks')[]).map(t=><button key={t} onClick={()=>setMarketsTab(t)} style={{flex:1,padding:'10px',border:'1px solid',borderColor:marketsTab===t?'var(--cyan)':'var(--border)',borderRadius:8,background:marketsTab===t?'var(--cyan-glow)':'var(--bg2)',color:marketsTab===t?'var(--cyan)':'var(--text-muted)',...s.mono,fontSize:'0.72rem',cursor:'pointer'}}>{t==='charts'?'📊 Charts':t==='news'?'📰 News':t==='alerts'?'🔔 Alerts':'📈 Stocks'}</button>)}</div>
           {marketsTab==='charts'&&<div>
             <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:12}}>{['ETH','SOL','ARB','BTC','BNB'].map(sym=>{const token=TOKENS.find(t=>t.symbol===sym);return <button key={sym} onClick={()=>setChartToken(sym)} style={{padding:'6px 12px',border:'1px solid',borderColor:chartToken===sym?token?.color||'var(--cyan)':'var(--border)',borderRadius:20,background:chartToken===sym?`${token?.color||'#00e5ff'}15`:'var(--bg2)',color:chartToken===sym?token?.color||'var(--cyan)':'var(--text-muted)',...s.mono,fontSize:'0.72rem',cursor:'pointer'}}>{sym}</button>})}</div>
             <div style={{display:'flex',gap:6,marginBottom:12}}>{[{v:'1',l:'1D'},{v:'7',l:'7D'},{v:'30',l:'1M'},{v:'90',l:'3M'},{v:'365',l:'1Y'}].map(d=><button key={d.v} onClick={()=>setChartDays(d.v)} style={{flex:1,padding:'6px',border:'1px solid',borderColor:chartDays===d.v?'var(--cyan)':'var(--border)',borderRadius:6,background:chartDays===d.v?'var(--cyan-glow)':'var(--bg2)',color:chartDays===d.v?'var(--cyan)':'var(--text-muted)',...s.mono,fontSize:'0.68rem',cursor:'pointer'}}>{d.l}</button>)}</div>
@@ -1073,6 +1075,11 @@ const ChainIcon = ({ id }: { id: string }) => {
             </div>
             <div style={{...s.label,marginBottom:8}}>ALL ASSETS</div>
             {TOKENS.map(token=>{const p=prices[token.symbol];return <div key={token.symbol} onClick={()=>setChartToken(token.symbol)}  style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 12px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:8,marginBottom:6,cursor:'pointer',WebkitTapHighlightColor:'rgba(0,0,0,0)',touchAction:'manipulation'}}><div style={{display:'flex',alignItems:'center',gap:8}}><div style={{width:6,height:6,borderRadius:'50%',background:token.color}}/><span style={{fontSize:'0.78rem',...s.mono,color:'var(--text)',fontWeight:700}}>{token.symbol}</span><span style={{fontSize:'0.6rem',...s.muted}}>{token.chain}</span></div><div style={{textAlign:'right'}}><div style={{fontSize:'0.78rem',...s.mono}}>{p?'$'+p.price.toLocaleString('en',{minimumFractionDigits:2}):<span style={s.muted}>$···</span>}</div>{p&&<div style={{fontSize:'0.62rem',color:p.change24h>=0?'#00ff88':'#ff4466'}}>{p.change24h>=0?'▲':'▼'}{Math.abs(p.change24h).toFixed(2)}%</div>}</div></div>})}
+          </div>}
+          {marketsTab==='stocks'&&<div>
+            <div style={{...s.label,marginBottom:8}}>US STOCKS & ETFs</div>
+            {['AAPL','TSLA','NVDA','MSFT','AMZN','GOOGL','SPY','QQQ'].map(sym=>{const p=stocks[sym];return <div key={sym} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 12px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:8,marginBottom:6}}><span style={{fontSize:'0.78rem',...s.mono,color:'var(--text)',fontWeight:700}}>{sym}</span><div style={{textAlign:'right'}}><div style={{fontSize:'0.78rem',...s.mono}}>{p?'$'+p.price.toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2}):<span style={s.muted}>$···</span>}</div>{p&&<div style={{fontSize:'0.62rem',color:p.change24h>=0?'#00ff88':'#ff4466'}}>{p.change24h>=0?'▲':'▼'}{Math.abs(p.change24h).toFixed(2)}%</div>}</div></div>})}
+            <div style={{fontSize:'0.62rem',...s.muted,marginTop:8}}>Price information only. Not investment advice.</div>
           </div>}
           {marketsTab==='news'&&<div>
             <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}><div style={{...s.label,marginBottom:0}}>CRYPTO NEWS</div><button onClick={fetchNews} style={{padding:'4px 10px',background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:6,...s.cyan,...s.mono,fontSize:'0.65rem',cursor:'pointer'}}>↻ Refresh</button></div>
