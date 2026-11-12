@@ -294,7 +294,7 @@ export default function TheWall() {
       const modal = await initAppKit()
       if (!modal) return
       const account = modal.getAccount()
-      if (account?.isConnected && account?.address) {
+      if (account?.isConnected && account?.address && userRef.current?.type !== 'smart') {
         const savedSol = typeof window!=='undefined' ? localStorage.getItem('solAddress') : null
         setUser({address: account.address, type: 'external', solAddress: savedSol || undefined})
         fetchBalance(account.address)
